@@ -1,0 +1,9 @@
+[
+  "greent/test/test_ontology.py::test_label",
+  "greent/test/test_ontology.py::test_is_a",
+  "greent/test/test_ontology.py::test_xrefs",
+  "greent/test/test_ontology.py::test_synonyms",
+  "greent/test/test_ontology.py::test_search",
+  "greent/test/test_ontology.py::test_lookup",
+  "greent/test/test_ontology.py::test_id_list"
+]
