@@ -15,12 +15,8 @@ class GenericOntology(Service):
     
     def __init__(self, context, obo):
         """ Load an obo file. """
-        # I don't understand why super() is invoked here
-    
         super(GenericOntology, self).__init__("go", context)
         self.ont = pronto.Ontology (obo)
-        
-        
         #self.obonet = obonet.parse_obo (obo)
     
     def label(self,identifier):
@@ -131,7 +127,6 @@ class GenericOntology(Service):
         return result
 
     def id_list(self, identifier):
-
         id_list = []
         id_list = [term.id for term in self.ont if term.id.startswith(identifier)]
         if not id_list:
