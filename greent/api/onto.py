@@ -31,8 +31,8 @@ template = {
   },
 #  "basePath": "/onto/api",
   "schemes": [
-    "http",
-    "https"
+    "https",
+    "http"
   ]
 }
 app.config['SWAGGER'] = {
