@@ -6,10 +6,11 @@ import re
 import requests
 import yaml
 import shutil
+from greent.services.bionames import BioNames
 from lru import LRU
 #from greent.graph_components import KNode,KEdge,elements_to_json
 from builder.lookup_utils import chemical_ids_from_drug_names
-from greent.services.bionames import BioNames
+
 from greent.servicecontext import ServiceContext
 from flask import Flask, jsonify, g, Response
 from flasgger import Swagger
