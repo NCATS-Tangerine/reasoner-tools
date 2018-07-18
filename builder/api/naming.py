@@ -39,9 +39,8 @@ app.config['SWAGGER'] = {
 }
 
 swagger = Swagger(app, template=template)
-
 core = BioNames(ServiceContext.create_context ())
-cache = LRU (1000) 
+cache = LRU (1000)
 
 @app.route('/lookup/<q>/<concept>/')
 def lookup (q, concept):
