@@ -31,8 +31,8 @@ template = {
     "version": "0.0.1"
   },
   "schemes": [
-    "https",
-    "http"
+    "http",
+    "https"
   ]
 }
 app.config['SWAGGER'] = {
