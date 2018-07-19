@@ -82,7 +82,7 @@ def lookup (q, concept):
    else:
        result = chemical_ids_from_drug_names(key)
        cache[key] = result
-   return result
+   return jsonify(result)
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')

@@ -53,84 +53,64 @@ def lookup_disease_by_name( disease_name, greent ):
 #below is taken from greent/services/CTD.py line 91
 def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):  
     
-    CTD_query_url = 'http://ctdbase.org/tools/batchQuery.go?'
-    CTD_query_details = {'inputType':'chem', 'inputTerms': drug_name_as_string, 'report':'genes_curated','format':'json'}
-    
-    CTD_query_results = requests.get(CTD_query_url, params = CTD_query_details).json()
-    
-    exact_matches_from_CTD_query_results = [ x for x in CTD_query_results if x['ChemicalName'].upper() == drug_name_as_string.upper()]
-    related_matches_from_CTD_query_results = [x for x in CTD_query_results if x['ChemicalName'].upper() != drug_name_as_string.upper()]
-    
-    exact_match_IDs_from_CTD_query =['CTD exact match IDs:']+[q['ChemicalId'] for q in exact_matches_from_CTD_query_results]
-    
-    related_match_IDs_from_CTD_query = ['CTD related match IDs:']+[p['ChemicalId'] for p in related_matches_from_CTD_query_results]
-    
-    all_ctd_results = exact_match_IDs_from_CTD_query + related_match_IDs_from_CTD_query
-    return all_ctd_results
-
-# pharos query a string drug_name to return chemical IDs ... same model as fcn above, CTD_drug_name_string_to_drug_identifier
+    CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/").json()
+    matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
+    if not matches_from_CTD_query:
+        CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/").json()
+        synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query if x['Synonyms'].split('|') == drug_name_as_string]
+        matches_from_CTD_query = matches_from_CTD_query + synonym_matches_from_CTD_query
+    return matches_from_CTD_query
 
 def pharos_drug_name_to_chemical_identifier(drug_name_as_string):
 
-    pharos_query_url = 'https://pharos.nih.gov/idg/api/v1/ligands/search?'
-    pharos_query_details = {'q': 'aspirin'}
+    pharos_query = requests.get(f"https://pharos.nih.gov/idg/api/v1/ligands/search?q={drug_name_as_string}").json()
+    facets = pharos_query['facets']
+    values = [x['values'] for x in facets]
+    values = [val for sublist in values for val in sublist] #stripping off a superfluous outer list
+    labels = [x['label'] for x in values]
+    useful_labels = [x for x in labels if x.startswith('CHEMBL') and len(x) > len('CHEMBL')]
+    useful_labels_no_duplicates = []
+    for x in useful_labels:
+        if x not in useful_labels_no_duplicates:
+            useful_labels_no_duplicates.append(x)
 
-    pharos_query_results = requests.get(pharos_query_url, params = pharos_query_details).json()
-    
-    #this way, below, reduces the number of list comprehensions by half from the above method 'ctd_drug_name_to_chemical_identifier'... i think
-    exact_matches_from_pharos_search_results = [x['id'] for x in pharos_query_results['content'] if x['name'].upper() == drug_name_as_string.upper()]
-   
-    related_matches_from_pharos_search_results = [x['id'] for x in pharos_query_results['content'] if x['name'].upper() != drug_name_as_string.upper()]
-    all_pharos_results = ['pharos exact match IDs:']+ exact_matches_from_pharos_search_results + ['pharos related match IDs:'] +related_matches_from_pharos_search_results
-    return all_pharos_results
+    return useful_labels_no_duplicates
 
+def chem2bio2rdf_drug_name_to_chemical_identifier(drug_name_as_string):
 
-def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
-
-    pubchem_query_url = f'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name_as_string}/property/MolecularFormula/JSON'
-    
-    pubchem_query_results = requests.get(pubchem_query_url).json()
-    test = pubchem_query_results['PropertyTable']['Properties']
-   
-    matches_from_pubchem_search_results = [x['CID'] for x in pubchem_query_results['PropertyTable']['Properties']]
-    all_pubchem_results = ['pubchem IDs:'] + matches_from_pubchem_search_results
-    return all_pubchem_results
+    return
 
 
 
 
-def chemical_ids_from_drug_names( drug_name ):
+
+
+def chemical_ids_from_drug_names( drug_name_as_string ):
     """Look up drugs by name.  We will pull results from multiple sources in this case,
     and return them all."""
     
     logger=logging.getLogger('application')
-    logger.debug('Looking up drug name: {}'.format(drug_name) )
+    logger.debug('Looking up drug name: {}'.format(drug_name_as_string) )
     
     #CTD_ids
-    ctd_ids = ctd_drug_name_string_to_chemical_identifier( drug_name )
+    ctd_ids = ctd_drug_name_string_to_chemical_identifier( drug_name_as_string )
     logger.debug(' CTD says: {}'.format(ctd_ids) )
 
-    #pharos_ids = 
-    pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name)
+    # # pharos_ids = 
+    pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name_as_string)
     logger.debug(' pharos says: {}'.format(pharos_ids) )
 
-    #pubchem_ids = 
+    # chem2bio2rdf_ids = 
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name)
     logger.debug(' pubchem says: {}'.format(pubchem_ids))
 
-    # #PHAROS
-    # pids_and_labels = greent.pharos.drugname_string_to_pharos_info( drug_name )
-    # pharos_ids = [x[0] for x in pids_and_labels]
-    # logger.debug(' Pharos says: {}'.format(pharos_ids) )
-
-    # #PUBCHEM
-    # pubchem_info = greent.chembio.drugname_to_pubchem( drug_name )
-    # pubchem_ids = [ 'PUBCHEM:{}'.format(r['drugID'].split('/')[-1]) for r in pubchem_info ]
-    # logger.debug(' pubchem says: {}'.format(pubchem_ids))
     # #TOTAL:
-    chemical_ids_from_drug_names =  jsonify(ctd_ids + pharos_ids + pubchem_ids)
+    chemical_ids_from_drug_names = ctd_ids + pharos_ids #+ pubchem_ids
     logger.debug( chemical_ids_from_drug_names )
-    return chemical_ids_from_drug_names
+
+    return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
+   
+   #return chemical_ids_from_drug_names
 
 
 def lookup_identifier( name, name_type, greent ):

@@ -7,6 +7,7 @@ flasgger==0.9.0
 Flask==1.0.2
 gunicorn==19.9.0
 idna==2.7
+isodate==0.6.0
 itsdangerous==0.24
 Jinja2==2.10
 jsonschema==2.6.0
@@ -17,9 +18,12 @@ more-itertools==4.2.0
 pluggy==0.6.0
 pronto==0.10.2
 py==1.5.4
+pyparsing==2.2.0
 pytest==3.6.3
 PyYAML==3.13
+rdflib==4.2.2
 requests==2.19.1
 six==1.11.0
+SPARQLWrapper==1.8.2
 urllib3==1.23
 Werkzeug==0.14.1
