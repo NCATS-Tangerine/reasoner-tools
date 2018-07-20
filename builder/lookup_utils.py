@@ -57,7 +57,9 @@ def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):
     matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
     if not matches_from_CTD_query:
         CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/").json()
-        synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query if x['Synonyms'].split('|') == drug_name_as_string]
+        print(CTD_synonym_query)
+        synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query]
+        print(synonym_matches_from_CTD_query)
         matches_from_CTD_query = matches_from_CTD_query + synonym_matches_from_CTD_query
     return matches_from_CTD_query
 
@@ -73,12 +75,17 @@ def pharos_drug_name_to_chemical_identifier(drug_name_as_string):
     for x in useful_labels:
         if x not in useful_labels_no_duplicates:
             useful_labels_no_duplicates.append(x)
+    added_string = ':CHEMBL'
+    added_string_location = len('CHEMBL')
+    useful_labels_modified = [x[:added_string_location]+added_string+x[added_string_location:] for x in useful_labels_no_duplicates]
+    return useful_labels_modified
 
-    return useful_labels_no_duplicates
+def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
 
-def chem2bio2rdf_drug_name_to_chemical_identifier(drug_name_as_string):
-
-    return
+    pubchem_query = requests.get(f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name_as_string}/property/MolecularFormula/JSON").json()
+    pubchem_IDs = [x['CID'] for x in pubchem_query['PropertyTable']['Properties']]
+    pubchem_IDs_annotated = ["PUBCHEM:" + str(x) for x in pubchem_IDs]
+    return pubchem_IDs_annotated
 
 
 
@@ -96,21 +103,20 @@ def chemical_ids_from_drug_names( drug_name_as_string ):
     ctd_ids = ctd_drug_name_string_to_chemical_identifier( drug_name_as_string )
     logger.debug(' CTD says: {}'.format(ctd_ids) )
 
-    # # pharos_ids = 
+    # pharos_ids = 
     pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name_as_string)
     logger.debug(' pharos says: {}'.format(pharos_ids) )
 
-    # chem2bio2rdf_ids = 
-    pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name)
+    # pubchem_ids = 
+    pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
     logger.debug(' pubchem says: {}'.format(pubchem_ids))
 
     # #TOTAL:
-    chemical_ids_from_drug_names = ctd_ids + pharos_ids #+ pubchem_ids
+    chemical_ids_from_drug_names = ctd_ids + pharos_ids + pubchem_ids
     logger.debug( chemical_ids_from_drug_names )
 
     return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
    
-   #return chemical_ids_from_drug_names
 
 
 def lookup_identifier( name, name_type, greent ):
