@@ -6,14 +6,12 @@ import re
 import requests
 import yaml
 import shutil
-from greent.services.bionames import BioNames
-from lru import LRU
-#from greent.graph_components import KNode,KEdge,elements_to_json
-from builder.lookup_utils import chemical_ids_from_drug_names
-
-from greent.servicecontext import ServiceContext
 from flask import Flask, jsonify, g, Response
 from flasgger import Swagger
+from lru import LRU
+from greent.services.bionames import BioNames
+from greent.servicecontext import ServiceContext
+
 app = Flask(__name__)
 
 template = {
@@ -59,12 +57,13 @@ def lookup (q, concept):
        x-requestTemplate:
          - valueType: http://schema.org/string
            template: /lookup/{{ input }}/{{ input2 }}
+
      - name: concept
        in: path
        type: string
        required: false
        default: drug
-       description: "A biolink-model concept name."
+       description: "A biolink-model concept name, e.g. 'drug', 'disease', etc."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -76,12 +75,13 @@ def lookup (q, concept):
    """
    assert q, "A string must be entered as a query."
    key = f"{q}"
-   
+
    if key in cache:
-       result = cache[key]
-   else:
-       result = chemical_ids_from_drug_names(key)
-       cache[key] = result
+      result = cache[key]
+   else:  
+      result = core.lookup(key, concept=concept)
+      cache[key] = result
+
    return jsonify(result)
 
 if __name__ == "__main__":

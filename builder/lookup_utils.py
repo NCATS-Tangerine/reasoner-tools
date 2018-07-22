@@ -1,7 +1,6 @@
 import logging
 import requests
 from flask import jsonify
-#from greent import node_types
 
 def lookup_phenotype_by_name( name, greent ):
     """Return type is a list of HPO identifiers."""
@@ -14,13 +13,31 @@ def lookup_phenotype_by_name( name, greent ):
         logger.debug('Found ids for phenotype name: {} {}.'.format(name,' '.join(hpo_ids)))
     return hpo_ids
 
+def search_owlsim(q, co):
+    result = []
+    try:
+        owlsim_query = f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}"
+        logger.debug (f"owlsim query: {owlsim_query}")
+        response = requests.get (owlsim_query).json ()
+        logger.debug (f"owlsim response: {response}")
+        if response and "docs" in response:
+            result = [ { "id" : d["id"], "label" : ", ".join (d["label"]), "type": concept } for d in response["docs"] ]
+        logger.debug (f"owlsim result: {result}")
+    except:
+        traceback.print_exc ()
+    return result
 
-#Just going to use MONDO.
-def lookup_disease_by_name( disease_name, greent ):
+def search_onto(disease_name):
+    
+
+    return
+
+def lookup_disease_by_name( disease_name ):
     """We can have different parameterizations if necessary.
     Here, we first get a mondo ID.  Then we try to turn that into
     (in order), a DOID, a UMLS, and an EFO.
     Return type is a list of identifiers."""
+
     logger=logging.getLogger('application')
     #This performs a case-insensitive exact match, and also inverts comma-ed names
     mondo_ids =  greent.mondo.search( disease_name )
@@ -30,8 +47,8 @@ def lookup_disease_by_name( disease_name, greent ):
         logger.error('Could not convert disease name: {}.'.format(disease_name))
     else:
         logging.getLogger('application').debug('Found mondo identifiers for {}'.format(disease_name))
-    return mondo_ids
-
+    return [ { "id" : i, "label" : disease_name} for i in mondo_ids ] if mondo_ids else []
+ 
 #    for mid in mondo_ids:
 #        logger.debug('  {}  {}'.format(mid, greent.mondo.get_label(mid)))
 #    doids = sum([ greent.mondo.mondo_get_doid( r ) for r in mondo_ids], [] )
@@ -49,22 +66,16 @@ def lookup_disease_by_name( disease_name, greent ):
 #    logger.error('For disease name: "{}" found mondo ID(s): {}, but could not transform to another identifier system.'.format(disease_name, ';'.join(mondo_ids)))
 #    return []
 
-
-#below is taken from greent/services/CTD.py line 91
 def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):  
-    
     CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/").json()
     matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
     if not matches_from_CTD_query:
         CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/").json()
-        print(CTD_synonym_query)
         synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query]
-        print(synonym_matches_from_CTD_query)
         matches_from_CTD_query = matches_from_CTD_query + synonym_matches_from_CTD_query
     return matches_from_CTD_query
 
 def pharos_drug_name_to_chemical_identifier(drug_name_as_string):
-
     pharos_query = requests.get(f"https://pharos.nih.gov/idg/api/v1/ligands/search?q={drug_name_as_string}").json()
     facets = pharos_query['facets']
     values = [x['values'] for x in facets]
@@ -81,16 +92,14 @@ def pharos_drug_name_to_chemical_identifier(drug_name_as_string):
     return useful_labels_modified
 
 def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
-
     pubchem_query = requests.get(f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name_as_string}/property/MolecularFormula/JSON").json()
-    pubchem_IDs = [x['CID'] for x in pubchem_query['PropertyTable']['Properties']]
-    pubchem_IDs_annotated = ["PUBCHEM:" + str(x) for x in pubchem_IDs]
-    return pubchem_IDs_annotated
-
-
-
-
-
+    if 'Fault' in pubchem_query:
+        empty_pubchem_query = []
+        return empty_pubchem_query
+    else:
+        pubchem_IDs = [x['CID'] for x in pubchem_query['PropertyTable']['Properties']]
+        pubchem_IDs_annotated = ["PUBCHEM:" + str(x) for x in pubchem_IDs]
+        return pubchem_IDs_annotated
 
 def chemical_ids_from_drug_names( drug_name_as_string ):
     """Look up drugs by name.  We will pull results from multiple sources in this case,
@@ -111,13 +120,10 @@ def chemical_ids_from_drug_names( drug_name_as_string ):
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
     logger.debug(' pubchem says: {}'.format(pubchem_ids))
 
-    # #TOTAL:
+    # #all_ids:
     chemical_ids_from_drug_names = ctd_ids + pharos_ids + pubchem_ids
     logger.debug( chemical_ids_from_drug_names )
-
     return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
-   
-
 
 def lookup_identifier( name, name_type, greent ):
     if name_type == node_types.DRUG:
