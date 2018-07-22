@@ -53,7 +53,7 @@ class BioNames(Service):
         return chemical_ids_from_drug_names (q)
     
     def _find_disease(self, q, concept):
-        return lookup_disease_by_name(q)
+        return lookup_disease_by_name(q, concept)
         
         #return self._search_onto(q) + self._search_owlsim(q, concept)
 
