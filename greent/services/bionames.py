@@ -4,7 +4,7 @@ import traceback
 import logging
 from greent.service import Service
 from greent.util import LoggingUtil
-from builder.lookup_utils import chemical_ids_from_drug_names, lookup_disease_by_name
+from builder.lookup_utils import chemical_ids_from_drug_names
 
 logger = LoggingUtil.init_logging(__name__, level=logging.DEBUG)
 
@@ -16,7 +16,7 @@ class BioNames(Service):
         super(BioNames, self).__init__("bionames", context)
         self.router_directory = {
             "chemical_substance" : self._find_chemical_substance,
-            "disease"            : self._find_disease,
+            "disease"            : self._find,
             "phenotypic_feature" : self._find,
             "cell"               : self._find,
             "anatomical_entity"  : self._find,
@@ -27,7 +27,13 @@ class BioNames(Service):
             "medication" : "chemical_substance",
             "pharmaceutical" : "chemical_substance",
             "chemical substance" : "chemical_substance",
-            "phenotypic feature" : "phenotypic_feature"
+            "phenotypic feature" : "phenotypic_feature",
+            "phenotype feature" : "phenotypic_feature",
+            "phenotype" : "phenotypic_feature",
+            "phenotypic_trait" : "phenotypic_feature",
+            "phenotypic trait" : "phenotypic_feature",
+            "phenotype trait" : "phenotypic_feature",
+            "anatomical entity" : "anatomical_entity"
         }
         
     def lookup_router(self, q, concept=None):
@@ -52,24 +58,9 @@ class BioNames(Service):
     def _find_chemical_substance(self, q, concept):
         return chemical_ids_from_drug_names (q)
     
-    def _find_disease(self, q, concept):
-        return lookup_disease_by_name(q, concept)
-
-    def _find(self, q, concept):
-        return
-    '''
-    def _find_anatomical_entity(self, q, concept=None):
-        return self._search_owlsim(q, concept) + self._search_onto(q)
-    
-    def _find_cell(self, q, concept):
-        return  self._search_owlsim(q, concept) + self._search_onto(q)
-    
-    def _find_phenotypic_feature(self, q, concept):
-        return self._search_onto(q) + self._search_owlsim(q, concept)
-    
     def _find(self, q, concept):
         return self._search_onto(q, concept=concept) + self._search_owlsim(q, concept)
-    
+ 
     def _search_owlsim(self, q, concept):
         result = []
         try:
@@ -93,4 +84,3 @@ class BioNames(Service):
         except:
             traceback.print_exc ()
         return result
-    '''

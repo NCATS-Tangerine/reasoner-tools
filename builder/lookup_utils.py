@@ -13,34 +13,6 @@ def lookup_phenotype_by_name( name, greent ):
         logger.debug('Found ids for phenotype name: {} {}.'.format(name,' '.join(hpo_ids)))
     return hpo_ids
 
-def search_owlsim(q, concept):
-    owlsim_query = requests.get(f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}").json()
-    matches_from_search_owlsim = [x['id'] for x in owlsim_query['docs']]
-    return matches_from_search_owlsim
-
-def search_onto(disease_name):
-    onto_query = requests.get(f"https://onto.renci.org/search/{disease_name}/?regex=true").json()
-    matches_from_search_onto = [x['id'] for x in onto_query['values']]
-    return matches_from_search_onto
-
-def lookup_disease_by_name( disease_name, concept ):
-    """We can have different parameterizations if necessary.
-    Here, we first get a mondo ID.  Then we try to turn that into
-    (in order), a DOID, a UMLS, and an EFO.
-    Return type is a list of identifiers."""
-    logger=logging.getLogger('application')
-    logger.debug('Looking up disease name: {}'.format(disease_name))
-
-    owlsim_disease_ids = search_owlsim(disease_name, concept)
-    logger.debug(' owlsim says: {}'.format(owlsim_disease_ids))
-
-    onto_disease_ids = search_onto(disease_name)
-    logger.debug(' onto says: []'.format(onto_disease_ids))
-
-    all_disease_ids =  onto_disease_ids + owlsim_disease_ids
-    logger.debug( all_disease_ids )
-    return [ { "id" : i, "label" : disease_name } for i in all_disease_ids ] if all_disease_ids else []
-
 def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):  
     CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/").json()
     matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]

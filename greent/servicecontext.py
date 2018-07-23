@@ -1,7 +1,6 @@
 import os
-#from greent.cache import Cache
-#from greent.core import GreenT
-#from greent.graph_components import KEdge, KNode
+from greent.cache import Cache
+from greent.core import GreenT
 from greent.config import Config
 from greent.util import LoggingUtil
 import socket
@@ -14,14 +13,8 @@ class ServiceContext:
             config_name = "greent.conf"
             config = os.path.join (os.path.dirname (__file__), config_name)
         self.config = Config (config)
-        #self.core = GreenT (self)
-        
-        # Initiaize the cache.
-        """  redis_conf = self.config["redis"]
-        self.cache = Cache (
-            redis_host = redis_conf.get ("host"),
-            redis_port = redis_conf.get ("port"),
-            redis_db = redis_conf.get ("db")) """
+        self.core = GreenT (self)
+        self.cache = Cache ()
         
     @staticmethod
     def create_context (config=None):
