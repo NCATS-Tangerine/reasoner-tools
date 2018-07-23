@@ -79,7 +79,7 @@ def lookup (q, concept):
    if key in cache:
       result = cache[key]
    else:  
-      result = core.lookup(key, concept=concept)
+      result = core.lookup_router(key, concept=concept)
       cache[key] = result
 
    return jsonify(result)

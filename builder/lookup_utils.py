@@ -13,41 +13,44 @@ def lookup_phenotype_by_name( name, greent ):
         logger.debug('Found ids for phenotype name: {} {}.'.format(name,' '.join(hpo_ids)))
     return hpo_ids
 
-def search_owlsim(q, co):
-    result = []
-    try:
-        owlsim_query = f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}"
-        logger.debug (f"owlsim query: {owlsim_query}")
-        response = requests.get (owlsim_query).json ()
-        logger.debug (f"owlsim response: {response}")
-        if response and "docs" in response:
-            result = [ { "id" : d["id"], "label" : ", ".join (d["label"]), "type": concept } for d in response["docs"] ]
-        logger.debug (f"owlsim result: {result}")
-    except:
-        traceback.print_exc ()
-    return result
+def search_owlsim(q, concept):
+    owlsim_query = requests.get(f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}").json()
+    matches_from_search_owlsim = [x['id'] for x in owlsim_query['docs']]
+    return matches_from_search_owlsim
 
 def search_onto(disease_name):
-    
+    onto_query = requests.get(f"https://onto.renci.org/search/{disease_name}/?regex=true").json()
+    matches_from_search_onto = [x['id'] for x in onto_query['values']]
+    return matches_from_search_onto
 
-    return
-
-def lookup_disease_by_name( disease_name ):
+def lookup_disease_by_name( disease_name, concept ):
     """We can have different parameterizations if necessary.
     Here, we first get a mondo ID.  Then we try to turn that into
     (in order), a DOID, a UMLS, and an EFO.
     Return type is a list of identifiers."""
-
     logger=logging.getLogger('application')
-    #This performs a case-insensitive exact match, and also inverts comma-ed names
-    mondo_ids =  greent.mondo.search( disease_name )
-    #Take out phenotypes...
-    mondo_ids = list( filter( lambda x: not x.startswith('HP'), mondo_ids))
-    if len(mondo_ids) == 0:
-        logger.error('Could not convert disease name: {}.'.format(disease_name))
-    else:
-        logging.getLogger('application').debug('Found mondo identifiers for {}'.format(disease_name))
-    return [ { "id" : i, "label" : disease_name} for i in mondo_ids ] if mondo_ids else []
+    logger.debug('Looking up disease name: {}'.format(disease_name))
+
+    owlsim_disease_ids = search_owlsim(disease_name, concept)
+    logger.debug(' owlsim says: {}'.format(owlsim_disease_ids))
+
+    onto_disease_ids = search_onto(disease_name)
+    logger.debug(' onto says: []'.format(onto_disease_ids))
+
+    all_disease_ids =  onto_disease_ids + owlsim_disease_ids
+    logger.debug( all_disease_ids )
+    return [ { "id" : i, "label" : disease_name } for i in all_disease_ids ] if all_disease_ids else []
+
+    # logger=logging.getLogger('application')
+    # #This performs a case-insensitive exact match, and also inverts comma-ed names
+    # mondo_ids =  greent.mondo.search( disease_name )
+    # #Take out phenotypes...
+    # mondo_ids = list( filter( lambda x: not x.startswith('HP'), mondo_ids))
+    # if len(mondo_ids) == 0:
+    #     logger.error('Could not convert disease name: {}.'.format(disease_name))
+    # else:
+    #     logging.getLogger('application').debug('Found mondo identifiers for {}'.format(disease_name))
+    # return [ { "id" : i, "label" : disease_name} for i in mondo_ids ] if mondo_ids else []
  
 #    for mid in mondo_ids:
 #        logger.debug('  {}  {}'.format(mid, greent.mondo.get_label(mid)))
@@ -104,22 +107,18 @@ def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
 def chemical_ids_from_drug_names( drug_name_as_string ):
     """Look up drugs by name.  We will pull results from multiple sources in this case,
     and return them all."""
-    
     logger=logging.getLogger('application')
-    logger.debug('Looking up drug name: {}'.format(drug_name_as_string) )
+    logger.debug('Looking up drug name: {}'.format(drug_name_as_string))
     
     #CTD_ids
-    ctd_ids = ctd_drug_name_string_to_chemical_identifier( drug_name_as_string )
-    logger.debug(' CTD says: {}'.format(ctd_ids) )
-
+    ctd_ids = ctd_drug_name_string_to_chemical_identifier(drug_name_as_string)
+    logger.debug(' CTD says: {}'.format(ctd_ids))
     # pharos_ids = 
     pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name_as_string)
-    logger.debug(' pharos says: {}'.format(pharos_ids) )
-
+    logger.debug(' pharos says: {}'.format(pharos_ids))
     # pubchem_ids = 
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
     logger.debug(' pubchem says: {}'.format(pubchem_ids))
-
     # #all_ids:
     chemical_ids_from_drug_names = ctd_ids + pharos_ids + pubchem_ids
     logger.debug( chemical_ids_from_drug_names )

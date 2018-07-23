@@ -14,7 +14,7 @@ class BioNames(Service):
     def __init__(self, context):
         """ Construct a bionames object and router for channeling searches. """
         super(BioNames, self).__init__("bionames", context)
-        self.router = {
+        self.router_directory = {
             "chemical_substance" : self._find_chemical_substance,
             "disease"            : self._find_disease,
             "phenotypic_feature" : self._find,
@@ -30,23 +30,23 @@ class BioNames(Service):
             "phenotypic feature" : "phenotypic_feature"
         }
         
-    def lookup(self, q, concept=None):
+    def lookup_router(self, q, concept=None):
         """ Lookup a term with an optional concept. """
         result = []
         if concept and not concept=="{concept}":
             """ Route the search by concept. """
             if concept in self.normalize:
                 concept = self.normalize[concept]
-            if concept in self.router:
-                result = self.router[concept](q, concept)
+            if concept in self.router_directory:
+                result = self.router_directory[concept](q, concept)
             else:
                 raise ValueError (f"Unknown concept {concept} is not a biolink-model concept.")
         else:
             """ Try everything? Union the lot. """
-            for concept in self.router.keys():
-                route = self.router[concept]
+            for concept in self.router_directory.keys():
+                route = self.router_directory[concept]
                 result = result + route(q, concept)
-        logger.debug (f"search q: {q} results: {result}")
+        #logger.debug (f"search q: {q} results: {result}")
         return result
     
     def _find_chemical_substance(self, q, concept):
@@ -54,8 +54,6 @@ class BioNames(Service):
     
     def _find_disease(self, q, concept):
         return lookup_disease_by_name(q, concept)
-        
-        #return self._search_onto(q) + self._search_owlsim(q, concept)
 
     def _find(self, q, concept):
         return
