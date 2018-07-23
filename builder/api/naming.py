@@ -74,14 +74,19 @@ def lookup (q, concept):
        description: ...
    """
    assert q, "A string must be entered as a query."
-   key = f"{q}"
-
-   if key in cache:
-      result = cache[key]
+   assert concept, "A string must be entered as a query."
+  
+   # the below separation of keys ensures that a search for q = 'diabetes' returns
+   # a result distinct and different if concept = 'drug' OR concept = 'disease'
+   # any unique, two-term search will yield distinct results and cache them
+   q_key = f"{q}"
+   concept_key = f"{concept}"
+   full_key = q_key + concept_key 
+   if full_key in cache:
+      result = cache[full_key]
    else:  
-      result = core.lookup_router(key, concept=concept)
-      cache[key] = result
-
+      result = core.lookup_router(q_key, concept=concept_key)
+      cache[full_key] = result
    return jsonify(result)
 
 if __name__ == "__main__":

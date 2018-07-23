@@ -84,3 +84,9 @@ class BioNames(Service):
         except:
             traceback.print_exc ()
         return result
+
+# IF WE WANT TO CHANGE THE CTD DRUG LOOKUP TO THE "INTERNAL LOOKUP", continue below
+    # def _search_ctd(self, q, concept=None)
+    #     result = []
+    #     try:
+    #         result = self.context.core.ctd
