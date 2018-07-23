@@ -41,34 +41,6 @@ def lookup_disease_by_name( disease_name, concept ):
     logger.debug( all_disease_ids )
     return [ { "id" : i, "label" : disease_name } for i in all_disease_ids ] if all_disease_ids else []
 
-    # logger=logging.getLogger('application')
-    # #This performs a case-insensitive exact match, and also inverts comma-ed names
-    # mondo_ids =  greent.mondo.search( disease_name )
-    # #Take out phenotypes...
-    # mondo_ids = list( filter( lambda x: not x.startswith('HP'), mondo_ids))
-    # if len(mondo_ids) == 0:
-    #     logger.error('Could not convert disease name: {}.'.format(disease_name))
-    # else:
-    #     logging.getLogger('application').debug('Found mondo identifiers for {}'.format(disease_name))
-    # return [ { "id" : i, "label" : disease_name} for i in mondo_ids ] if mondo_ids else []
- 
-#    for mid in mondo_ids:
-#        logger.debug('  {}  {}'.format(mid, greent.mondo.get_label(mid)))
-#    doids = sum([ greent.mondo.mondo_get_doid( r ) for r in mondo_ids], [] )
-#    if len(doids) > 0:
-#        logger.debug('Returning: {}'.format(' '.join(doids)))
-#        return doids
-#    umls = sum([ greent.mondo.mondo_get_umls( r ) for r in mondo_ids], [] )
-#    if len(umls) > 0:
-#        logger.debug('Returning: {}'.format(' '.join(umls)))
-#        return umls
-#    efos = sum([ greent.mondo.mondo_get_efo( r ) for r in mondo_ids], [] )
-#    if len(efos) > 0:
-#        logger.debug('Returning: {}'.format(' '.join(efos)))
-#        return efos
-#    logger.error('For disease name: "{}" found mondo ID(s): {}, but could not transform to another identifier system.'.format(disease_name, ';'.join(mondo_ids)))
-#    return []
-
 def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):  
     CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/").json()
     matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
