@@ -17,7 +17,7 @@ app = Flask(__name__)
 template = {
   "swagger": "2.0",
   "info": {
-    "title": "Generic Name Resolution API",
+    "title": "BioNames API",
     "description": "Generic facility aggregating bio-ontology lookup services to get ids based on natural language names.",
     "contact": {
       "responsibleOrganization": "renci.org",
@@ -26,7 +26,7 @@ template = {
       "url": "www.renci.org",
     },
     "termsOfService": "http://renci.org/terms",
-    "version": "0.0.1"
+    "version": "0.0.2"
   },
   "schemes": [
     "https",
@@ -51,7 +51,7 @@ def lookup (q, concept):
        type: string
        required: true
        default: aspirin
-       description: "A text string. Can be a fragment."
+       description: "A text string of interest. Can be a fragment."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -63,7 +63,7 @@ def lookup (q, concept):
        type: string
        required: false
        default: drug
-       description: "A biolink-model concept name, e.g. 'drug', 'disease', etc."
+       description: "A biolink-model concept name, e.g. 'drug', 'disease', 'phenotypic feature', 'gene', 'cell', or 'anatomical entity'"
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
