@@ -113,15 +113,10 @@ def query_to_graph_utility (curie = "MONDO:0005737", test="TEST"):
             }
           }
 
-   builder_query_1_data_2 = '{  \\"machine_question\\": {    \\"edges\\": [      {        \\"source_id\\": 0,        \\"target_id\\": 1      },      {        \\"source_id\\": 1,        \\"target_id\\": 2      }    ],    \\"nodes\\": [      {        \\"curie\\": \\"MONDO:0005737\\",        \\"id\\": 0,        \\"name\\": \\"Ebola hemorrhagic fever\\",        \\"type\\": \\"disease\\"      },      {        \\"id\\": 1,        \\"type\\": \\"gene\\"      },      {        \\"id\\": 2,        \\"type\\": \\"genetic_condition\\"      }    ]  }}'
-
-   builder_query_1_data_3 = '{  "machine_question": {    "edges": [      {        "source_id": 0,        "target_id": 1      },      {        "source_id": 1,        "target_id": 2      }    ],    "nodes": [      {        "curie": "MONDO:0005737",        "id": 0,        "name": "Ebola hemorrhagic fever",        "type": "disease"      },      {        "id": 1,        "type": "gene"      },      {        "id": 2,        "type": "genetic_condition"      }    ]  }}'
-
-
    builder_query_1_response = requests.post(builder_query_1_url, headers = builder_query_1_headers, json = builder_query_1_data_1)
   
    print(builder_query_1_response.status_code)
-   print(builder_query_1_response.encoding)
+   
    print(builder_query_1_response.text)
 
    return ('testing.. aug 14 2018')
