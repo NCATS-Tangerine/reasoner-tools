@@ -78,14 +78,14 @@ def query_to_graph_utility (curie = "MONDO:0005737", test="TEST"):
      'accept' : 'application/json',
      'Content-Type' : 'application/json' 
    }
-   builder_query_1_details = {
+   builder_query_1_data = {
      "machine_question": { "edges": [{"source_id": 0, "target_id": 1}, {"source_id": 1, "target_id": 2}], "nodes": [{"curie": "MONDO:0005737", "id": 0, "name": "Ebola hemorrhagic fever", "type": "disease"}, {"id": 1, "type": "gene" }, {"id": 2,  "type": "genetic_condition"}]}
    }
-   builder_query_1_response = requests.post(builder_query_1_url, data=builder_query_1_details)
+   builder_query_1_response = requests.post(builder_query_1_url, headers = builder_query_1_headers, data = builder_query_1_data)
   
    print(builder_query_1_response)
 
-   return jsonify('testing...')
+   return ('testing.. aug 14 2018')
 
 #assert curie, "A string must be entered as a query."
    #assert name, "A string must be entered as a query."
