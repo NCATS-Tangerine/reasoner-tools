@@ -37,15 +37,15 @@ swagger = Swagger(app, template=template)
 #core = RoboQueryToGraph(ServiceContext.create_context ())
 #cache = LRU (1000)
 
-@app.route('/api/querytograph')
-def query_to_graph_utility (curie = "MONDO:0005737", test="TEST"):
-   """ Find ids by various methods.
+@app.route('/api/querytograph/step_1_builder_task_id')
+def query_to_graph_builder_task_id (curie = "MONDO:0005737", test="TEST"):
+   """ initiate a graph query with ROBOKOP Builder and return the task id
    ---
    parameters:
      - name: curie
        in: path
        type: string
-       required: false
+       required: true
        default: MONDO:0005737
        description: "Enter an ontological ID."
        x-valueType:
@@ -70,19 +70,12 @@ def query_to_graph_utility (curie = "MONDO:0005737", test="TEST"):
      200:
        description: ...
    """
-
-   # We need to take the above "STUFF" and make it fit into:
-   # 
    builder_query_1_url = "http://127.0.0.1:6010/api/"
    builder_query_1_headers = {
      'accept' : 'application/json',
      'Content-Type' : 'application/json' 
    }
-  #  builder_query_1_data = {
-  #    "machine_question": { "edges": [{"source_id": 0, "target_id": 1}, {"source_id": 1, "target_id": 2}], "nodes": [{"curie": "MONDO:0005737", "id": 0, "name": "Ebola hemorrhagic fever", "type": "disease"}, {"id": 1, "type": "gene" }, {"id": 2,  "type": "genetic_condition"}]}
-  #  }
-
-   builder_query_1_data_1 = {
+   builder_query_1_data = {
             "machine_question": {
               "edges": [
                 {
@@ -113,13 +106,70 @@ def query_to_graph_utility (curie = "MONDO:0005737", test="TEST"):
             }
           }
 
-   builder_query_1_response = requests.post(builder_query_1_url, headers = builder_query_1_headers, json = builder_query_1_data_1)
-  
-   print(builder_query_1_response.status_code)
-   
-   print(builder_query_1_response.text)
+   builder_query_1_response = requests.post(builder_query_1_url, headers = builder_query_1_headers, json = builder_query_1_data)
+   task_id_string_raw = builder_query_1_response.text
+   task_id_dict = json.loads(task_id_string_raw)
+   task_id_string_clean = task_id_dict['task id']
+   return (task_id_string_clean)
 
-   return ('testing.. aug 14 2018')
+
+@app.route('/api/querytograph/step_2_builder_check_status')
+def query_to_graph_builder_check_status (task_id='ef42004e-13f7-45a8-bf9b-75ffa2c50b40'):
+   """ Use the Task ID from Step 1 to check on the graph process.
+   ---
+   parameters:
+     - name: task_id
+       in: path
+       type: string
+       required: true
+       default: ef42004e-13f7-45a8-bf9b-75ffa2c50b40
+       description: "Enter a task ID from Builder Step 1."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /is_a/{{ input }}/{{ input2 }}
+     
+          
+   responses:
+     200:
+       description: ...
+   """
+   builder_query_2_url = "http://127.0.0.1:6010/api/task/"+task_id
+   builder_query_2_headers = {
+     'accept' : 'application/json'
+   }
+   builder_query_2_response = requests.get(builder_query_2_url)
+   check_builder_status_raw = builder_query_2_response.text
+   check_builder_status_dict = json.loads(check_builder_status_raw)
+   builder_status = check_builder_status_dict['status']
+   print(builder_status)
+   
+   return (builder_status)
+
+@app.route('/api/querytograph/all_steps_combined')
+def query_to_graph_all_steps_combined (search_term = "MONDO:0005737"):
+   """ Not Currently Functional
+   ---
+   parameters:
+     - name: search term of interest
+       in: path
+       type: string
+       required: false
+       default: MONDO:0005737
+       description: "Enter an ontological ID."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /is_a/{{ input }}/{{ input2 }}
+     
+          
+   responses:
+     200:
+       description: ...
+   """  
+   return
 
 #assert curie, "A string must be entered as a query."
    #assert name, "A string must be entered as a query."
