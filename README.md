@@ -19,6 +19,7 @@ $ source reasoner-tools_env/bin/activate
 $ git clone git@github.com:NCATS-Tangerine/reasoner-tools
 $ cd reasoner-tools
 $ pip install greent/roboquery_requirements.txt
+$ source deploy/setenv.sh
 $ PYTHONPATH=$PWD python builder/api/roboquery_launcher.py
 ```
 browse to localhost:5000/apidocs

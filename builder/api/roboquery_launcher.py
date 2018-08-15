@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import requests
+import logging
 
 from flask import Flask, jsonify, g, Response
 from flasgger import Swagger
@@ -12,7 +13,7 @@ from flask import request
 from flask_restful import Resource, reqparse
 
 import builder.api.roboquery_definitions
-
+import builder.api.roboquery_logging_config
 from builder.api.roboquery_setup import app, api
 
 class RoboQuery(Resource):
@@ -53,8 +54,15 @@ class RoboQuery(Resource):
         """
         logger = logging.getLogger('builder')
         logger.info("Queueing 'KG update' task...")
-        task = update_kg.apply_async(args=[request.json])
-        return {'task id': task.id}, 202
+        builder_query_1_url = "http://127.0.0.1:6010/api/"
+        builder_query_1_headers = {
+          'accept' : 'application/json',
+          'Content-Type' : 'application/json'
+          }
+        
+        #task = update_kg.apply_async(args=[request.json])
+        #return {'task id': task.id}, 202
+        return ('testing builder 1')
 
 api.add_resource(RoboQuery, '/')
 
