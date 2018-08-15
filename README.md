@@ -1,9 +1,21 @@
 # reasoner-tools
-# master branch
-july 23 2018
 
-#onto v2
-no major comments
+# Onto v2
 
-#bionames v2
-all fcns working as expected based on bionames v1 performance
+# BioNames v2
+All functions working as expected based on bionames v1 performance
+
+# RoboQuery v1
+
+Framework established for a system which uses ROBOKOP Builder to instantiate a graph 
+and which then uses ROBOKOP Ranker to measure portions of that graph.
+
+``` To test or try-out RoboQuery v1
+$ python -m venv reasoner-tools_env
+$ source reasoner-tools_env/bin/activate
+$ git clone git@github.com:NCATS-Tangerine/reasoner-tools/tree/robo_query_to_graph
+$ cd reasoner-tools
+$ pip install robo_query_to_graph_requirements.txt
+$ PYTHONPATH=$PWD python builder/api/robo_query_to_graph_launcher.py
+```
+see localhost:5000/apidocs
