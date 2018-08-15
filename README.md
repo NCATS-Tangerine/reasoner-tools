@@ -20,7 +20,7 @@ Three steps are viable...
 ``` To test or try-out RoboQuery v1
 $ python -m venv reasoner-tools_env
 $ source reasoner-tools_env/bin/activate
-$ git clone git@github.com:NCATS-Tangerine/reasoner-tools
+$ git clone git@github.com:NCATS-Tangerine/reasoner-tools/tree/robo_query_to_graph
 $ cd reasoner-tools
 $ pip install robo_query_to_graph_requirements.txt
 $ PYTHONPATH=$PWD python builder/api/robo_query_to_graph_launcher.py
