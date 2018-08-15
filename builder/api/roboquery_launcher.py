@@ -29,7 +29,7 @@ template = {
   ]
 }
 app.config['SWAGGER'] = {
-   'title': 'ROBOKOP Query to Graph Service'
+   'title': 'RoboQuery'
 }
 
 swagger = Swagger(app, template=template)
