@@ -39,8 +39,8 @@ swagger = Swagger(app, template=template)
 
 
 #BUTTON 1
-@app.route('/api/query_builder/<curie>')
-def query_to_graph_builder_task_id (curie):
+@app.route('/api/builder_query/<curie>/<curie_name>')
+def builder_query (curie, curie_name):
    """ initiate a graph query with ROBOKOP Builder and return the task id
    ---
    parameters:
@@ -54,13 +54,26 @@ def query_to_graph_builder_task_id (curie):
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /query_builder/{{ input }}/{{ input2 }}
+           template: /builder_query_curie/{{ input }}/{{ input2 }}
+     
+     - name: curie_name
+       in: path
+       type: string
+       required: true
+       default: Ebola hemorrhagic fever
+       description: "Enter an ontological ID."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /builder_query_curie_name/{{ input }}/{{ input2 }}
    responses:
      200:
        description: ...
    """
-   assert curie, "A string must be entered as a query."
 
+   assert curie, "A string must be entered as a query."
+   assert curie_name, "A string..."
 
    builder_query_1_url = "http://127.0.0.1:6010/api/"
    builder_query_1_headers = {
@@ -81,9 +94,11 @@ def query_to_graph_builder_task_id (curie):
               ],
               "nodes": [
                 {
+                  "MONDO":"0005737",
                   "curie": curie,
                   "id": 0,
-                  "name": "Ebola hemorrhagic fever",
+                  #"name": "Ebola hemorrhagic fever", aren't curie and name redundant?
+                  "name": curie_name,
                   "type": "disease"
                 },
                 {
@@ -102,11 +117,11 @@ def query_to_graph_builder_task_id (curie):
    task_id_string_raw = builder_query_1_response.text
    task_id_dict = json.loads(task_id_string_raw)
    task_id_string_clean = task_id_dict['task id']
-   return (task_id_string_clean)
+   return (task_id_string_raw)
 
 #BUTTON 2
-@app.route('/api/query_builder_status/<task_id>')
-def query_to_graph_builder_check_status (task_id):
+@app.route('/api/builder_status_check/<task_id>')
+def builder_status_check (task_id):
    """ Use the Task ID from Step 1 to check on the graph process.
    ---
    parameters:
@@ -114,13 +129,13 @@ def query_to_graph_builder_check_status (task_id):
        in: path
        type: string
        required: true
-       default: ef42004e-13f7-45a8-bf9b-75ffa2c50b40
+       default:
        description: "Enter a task ID from Builder Step 1."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /is_a/{{ input }}/{{ input2 }} 
+           template: /builder_query_task_id/{{ input }}/{{ input2 }} 
    responses:
      200:
        description: ...
@@ -141,7 +156,7 @@ def query_to_graph_builder_check_status (task_id):
 
 #BUTTON 3
 @app.route('/api/querytograph/step_3_ranker')
-def query_to_robo_ranker (task_id='ef42004e-13f7-45a8-bf9b-75ffa2c50b40'):
+def query_to_robo_ranker (XYZ):
    """ Use the Task ID from Step 1 to check on the graph process.
    ---
    parameters:
