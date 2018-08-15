@@ -11,7 +11,7 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(formatter)
 
 # create file handler and set level to debug
-file_handler = logging.handlers.RotatingFileHandler(f"{os.environ['ROBOKOP_HOME']}/logs/builder.log",
+file_handler = logging.handlers.RotatingFileHandler(f"{os.environ['ROBOKOP_HOME']}/logs/roboquery.log",
     mode="a",
     encoding="utf-8",
     maxBytes=1e6,
