@@ -11,7 +11,7 @@ All functions working as expected based on bionames v1 performance
 ## RoboQuery v1
 
 Framework established for a system which uses ROBOKOP Builder to instantiate a graph 
-and which then uses ROBOKOP Ranker to measure portions of that graph.
+and ROBOKOP Ranker to measure properties of that graph.
 
 ``` To test or try-out RoboQuery v1
 $ python -m venv reasoner-tools_env
