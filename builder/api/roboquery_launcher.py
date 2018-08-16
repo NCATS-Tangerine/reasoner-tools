@@ -5,7 +5,9 @@ import json
 import os
 import requests
 import logging
+import time
 
+from datetime import timedelta
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from greent.servicecontext import ServiceContext
@@ -61,86 +63,32 @@ class RoboQuery(Resource):
         builder_query_1_data = request.json
         builder_query_1_response = requests.post(builder_query_1_url, \
           headers = builder_query_1_headers, json = builder_query_1_data)
-        builder_task_id_string = builder_query_1_response.json()
-        print(type(builder_task_id_string))
-        return builder_task_id_string
+        builder_task_id = builder_query_1_response.json()
+        builder_task_id_string = builder_task_id["task id"]
+        assert builder_task_id, "A string."
+        builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id_string
+        builder_task_status_response = requests.get(builder_task_status_url)
+        builder_status = builder_task_status_response.json()
+
+        break_loop = False
+        while not break_loop:
+          time.sleep(1)
+          builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id_string
+          builder_task_status_response = requests.get(builder_task_status_url)
+          builder_status = builder_task_status_response.json()
+          if builder_status['status'] == 'SUCCESS':
+            break_loop = True
+
+          
+        return builder_status
+        
+        
+        
+        
+
+
 api.add_resource(RoboQuery, '/')
 
-# @app.route('/api/builder_query/<curie>/<curie_name>')
-# def builder_query (curie, curie_name):
-#    """ 
-#    Initiate a graph query with ROBOKOP Builder and return a Graph with rankings from ROBOKOP Ranker.
-#    ---
-#    tags: [RoboQuery]
-#    parameters:
-#      - name: curie
-#        in: path
-#        type: string
-#        required: true
-#        default: MONDO:0005737
-#        description: "Enter an ontological ID."
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /builder_query_curie/{{ input }}/{{ input2 }}
-     
-#      - name: curie_name
-#        in: path
-#        type: string
-#        required: true
-#        default: Ebola hemorrhagic fever
-#        description: "Enter a corresponding name."
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /builder_query_curie_name/{{ input }}/{{ input2 }}
-#    responses:
-#      200:
-#        description: ...
-#    """
-#    assert curie, "A string must be entered as a query."
-#    assert curie_name, "A string..."
-#    builder_query_1_url = "http://127.0.0.1:6010/api/"
-#    builder_query_1_headers = {
-#      'accept' : 'application/json',
-#      'Content-Type' : 'application/json' 
-#    }
-#    builder_query_1_data = {
-#             "machine_question": {
-#               "edges": [
-#                 {
-#                   "source_id": 0,
-#                   "target_id": 1
-#                 },
-#                 {
-#                   "source_id": 1,
-#                   "target_id": 2
-#                 }
-#               ],
-#               "nodes": [
-#                 {
-#                   "curie": curie,
-#                   "id": 0,
-#                   "name": curie_name,
-#                   "type": "disease"
-#                 },
-#                 {
-#                   "id": 1,
-#                   "type": "gene"
-#                 },
-#                 {
-#                   "id": 2,
-#                   "type": "genetic_condition"
-#                 }
-#               ]
-#             }
-#           }
-#    builder_query_1_response = requests.post(builder_query_1_url, \
-#     headers = builder_query_1_headers, json = builder_query_1_data)
-#    builder_task_id_string = builder_query_1_response.json()
-#    return json.dumps(builder_task_id_string)
 
 # @app.route('/api/builder_status_check/<task_id>')
 # def builder_status_check (task_id):
