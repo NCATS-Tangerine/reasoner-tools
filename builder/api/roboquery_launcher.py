@@ -6,7 +6,7 @@ import os
 import requests
 import logging
 
-from flask import Flask, jsonify, g, Response
+from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from greent.servicecontext import ServiceContext
 from flask import request
@@ -24,8 +24,7 @@ class RoboQuery(Resource):
         tags: [RoboQuery]
         parameters:
           - in: body
-            name: question
-            description: The machine-readable question graph.
+            name: A machine-readable question graph
             schema:
                 $ref: '#/definitions/Question'
             required: true
@@ -59,13 +58,13 @@ class RoboQuery(Resource):
           'accept' : 'application/json',
           'Content-Type' : 'application/json'
           }
-        
-        #task = update_kg.apply_async(args=[request.json])
-        #return {'task id': task.id}, 202
-        return ('testing builder 1')
-
+        builder_query_1_data = request.json
+        builder_query_1_response = requests.post(builder_query_1_url, \
+          headers = builder_query_1_headers, json = builder_query_1_data)
+        builder_task_id_string = builder_query_1_response.json()
+        print(type(builder_task_id_string))
+        return builder_task_id_string
 api.add_resource(RoboQuery, '/')
-
 
 # @app.route('/api/builder_query/<curie>/<curie_name>')
 # def builder_query (curie, curie_name):
