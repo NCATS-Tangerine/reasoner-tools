@@ -86,7 +86,7 @@ celerybeat-schedule
 
 # Environments
 shared/robokop.env
-# .env  <-- I want to provide a template at shared/robokop_TEMPLATE.env ... it is available at github.com/NCATS-Gamma/robokop anyways...
+#.env  <-- I want to provide a template at shared/robokop_TEMPLATE.env ... it is available at github.com/NCATS-Gamma/robokop anyways...
 .venv
 env/
 venv/

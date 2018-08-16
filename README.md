@@ -23,6 +23,10 @@ $ source reasoner-tools_env/bin/activate
 $ git clone git@github.com:NCATS-Tangerine/reasoner-tools
 $ cd reasoner-tools
 $ pip install greent/roboquery_requirements.txt
+$ mv shared/robokop_TEMPLATE.env shared/robokop.env
+$ <editor call, e.g. vi or nano> shared/robokop.env
+    --> you will need to fill in passwords for "SECRET STUFF" at the bottom,
+        contact a developer if this is unclear or unknown to you.
 $ source deploy/setenv.sh
 $ PYTHONPATH=$PWD python builder/api/roboquery_launcher.py
 ```
