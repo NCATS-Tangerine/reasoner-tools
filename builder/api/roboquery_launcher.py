@@ -6,14 +6,12 @@ import os
 import requests
 import logging
 import time
-
 from datetime import timedelta
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from greent.servicecontext import ServiceContext
 from flask import request
 from flask_restful import Resource, reqparse
-
 import builder.api.roboquery_definitions
 import builder.api.roboquery_logging_config
 from builder.api.roboquery_setup import app, api
@@ -32,15 +30,9 @@ class RoboQuery(Resource):
             required: true
         responses:
             202:
-                description: Update started...
+                description: 
                 schema:
-                    type: object
-                    required:
-                      - task id
-                    properties:
-                        task id:
-                            type: string
-                            description: task ID to poll for KG update status
+                    type: object                
         """
         # replace `parameters`` with this when OAS 3.0 is fully supported by Swagger UI
         # https://github.com/swagger-api/swagger-ui/issues/3641
@@ -56,7 +48,6 @@ class RoboQuery(Resource):
         # First we queue an update to the Knowledge Graph (KG) using ROBOKOP builder
         logger = logging.getLogger('builder KG update task')
         logger.info("Queueing 'KG update' task...")
-
         builder_query_1_url = "http://127.0.0.1:6010/api/"
         builder_query_1_headers = {
           'accept' : 'application/json',
@@ -73,7 +64,7 @@ class RoboQuery(Resource):
         logger.info("Checking status of 'KG update' task...")
         break_loop = False
         while not break_loop:
-          time.sleep(3)
+          time.sleep(2)
           builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id_string
           builder_task_status_response = requests.get(builder_task_status_url)
           builder_status = builder_task_status_response.json()
@@ -94,6 +85,7 @@ class RoboQuery(Resource):
           headers = builder_query_1_headers, json = builder_query_1_data)
         ranker_answer = ranker_now_query_response.json()
         return ranker_answer
+        
 api.add_resource(RoboQuery, '/')
 
 if __name__ == "__main__":
