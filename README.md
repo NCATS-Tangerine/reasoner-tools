@@ -1,14 +1,16 @@
 # reasoner-tools
+# renci.org
+# Translator Green >> Tangerine Teams
 
 
 ### Tools Available:
 
-## Onto v2
+## Onto v 2
 
-## BioNames v2
+## BioNames v 2
 All functions working as expected based on bionames v1 performance
 
-## RoboQuery v1.1
+## RoboQuery v 0.1
 
 Framework established for a system which uses ROBOKOP Builder to instantiate a graph 
 and ROBOKOP Ranker to measure properties of that graph.
