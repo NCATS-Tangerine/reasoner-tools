@@ -1,7 +1,5 @@
 # reasoner-tools
-# renci.org
-# Translator Green >> Tangerine Teams
-
+## renci.org
 
 ### Tools Available:
 
