@@ -16,7 +16,9 @@ import builder.api.roboquery_definitions
 import builder.api.roboquery_logging_config
 from builder.api.roboquery_setup import app, api
 
-class RoboQuery(Resource):
+logger = logging.getLogger("roboquery")
+
+class BuildAndRank(Resource):
     def post(self):
         """ 
         Initiate a graph query with ROBOKOP Builder and return a Graph with rankings from ROBOKOP Ranker.
@@ -24,15 +26,20 @@ class RoboQuery(Resource):
         tags: [RoboQuery]
         parameters:
           - in: body
-            name: A machine-readable question graph
+            name: build & rank
+            description: A machine-readable question graph, entered here, will build
+                onto the Knowledge Graph (KG) and return a portion of that KG with rank values.
             schema:
                 $ref: '#/definitions/Question'
             required: true
         responses:
             202:
-                description: 
+                description: Building onto KG and Ranking results...
                 schema:
-                    type: object                
+                    type: object
+                    properties:
+                        machine question:
+                            description: machine-readable question graph                
         """
         # replace `parameters`` with this when OAS 3.0 is fully supported by Swagger UI
         # https://github.com/swagger-api/swagger-ui/issues/3641
@@ -84,19 +91,39 @@ class RoboQuery(Resource):
         ranker_now_query_response = requests.post(ranker_now_query_url, \
           headers = builder_query_1_headers, json = builder_query_1_data)
         ranker_answer = ranker_now_query_response.json()
-        return ranker_answer
-        
-api.add_resource(RoboQuery, '/')
+        return ranker_answer        
 
-if __name__ == "__main__":
-   parser = argparse.ArgumentParser(description='Robo_query_to_graph Server')
-   parser.add_argument('-p', '--port',  type=int, help='Port to run service on.', default=5000)
-   parser.add_argument('-d', '--debug', help="Debug.", default=False)
-   parser.add_argument('-c', '--conf',  help='GreenT config file to use.', default="greent.conf")
-   args = parser.parse_args ()
-   app.config['SWAGGER']['greent_conf'] = args.greent_conf = args.conf
-   app.config['robo_query_to_graph'] = {
-       'config' : args.conf,
-       'debug'  : args.debug
-   }
-   app.run(host='0.0.0.0', port=args.port, debug=True, threaded=True)
+api.add_resource(BuildAndRank, '/buildrank')
+
+class Refine(Resource):
+    def post(self):
+        """ 
+        Refining our previous KG response and performing a new reasoning operation...
+        ---
+        tags: [RoboQuery]
+        parameters:
+          - in: body
+            name: refine
+            description: The output of the previous Build & Rank operation is utilized, with or without
+                revision, to get back a more-refined Knowledge Graph.
+            schema:
+                $ref: '#/definitions/Question'
+            required: true
+        
+        """
+        return
+
+
+api.add_resource(Refine, '/refine')
+
+
+if __name__ == '__main__':
+
+    # Get host and port from environmental variables
+    server_host = '0.0.0.0' #os.environ['ROBOQUERY_HOST']
+    server_port = int(os.environ['ROBOQUERY_PORT'])
+
+    app.run(host=server_host,\
+        port=server_port,\
+        debug=False,\
+        use_reloader=True)

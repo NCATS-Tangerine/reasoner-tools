@@ -30,4 +30,4 @@ $ <editor call, e.g. vi or nano> shared/robokop.env
 $ source deploy/setenv.sh
 $ PYTHONPATH=$PWD python builder/api/roboquery_launcher.py
 ```
-browse to localhost:5000/apidocs
+browse to localhost:6017/apidocs
