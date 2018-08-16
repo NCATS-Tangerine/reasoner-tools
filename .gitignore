@@ -1,9 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-logs/
 *.py[cod]
 *$py.class
-shared/
 
 # C extensions
 *.so
@@ -36,6 +34,9 @@ MANIFEST
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+#runtime logs
+logs/
 
 # Unit test / coverage reports
 htmlcov/
@@ -84,7 +85,8 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
+shared/robokop.env
+# .env  <-- I want to provide a template at shared/robokop_TEMPLATE.env ... it is available at github.com/NCATS-Gamma/robokop anyways...
 .venv
 env/
 venv/
