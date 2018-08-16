@@ -53,8 +53,10 @@ class RoboQuery(Resource):
                     schema:
                         $ref: '#/definitions/Question'
         """
-        logger = logging.getLogger('builder')
+        # First we queue an update to the Knowledge Graph (KG) using ROBOKOP builder
+        logger = logging.getLogger('builder KG update task')
         logger.info("Queueing 'KG update' task...")
+
         builder_query_1_url = "http://127.0.0.1:6010/api/"
         builder_query_1_headers = {
           'accept' : 'application/json',
@@ -65,130 +67,34 @@ class RoboQuery(Resource):
           headers = builder_query_1_headers, json = builder_query_1_data)
         builder_task_id = builder_query_1_response.json()
         builder_task_id_string = builder_task_id["task id"]
-        assert builder_task_id, "A string."
-        builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id_string
-        builder_task_status_response = requests.get(builder_task_status_url)
-        builder_status = builder_task_status_response.json()
 
+        #now query ROBOKOP Builder for the status of Knowledge Graph work
+        logger = logging.getLogger('builder KG update status query')
+        logger.info("Checking status of 'KG update' task...")
         break_loop = False
         while not break_loop:
-          time.sleep(1)
+          time.sleep(3)
           builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id_string
           builder_task_status_response = requests.get(builder_task_status_url)
           builder_status = builder_task_status_response.json()
           if builder_status['status'] == 'SUCCESS':
             break_loop = True
 
-          
-        return builder_status
-        
-        
-        
-        
+        #KG has been updated by Builder, get answers NOW from ROBOKOP Ranker!
+        logger = logging.getLogger('Ranker Answer query')
+        logger.info("Getting Answers about KG from Ranker...")
 
-
+        ranker_now_query_url = "http://127.0.0.1:6011/api/now"
+        ranker_now_query_headers = {
+          'accept' : 'application/json',
+          'Content-Type' : 'application/json'
+          }
+        ranker_now_query_data = request.json
+        ranker_now_query_response = requests.post(ranker_now_query_url, \
+          headers = builder_query_1_headers, json = builder_query_1_data)
+        ranker_answer = ranker_now_query_response.json()
+        return ranker_answer
 api.add_resource(RoboQuery, '/')
-
-
-# @app.route('/api/builder_status_check/<task_id>')
-# def builder_status_check (task_id):
-#    """ Use the Task ID from Step 1 to check on the graph process.
-#    ---
-#    parameters:
-#      - name: task_id
-#        in: path
-#        type: string
-#        required: true
-#        default:
-#        description: "Enter a task ID from Builder Step 1."
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /builder_query_task_id/{{ input }}/{{ input2 }} 
-#    responses:
-#      200:
-#        description: ...
-#    """
-#    assert builder_task_id, "A string."
-#    builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id
-#    builder_task_status_response = requests.get(builder_task_status_url)
-#    builder_status = builder_query_2_response.json()
-#    return json.dumps(builder_status)
-
-# @app.route('/api/ranker_query/<curie>/<curie_name>')
-# def query_to_robo_ranker (curie, curie_name):
-#    """ Initiate a graph ranking process with ROBOKOP Ranker and return the task id
-#    ---
-#    parameters:
-#      - name: curie
-#        in: path
-#        type: string
-#        required: true
-#        default: MONDO:0005735
-#        description: "Enter an Ontological ID."
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /ranker_query_curie/{{ input }}/{{ input2 }}
-#      - name: curie_name
-#        in: path
-#        type: string
-#        required: true
-#        default: Ebola hemorrhagic fever
-#        description: "Enter a corresponding name."
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /ranker_query_curie_name/{{ input }}/{{ input2 }}  
-#    responses:
-#      200:
-#        description: ...
-#    """
-#    assert curie, "A string must be entered as a query."
-#    assert curie_name, "A string..."
-#    ranker_query_1_url = "http://127.0.0.1:6011/api/"
-#    ranker_query_1_headers = {
-#      'accept' : 'application/json',
-#      'Content-Type' : 'application/json' 
-#    }
-#    ranker_query_1_data = {
-#             "machine_question": {
-#               "edges": [
-#                 {
-#                   "source_id": 0,
-#                   "target_id": 1,
-#                   "type": "disease_to_gene_association"
-#                 },
-#                 {
-#                   "source_id": 1,
-#                   "target_id": 2,
-#                   "type": "has_phenotype"
-#                 }
-#               ],
-#               "nodes": [
-#                 {
-#                   "curie": curie,
-#                   "id": 0,
-#                   "type": "disease"
-#                 },
-#                 {
-#                   "id": 1,
-#                   "type": "gene"
-#                 },
-#                 {
-#                   "id": 2,
-#                   "type": "genetic_condition"
-#                 }
-#               ]
-#             }
-#           }
-#    ranker_query_1_response = requests.post(ranker_query_1_url, \
-#     headers = ranker_query_1_headers, json = ranker_query_1_data)
-#    ranker_task_id_string = ranker_query_1_response.json()
-#    return json.dumps(ranker_task_id_string)
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Robo_query_to_graph Server')
