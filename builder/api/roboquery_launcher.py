@@ -98,7 +98,7 @@ class BuildAndRankOneQuestion(Resource):
         ranker_now_query_response = requests.post(ranker_now_query_url, \
           headers = builder_query_1_headers, json = builder_query_1_data)
         self.ranker_answer = ranker_now_query_response.json()
-        #print(self.ranker_answer)
+        
         return self.ranker_answer        
 
 api.add_resource(BuildAndRankOneQuestion, '/one_question')
