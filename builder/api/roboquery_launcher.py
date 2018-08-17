@@ -101,10 +101,9 @@ class BuildAndRankOneQuestion(Resource):
         #print(self.ranker_answer)
         return self.ranker_answer        
 
-api.add_resource(BuildAndRankOneQuestion, '/OneQuestion')
+api.add_resource(BuildAndRankOneQuestion, '/one_question')
 
-
-class BuildAndRankNQuestions(Resource):
+class BuildAndRankMultipleQuestions(Resource):
     def __init__(self, ranker_answer = {}):
         self.ranker_answer = ranker_answer
         return
@@ -120,7 +119,7 @@ class BuildAndRankNQuestions(Resource):
             description: A machine-readable question graph, entered here, will build
                 onto the Knowledge Graph (KG) and return a portion of that KG with rank values.
             schema:
-                $ref: '#/definitions/Question'
+                $ref: '#/definitions/N_Machine_Questions'
             required: true
         responses:
             200:
@@ -186,7 +185,7 @@ class BuildAndRankNQuestions(Resource):
         #print(self.ranker_answer)
         return self.ranker_answer        
 
-api.add_resource(BuildAndRankNQuestions, '/NQuestions')
+api.add_resource(BuildAndRankMultipleQuestions, '/multiple_questions')
 
 # class Refine(Resource):
 #     def __init__(self):

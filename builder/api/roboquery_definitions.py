@@ -101,6 +101,45 @@ class Question(FromDictMixin):
                 target_id: 2
     """
 
+@swagger.definition('N_Machine_Questions')
+class N_Machine_Questions(FromDictMixin):
+    """
+    Question
+    ---
+    id: N_Machine_Questions
+    required:
+      - nodes
+      - edges
+    properties:
+        machine_question:
+            type: object
+            properties:
+                nodes:
+                    type: array
+                    items:
+                        $ref: '#/definitions/Node'
+                edges:
+                    type: array
+                    items:
+                        $ref: '#/definitions/Edge'
+    example:
+        machine_question:
+            nodes:
+              - id: 0
+                type: disease
+                curie: "MONDO:0005737"
+                name: "Ebola hemorrhagic fever"
+              - id: 1
+                type: gene
+              - id: 2
+                type: genetic_condition
+            edges:
+              - source_id: 0
+                target_id: 1
+              - source_id: 1
+                target_id: 2
+    """
+    
     def __init__(self, *args, **kwargs):
         '''
         keyword arguments: id, user, notes, natural_question, nodes, edges
