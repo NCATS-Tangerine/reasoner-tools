@@ -87,9 +87,9 @@ class Question(FromDictMixin):
         machine_question:
             nodes:
               - id: 0
-                type: disease
-                curie: "MONDO:0005737"
-                name: "Ebola hemorrhagic fever"
+                type: drug
+                curie: "MESH:D000068877"
+                name: "imatinib"
               - id: 1
                 type: gene
               - id: 2
@@ -111,6 +111,10 @@ class N_Machine_Questions(FromDictMixin):
       - nodes
       - edges
     properties:
+        machine_question_total:
+            type: integer
+            minimum: 1
+        
         machine_question:
             type: object
             properties:
@@ -123,10 +127,14 @@ class N_Machine_Questions(FromDictMixin):
                     items:
                         $ref: '#/definitions/Edge'
     example:
+        
+        machine_question_total:
+            1
+
         machine_question:
             nodes:
               - id: 0
-                type: disease
+                type: drug
                 curie: "MONDO:0005737"
                 name: "Ebola hemorrhagic fever"
               - id: 1
@@ -138,8 +146,11 @@ class N_Machine_Questions(FromDictMixin):
                 target_id: 1
               - source_id: 1
                 target_id: 2
+
+
+
     """
-    
+
     def __init__(self, *args, **kwargs):
         '''
         keyword arguments: id, user, notes, natural_question, nodes, edges
