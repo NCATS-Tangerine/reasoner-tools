@@ -155,12 +155,16 @@ class ExpandedStartNodes(Resource):
         
         bionames_response = requests.get(bionames_query_url, headers = bionames_query_headers)
         
-        new_start_nodes_list = bionames_response.text
+        bionames_response_json = bionames_response.json()
+
+        new_start_nodes_list = [x['id'] for x in bionames_response_json]
+
+        # now we need to create an expanded MQ based on TWO inputs: The MQ input by the
+        # user and the list of additional IDs retrieved from BioNames using the "name" and 
+        # "type" components of the MQ input by the user.        
+
 
         print(new_start_nodes_list)
-
-        #now we need to query bionames.
-
 
 
 

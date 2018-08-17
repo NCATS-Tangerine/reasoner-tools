@@ -3,26 +3,37 @@
     "edges": [
       {
         "source_id": 0,
-        "target_id": 1
+        "target_id": 2
       },
       {
         "source_id": 1,
         "target_id": 2
+      },
+      {
+        "source_id": 2,
+        "target_id": 3
       }
+
     ],
     "nodes": [
       {
-        "curie": "MESH:D001241",
+        "curie": "MESH:D000068877",
         "id": 0,
-        "name": "Aspirin",
+        "name": "imatinib",
         "type": "chemical_substance"
       },
       {
+        "curie": "PUBCHEM:5291",
         "id": 1,
-        "type": "gene"
+        "name": "imatinib",
+        "type": "chemical_substance"
       },
       {
         "id": 2,
+        "type": "gene"
+      },
+      {
+        "id": 3,
         "type": "phenotypic_feature"
       }
     ]
