@@ -19,7 +19,11 @@ from builder.api.roboquery_setup import app, api
 logger = logging.getLogger("roboquery")
 
 class BuildAndRank(Resource):
-    def post(self):
+    def __init__(self, ranker_answer = {}):
+        self.ranker_answer = ranker_answer
+        return
+        
+    def post(self, ranker_answer={}):
         """ 
         Initiate a graph query with ROBOKOP Builder and return a Graph with rankings from ROBOKOP Ranker.
         ---
@@ -90,12 +94,23 @@ class BuildAndRank(Resource):
         ranker_now_query_data = request.json
         ranker_now_query_response = requests.post(ranker_now_query_url, \
           headers = builder_query_1_headers, json = builder_query_1_data)
-        ranker_answer = ranker_now_query_response.json()
-        return ranker_answer        
+        self.ranker_answer = ranker_now_query_response.json()
+        #print(self.ranker_answer)
+        return self.ranker_answer        
 
 api.add_resource(BuildAndRank, '/buildrank')
 
+
+
 class Refine(Resource):
+    def __init__(self):
+        self.test = BuildAndRank()
+        print(self.test.post())
+        
+        
+
+
+
     def post(self):
         """ 
         Refining our previous KG response and performing a new reasoning operation...
@@ -111,6 +126,8 @@ class Refine(Resource):
             required: true
         
         """
+        # test = BuildAndRank()
+        # print(test.ranker_answer)
         return
 
 
