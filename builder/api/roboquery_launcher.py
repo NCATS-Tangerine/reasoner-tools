@@ -147,9 +147,18 @@ class ExpandedStartNodes(Resource):
        
 
         start_name = request.json['machine_question']['nodes'][0]['name']
-        start_type = request.json['machine_question']['nodes'][0]
-        print(start_type)
+        start_type = request.json['machine_question']['nodes'][0]['type']
+
+                
+        bionames_query_url = "https://bionames.renci.org/lookup/"+start_name+'/'+start_type+'/'
+        bionames_query_headers = { 'accept': 'application/json'}
         
+        bionames_response = requests.get(bionames_query_url, headers = bionames_query_headers)
+        
+        new_start_nodes_list = bionames_response.text
+
+        print(new_start_nodes_list)
+
         #now we need to query bionames.
 
 

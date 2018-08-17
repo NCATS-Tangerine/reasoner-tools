@@ -1,0 +1,30 @@
+{
+  "machine_question": {
+    "edges": [
+      {
+        "source_id": 0,
+        "target_id": 1
+      },
+      {
+        "source_id": 1,
+        "target_id": 2
+      }
+    ],
+    "nodes": [
+      {
+        "curie": "MESH:D001241",
+        "id": 0,
+        "name": "Aspirin",
+        "type": "chemical_substance"
+      },
+      {
+        "id": 1,
+        "type": "gene"
+      },
+      {
+        "id": 2,
+        "type": "phenotypic_feature"
+      }
+    ]
+  }
+}
