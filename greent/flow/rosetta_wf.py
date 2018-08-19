@@ -5,13 +5,17 @@ import sys
 from greent.util import Resource
 from jsonpath_rw import jsonpath, parse
 
-
 # scaffold
 def read_json (f):
+    obj = Resource.get_resource_obj(f, format="json")
+    print (f"{obj}")
+    return obj
+'''
     r = None
     with open(f,'r') as stream:
         r = json.loads (stream.read ())
     return r
+'''
 
 class Router:
     ''' Route operator invocations through a common interface. '''
@@ -49,7 +53,7 @@ class Router:
         input = context.resolve_arg (input)
         print (f"----> bionames input: {input}")
         # replace w/invocation of bionames.
-        return read_json ("bionames.json")
+        return read_json ("flow/bionames.json")
         
     def gamma_query (self, context, node, question, inputs):
         ''' An interface to the Gamma reasoner. '''
@@ -143,7 +147,7 @@ class Router:
         ''' Send the query to Gamma and return result. '''
         # Scaffold:
         self.prototyping_count = self.prototyping_count + 1
-        return read_json (f"gamma_answer_{self.prototyping_count}.json")
+        return read_json (f"flow/gamma_answer_{self.prototyping_count}.json")
 
 class Env:
     ''' Process utilities. '''

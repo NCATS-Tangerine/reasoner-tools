@@ -1,3 +1,5 @@
+export ROSETTA_WF_PORT=5005
+
 export RESULTS_PORT=6379
 export CELERY_APP_PACKAGE="greent.flow.dag"
 export RABBITMQ_DEFAULT_VHOST=rosetta
