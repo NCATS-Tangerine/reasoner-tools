@@ -1,9 +1,12 @@
 import argparse
 import json
-import yaml
+import requests
 import sys
+import yaml
+import time
 from greent.util import Resource
 from jsonpath_rw import jsonpath, parse
+
 
 # scaffold
 def read_json (f):
@@ -52,8 +55,10 @@ class Router:
         print (f"type: {type} input: {input}")
         input = context.resolve_arg (input)
         print (f"----> bionames input: {input}")
-        # replace w/invocation of bionames.
-        return read_json ("flow/bionames.json")
+                
+        bionames_request = requests.get(url = 'https://bionames.renci.org/lookup/'+input+'/'+type+'/', headers = {'accept': 'application/json'})
+        bionames_request_json = bionames_request.json()
+        return bionames_request_json
         
     def gamma_query (self, context, node, question, inputs):
         ''' An interface to the Gamma reasoner. '''
@@ -71,6 +76,7 @@ class Router:
         if not "result" in operators[source]:
             Env.error (f"Source {source} has not computed a result.")
         data_source = operators[source]["result"]
+        print("")
         print (f"data source> {data_source}")
 
         ''' Execute the query. '''
