@@ -60,16 +60,16 @@ class BuildAndRankOneQuestion(Resource):
         logger = logging.getLogger('builder KG update task')
         logger.info("Queueing 'KG update' task...")
         
-        builder_query_1_url = "http://127.0.0.1:6010/api/"
+        builder_query_url = "http://127.0.0.1:6010/api/"
         builder_query_1_headers = {
           'accept' : 'application/json',
           'Content-Type' : 'application/json'
           }
-        print(request.json)
-        builder_query_1_data = request.json
-        builder_query_1_response = requests.post(builder_query_1_url, \
-          headers = builder_query_1_headers, json = builder_query_1_data)
-        builder_task_id = builder_query_1_response.json()
+        
+        builder_query_data = request.json
+        builder_query_response = requests.post(builder_query_1_url, \
+          headers = builder_query_headers, json = builder_query_1_data)
+        builder_task_id = builder_query_response.json()
         builder_task_id_string = builder_task_id["task id"]
 
         #now query ROBOKOP Builder for the status of Knowledge Graph work
