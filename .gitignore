@@ -108,4 +108,4 @@ venv.bak/
 .mypy_cache/
 
 # text files for internal testing purposes
-.txt
+*.txt
