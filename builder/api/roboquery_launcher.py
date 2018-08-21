@@ -7,7 +7,7 @@ import requests
 import logging
 import time
 import jsonpath_rw
-from datetime import timedelta
+
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from greent.servicecontext import ServiceContext
@@ -163,10 +163,7 @@ class ExpandedStartNodes(Resource):
         # user and the list of additional IDs retrieved from BioNames using the "name" and 
         # "type" components of the MQ input by the user.        
 
-
         print(new_start_nodes_list)
-
-
 
         # builder_query_1_url = "http://127.0.0.1:6010/api/"
         # builder_query_1_headers = {
@@ -184,34 +181,7 @@ class ExpandedStartNodes(Resource):
         logger = logging.getLogger('builder KG update status query')
         logger.info("Checking status of 'KG update' task...")
         
-        # break_loop = False
-        # while not break_loop:
-        #   time.sleep(1)
-        #   builder_task_status_url = "http://127.0.0.1:6010/api/task/"+builder_task_id_string
-        #   builder_task_status_response = requests.get(builder_task_status_url)
-        #   builder_status = builder_task_status_response.json()
-        #   if builder_status['status'] == 'SUCCESS':
-        #     break_loop = True
-         
-        # #KG has been updated by Builder, get answers NOW from ROBOKOP Ranker!
-        # logger = logging.getLogger('Ranker Answer query')
-        # logger.info("Getting Answers about KG from Ranker...")
-
-        # ranker_now_query_url = "http://127.0.0.1:6011/api/now"
-        # ranker_now_query_headers = {
-        #   'accept' : 'application/json',
-        #   'Content-Type' : 'application/json'
-        #   }
-        # ranker_now_query_data = request.json
-        # ranker_now_query_response = requests.post(ranker_now_query_url, \
-        #   headers = builder_query_1_headers, json = builder_query_1_data)
-        # self.ranker_answer = ranker_now_query_response.json()
-        # #print(self.ranker_answer)
-        # return self.ranker_answer        
-        return
-
 api.add_resource(ExpandedStartNodes, '/expandedStartNodes')
-
 
 class BuildAndRankMultipleQuestions(Resource):
     def __init__(self, ranker_answer = {}):
@@ -307,66 +277,3 @@ if __name__ == '__main__':
         port=server_port,\
         debug=False,\
         use_reloader=True)
-
-# class GenerateMachineQuestion(Resource):
-#     def __init__(self):
-        
-#         return
-        
-#     def post(self):
-#         """ 
-#         Input search terms to automatically generate a machine-readable question graph.
-#         ---
-#         tags: [RoboQuery]
-#         parameters:
-#             - name: test
-#               in: body
-#               type: string
-#               required: true
-#               default: imatinib
-#               description: A biologically or medically impactful name or idea.
-             
-#         responses:
-#             200:
-#                 description: ...
-        
-#         requestBody:
-#             description: test
-#             required: true
-#             content:
-#                 application/json:
-#         """        
-
-#         print(request.get_data())
-#         print(request.get_json())
-#         print(request.stream.read())
-#         return
-
-# api.add_resource(GenerateMachineQuestion, '/generate_machine_question/')
-
-# class Refine(Resource):
-#     def __init__(self):
-#         self.test = BuildAndRank()
-    
-#     def post(self):
-#         """ 
-#         Refining our previous KG response and performing a new reasoning operation...
-#         ---
-#         tags: [RoboQuery]
-#         parameters:
-#           - in: body
-#             name: refine
-#             description: The output of the previous Build & Rank operation is utilized, with or without
-#                 revision, to get back a more-refined Knowledge Graph.
-#             schema:
-#                 $ref: '#/definitions/Question'
-#             required: true
-#         responses:
-#             200:
-#                 description: successful operation
-#             400:
-#                 description: Invalid input value(s)
-#         """
-#         return
-
-# api.add_resource(Refine, '/refine')
