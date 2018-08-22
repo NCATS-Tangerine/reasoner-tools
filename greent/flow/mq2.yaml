@@ -18,6 +18,15 @@ workflow:
       type: chemical_substance
       input: $drug_name
 
+  diseases:
+    doc: |
+      Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
+      For all operators, we store the result in a result node that can be referenced by subsequent steps.
+    code: naming.to_id
+    args:
+      type: disease
+      input: $disease_name
+
   to_phenotypic_feature:
     doc: |
       Selects elements from the previous result, forms a machine question, and queries Gamma.
@@ -54,7 +63,7 @@ workflow:
         return: id
       question:
         transitions:
-          - biological_process_or_activity
+          - phenotypic_feature
           - cell
           - anatomical_entity
           - phenotypic_feature
