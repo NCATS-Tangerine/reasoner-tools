@@ -18,7 +18,7 @@ workflow:
       type: chemical_substance
       input: $drug_name
 
-  to_process:
+  to_phenotypic_feature:
     doc: |
       Selects elements from the previous result, forms a machine question, and queries Gamma.
       The inputs arg supports a select language using
@@ -26,7 +26,7 @@ workflow:
          from   - The name of a completed worflow step
          where  - An equality expression constraining values of a selected column
          return - Required with where. Specifies which column to return
-      Construct a machine question base don the given transtions in the question.
+      Construct a machine question based on the given transtions in the question.
       For now, assume all edges flow in one direction from start type to end type.
       Create input nodes based on the type of the first element in transitions.
       For the nodes portion of the graph, create nodes with sequential ids for each element of transitions
@@ -39,7 +39,8 @@ workflow:
         transitions:
           - drug
           - gene
-          - biological_process
+          - anatomical_entity
+          - phenotypic_feature
 
   to_disease:
     doc: |
@@ -49,11 +50,11 @@ workflow:
       inputs:
         select: answers[*].nodes[*].type,id
         from:   to_process
-        where:  type=biological_process
+        where:  type=phenotypic_feature
         return: id
       question:
         transitions:
-          - biological_process
+          - biological_process_or_activity
           - cell
           - anatomical_entity
           - phenotypic_feature
