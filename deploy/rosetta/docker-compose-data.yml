@@ -17,6 +17,6 @@ services:
       - BROKER_USER
       - RABBITMQ_DEFAULT_VHOST
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      #- "5672:5672"
+      - "${BROKER_PORT}:${BROKER_PORT}"
     hostname: amqp
