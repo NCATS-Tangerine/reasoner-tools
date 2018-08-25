@@ -13,6 +13,10 @@ if __name__ == '__main__':
         host = "localhost"
         port = os.environ["ROSETTA_WF_PORT"]
 
+        workflow_spec['args'] = {
+            "drug_name" : "imatinib",
+            "disease_name" : "asthma"
+        }
         response = requests.post (
             f"http://localhost:{port}/api/executeWorkflow",
             json=workflow_spec)

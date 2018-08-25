@@ -14,12 +14,13 @@ services:
     environment:
       - ADMIN_PASSWORD
       - BROKER_PASSWORD
-      - BROKER_USER
       - RABBITMQ_DEFAULT_VHOST
+      - RABBITMQ_DEFAULT_USER
+      - RABBITMQ_DEFAULT_PASS
     hostname: rabbit_node_1
     ports:      
-      - "5672:${BROKER_PORT}"
-      - "15672:15672"
+      - "${BROKER_PORT}:5672"
+      - "${BROKER_ADMIN_PORT}:15672"
     hostname: amqp
 
   # The Rosetta service.

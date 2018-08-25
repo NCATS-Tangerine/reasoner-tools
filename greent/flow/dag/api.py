@@ -48,10 +48,7 @@ class ExecuteWorkflow(Resource):
         print (f"Received request {json.dumps(workflow_spec,indent=2)}.")
 
         response = execute_workflow (
-            inputs={
-                "drug_name" : "imatinib",
-                "disease_name" : "asthma"
-            },
+            inputs=workflow_spec['args'],
             workflow_spec=workflow_spec)
 
         return response, 200

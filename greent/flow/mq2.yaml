@@ -9,25 +9,24 @@
 
 workflow:
 
-  concept:
+  drugs:
     doc: |
       Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
       For all operators, we store the result in a result node that can be referenced by subsequent steps.
     code: naming.to_id
     args:
-      type: chemical_substance, disease
-      input: $concept_name
+      type: chemical_substance
+      input: $drug_name
 
-  # diseases:
-  #   doc: |
-  #     Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
-  #     For all operators, we store the result in a result node that can be referenced by subsequent steps.
-  #   code: naming.to_id
-  #   args:
-  #     type: disease
-  #     input: $disease_name
+  diseases:
+    doc: |
+      Analogous English to ontological identifier transformation for disease.
+    code: naming.to_id
+    args:
+      type: disease
+      input: $disease_name
 
-  to_phenotypic_feature:
+  drug_to_phenotypic_feature:
     doc: |
       Selects elements from the previous result, forms a machine question, and queries Gamma.
       The inputs arg supports a select language using
@@ -51,21 +50,17 @@ workflow:
           - anatomical_entity
           - phenotypic_feature
 
-  to_disease:
+  disease_to_phenotypic_feature:
     doc: |
       A chained Gamma query with a more complex select statement.
     code: gamma
     args:
       inputs:
-        select: answers[*].nodes[*].type,id
-        from:   to_process
-        where:  type=phenotypic_feature
-        return: id
+        select: $.[*].id
+        from:   diseases
       question:
         transitions:
-          - phenotypic_feature
-          - cell
-          - anatomical_entity
+          - disease
           - phenotypic_feature
 
   return:
@@ -73,7 +68,10 @@ workflow:
       Union answers from preceeding steps.
     code: union
     args:
-      elements: [ to_process, to_disease ]
+      elements:
+        - drug_to_phenotypic_feature
+        - disease_to_phenotypic_feature
+
 
 
               

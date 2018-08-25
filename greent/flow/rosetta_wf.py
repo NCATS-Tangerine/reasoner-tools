@@ -4,9 +4,9 @@ import requests
 import sys
 import yaml
 import time
+import greent.flow.dag.conf as Conf
 from greent.util import Resource
 from jsonpath_rw import jsonpath, parse
-
 
 # scaffold
 def read_json (f):
@@ -173,7 +173,7 @@ class Router:
           }
         
         robokop_query_data = machine_question
-        builder_query_response = requests.post(robokop_builder_build_url, \
+        builder_query_response = requests.post(Conf.robokop_builder_build_url, \
           headers = builder_query_headers, json = robokop_query_data)
         builder_task_id = builder_query_response.json()
         builder_task_id_string = builder_task_id["task id"]
@@ -183,7 +183,7 @@ class Router:
         print("Waiting for ROBOKOP Builder to update the Knowledge Graph")
         while not break_loop:
           time.sleep(1)
-          builder_task_status_response = requests.get(robokop_builder_task_status_url+builder_task_id_string)
+          builder_task_status_response = requests.get(Conf.robokop_builder_task_status_url+builder_task_id_string)
           builder_status = builder_task_status_response.json()
           if builder_status['status'] == 'SUCCESS':
             break_loop = True
@@ -197,7 +197,7 @@ class Router:
           'Content-Type' : 'application/json'
           }
         robokop_query_data = machine_question
-        ranker_now_query_response = requests.post(robokop_ranker_answers_now_url, \
+        ranker_now_query_response = requests.post(Conf.robokop_ranker_answers_now_url, \
           headers = builder_query_headers, json = robokop_query_data)
         self.ranker_answer = ranker_now_query_response.json()
         return self.ranker_answer  
@@ -269,7 +269,7 @@ class Workflow:
         if name.startswith ("$"):
             var = name.replace ("$","")
             if not var in self.inputs:
-                Env.exit ("Referenced undefined variable: {var}")
+                Env.exit (f"Referenced undefined variable: {var}")
             value = self.inputs[var]
             if "," in value:
                 value = value.split (",")
