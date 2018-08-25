@@ -5,6 +5,8 @@ import greent.flow.dag.conf as Conf
 from greent.flow.dag.celery_app import app
 from greent.flow.rosetta_wf import Workflow
 
+from celery.utils.graph import DependencyGraph
+
 @app.task(bind=True, queue="rosetta")
 def longtime_add(self, x, y):
     print ('long time task begins')

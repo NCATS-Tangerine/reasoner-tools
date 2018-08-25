@@ -16,13 +16,14 @@ services:
       - BROKER_PASSWORD
       - BROKER_USER
       - RABBITMQ_DEFAULT_VHOST
-    ports:
-      #- "5672:5672"
-      - "${BROKER_PORT}:${BROKER_PORT}"
+    hostname: rabbit_node_1
+    ports:      
+      - "5672:${BROKER_PORT}"
+      - "15672:15672"
     hostname: amqp
 
   # The Rosetta service.
-  rosetta:
+  rosetta_task_queue:
     # image: greent/robokop-rank
     build:
       context: .
@@ -44,7 +45,18 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-        
+
+  # An OpenAPI Interface to the service.
+  rosetta_api:
+    build:
+      context: api
+    env_file:
+      - ./rosetta.env
+    environment:
+      - APP_HOME
+    links:
+      - amqp
+      
 #networks:
 #  default:
 #    external:
