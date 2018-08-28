@@ -80,3 +80,11 @@ def test_id_list(ontology):
 
     result2 = ontology.id_list('A BAD ONTOLOGY')
     assert result2 is None
+
+def test_exactMatch(ontology):
+    result = ontology.exactMatch('MONDO:0004634')
+    assert result[-1] == "umls:C0235522"
+
+def test_closeMatch(ontology):
+    result = ontology.closeMatch('MONDO:0004634')
+    assert result[-1] == "umls:C0155774"
