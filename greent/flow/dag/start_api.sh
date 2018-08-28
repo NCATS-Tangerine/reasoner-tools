@@ -2,12 +2,13 @@
 
 set -x
 
-cd $APP_ROOT
-export PYTHONPATH=$APP_ROOT
+script_bin=$(dirname ${BASH_SOURCE[0]})
 
-source $APP_ROOT/greent/flow/dag/setenv.sh
-source $APP_ROOT/greent/flow/dag/conf.sh
+export PYTHONPATH=$script_bin/../../../
 
-python greent/flow/dag/api.py
+source $script_bin/setenv.sh
+source $script_bin/conf.sh
+
+python $script_bin/api.py
 
 exit 0
