@@ -27,14 +27,14 @@ template = {
     "termsOfService": "http://renci.org/terms",
     "version": "0.0.1"
   },
-#  "basePath": "/onto/api",
+
   "schemes": [
     "https",
     "http"
   ]
 }
 app.config['SWAGGER'] = {
-   'title': 'Ontology Service'
+   'title': 'Onto API'
 }
 
 swagger = Swagger(app, template=template)
@@ -118,7 +118,7 @@ def is_a (curie, ancestors):
        in: path
        type: array
        required: true
-       default: GO:1901362
+       default: "MONDO:0004631"
        items:
          type: string
        description: "A comma separated list of identifiers. eg, GO:1901362"
@@ -149,7 +149,7 @@ def label (curie):
        in: path
        type: string
        required: true
-       default: GO:2001317
+       default: "MONDO:0004631"
        description: "An identifier from an ontology. eg, GO:2001317"
        x-valueType:
          - http://schema.org/string
@@ -234,7 +234,7 @@ def xrefs (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0001106"
+       default: "MONDO:0004631"
        description: "Curie designating an ontology. eg, GO:2001317"
        x-valueType:
          - http://schema.org/string
@@ -285,7 +285,7 @@ def synonyms (curie):
        in: path
        type: string
        required: true
-       default: "GO:0000009"
+       default: "MONDO:0004631"
        description: "Curie designating an ontology. eg, GO:0000009"
        x-valueType:
          - http://schema.org/string
@@ -309,6 +309,53 @@ def synonyms (curie):
                    "xref"     : syn.xref
                })
    return jsonify (result)
+
+
+@app.route('/exactMatch/<curie>')
+def exactMatch (curie):
+   """ Use a CURIE to return a list of exactly matching IDs.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004631"
+       description: "Curie designating an external reference."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /exactMatch/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify ({'exact matches' : ont.exactMatch(curie)})
+
+@app.route('/closeMatch/<curie>')
+def closeMatch (curie):
+   """ Use a CURIE to return a list of exactly matching IDs.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004631"
+       description: "Curie designating an external reference."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /closeMatch/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify ({'close matches' : ont.closeMatch(curie)})
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')

@@ -148,7 +148,6 @@ class GenericOntology(Service):
 
         return exactMatches
 
-
     def closeMatch(self, identifier):
         
         result = []
@@ -159,6 +158,4 @@ class GenericOntology(Service):
 
         closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
         
-        #result = [ x.split(' ') if ' ' in x else [x, ''] for x in result ]
-        #result = [ { 'id' : x[0], 'desc' : ' '.join(x[1:]) } for x in result if len(x) > 1 and ':' in x[0] ]
         return closeMatches
