@@ -1,3 +1,4 @@
+import argparse
 import os
 import json
 import requests
@@ -62,10 +63,12 @@ class CeleryDAGExecutor:
         self.spec = spec
         self.inputs = inputs
     def execute (self, async=False):
+        ''' Dispatch a task to create the DAG for this workflow. '''
         model_dict = calc_dag(self.spec, inputs=self.inputs)
         #print (json.dumps (model_dict, indent=2))
         model = json2model (model_dict)
         total_jobs = len(model.topsort)
+        ''' Iterate over topologically sorted job names. '''
         while len(model.topsort) > 0:
             for j in model.topsort:
                 print (f"test: {j}")
@@ -73,13 +76,14 @@ class CeleryDAGExecutor:
                     break
                 dependencies = model.dependencies[j]
                 if len(dependencies) == 0:
+                    ''' Jobs with no dependencies can be run w/o further delay. '''
                     run_job (j, model, asynchronous=async)
                 else:
-                    ready = all ([ d in model.done for d in dependencies ])
-                    if ready:
-                        print (f" t5 ")
+                    ''' Iff all of this jobs dependencies are complete, run it. '''
+                    if all ([ d in model.done for d in dependencies ]):
                         run_job (j, model, asynchronous=async)
             completed = []
+            ''' Manage our list of asynchronous jobs. '''
             for job_name, promise in model.running.items ():
                 print (f"job {job_name} is ready:{promise.ready()} failed:{promise.failed()}")
                 if promise.ready ():
@@ -93,13 +97,20 @@ class CeleryDAGExecutor:
             for c in completed:
                 print (f"removing {job_name} from running.")
                 del model.running[c]
-        #return model
+        return model.done['return']
                 
 if __name__ == '__main__':
-    executor = CeleryDAGExecutor (
-        spec=get_workflow (),
-        inputs={
-            "drug_name" : "imatinib",
-            "disease_name" : "asthma"
-        })
-    executor.execute ()
+    arg_parser = argparse.ArgumentParser(description='Rosetta Workflow CLI')
+    arg_parser.add_argument('-a', '--api', action="store_true")
+    args = arg_parser.parse_args ()
+
+    if args.api:
+        call_api ()
+    else:
+        executor = CeleryDAGExecutor (
+            spec=get_workflow (),
+            inputs={
+                "drug_name" : "imatinib",
+                "disease_name" : "asthma"
+            })
+        executor.execute ()

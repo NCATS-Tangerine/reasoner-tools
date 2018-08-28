@@ -49,21 +49,18 @@ class ExecuteWorkflow(Resource):
 
 
         executor = CeleryDAGExecutor (
-            spec=get_workflow (),
+            spec=workflow_spec,
             inputs={
                 "drug_name" : "imatinib",
                 "disease_name" : "asthma"
         })
         response = executor.execute () 
-        
         return response, 200
 
 api.add_resource(ExecuteWorkflow, '/executeWorkflow')
 
 if __name__ == '__main__':
-
     # Get host and port from environmental variables
-    
     server_host = '0.0.0.0'
     server_port = int(os.environ['ROSETTA_WF_PORT'])
     print (f"Serving Rosettta WF on port: {server_port}")
