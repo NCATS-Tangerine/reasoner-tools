@@ -135,27 +135,35 @@ class GenericOntology(Service):
             id_list = None
         return id_list
 
-    
     def exactMatch(self, identifier):
         
         result = []
-        #print(identifier)
         if identifier in self.ont:
             term = self.ont[identifier]
             result = term.other['property_value']  if 'property_value' in term.other else []
-
-        exactMatches = [x.replace('exactMatch ', '') for x in result if 'exactMatch' in x]
-
-        return exactMatches
+        
+        raw_exactMatches = [x.replace('exactMatch ', '') for x in result if 'exactMatch' in x]
+        url_stripped_exactMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_exactMatches]
+        formatted_exactMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_exactMatches]     
+        # the umls URIs have a peculiar format, we handle that as follows:
+        umls_exactMatches = [re.sub(r"(?:(resource:)|(id:))","", str(x)) for x in formatted_exactMatches if "resource" in x]
+        normal_exactMatches = [x for x in formatted_exactMatches if "resource" not in x]
+        all_exactMatches = normal_exactMatches + umls_exactMatches
+        return all_exactMatches
 
     def closeMatch(self, identifier):
         
         result = []
-        
         if identifier in self.ont:
             term = self.ont[identifier]
             result = term.other['property_value']  if 'property_value' in term.other else []
-
         closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
-        
-        return closeMatches
+
+        raw_closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
+        url_stripped_closeMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_closeMatches]
+        formatted_closeMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_closeMatches]     
+        # the umls URIs have a peculiar format, we handle that as follows:
+        umls_closeMatches = [re.sub(r"(?:(resource:)|(id:))","", str(x)) for x in formatted_closeMatches if "resource" in x]
+        normal_closeMatches = [x for x in formatted_closeMatches if "resource" not in x]
+        all_closeMatches = normal_closeMatches + umls_closeMatches
+        return all_closeMatches
