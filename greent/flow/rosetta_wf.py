@@ -1,24 +1,22 @@
 import argparse
 import json
 import requests
+import os
 import sys
 import yaml
 import time
 import greent.flow.dag.conf as Conf
 from greent.util import Resource
 from jsonpath_rw import jsonpath, parse
+import networkx as nx
+import uuid
+from networkx.algorithms import lexicographical_topological_sort
 
 # scaffold
 def read_json (f):
     obj = Resource.get_resource_obj(f, format="json")
     print (f"{obj}")
     return obj
-'''
-    r = None
-    with open(f,'r') as stream:
-        r = json.loads (stream.read ())
-    return r
-'''
 
 class Router:
     ''' Route operator invocations through a common interface. '''
@@ -32,7 +30,7 @@ class Router:
         self.workflow = workflow
         self.prototyping_count = 0
         
-    def route (self, context, op_node, op, args):
+    def route (self, context, job_name, op_node, op, args):
         ''' Invoke an operator known to this router. '''
         result = None
         if op in self.r:
@@ -70,9 +68,12 @@ class Router:
         source = inputs['from']
 
         ''' Get the data source. '''
-        operators = self.workflow.get ("workflow", {})
+        operators = self.workflow.spec.get ("workflow", {})
         if not source in operators:
             Env.error (f"Source {source} not found in workflow.")
+        if not "result" in operators[source]:
+            if source in context.done:
+                operators[source]["result"] = context.done[source]
         if not "result" in operators[source]:
             Env.error (f"Source {source} has not computed a result.")
         data_source = operators[source]["result"]
@@ -112,15 +113,19 @@ class Router:
                     if actual_col_value == filter_value:
                         collector.append (values[ i + return_col_index ])
             else:
-                Env.error ("Must specify valid where clause and return together.")
-                
+                Env.error ("Must specify valid where clause and return together.")        
             values = collector
 
-        print("")    
-        print (f"---gamma select--------> {values}")
         if len(values) == 0:
             raise ValueError ("no values selected")
 
+        # Read a cached local version.
+        if os.path.exists ("ranker.json"):
+            answer = None
+            with open("ranker.json", "w") as stream:
+                answer = json.loads (stream.read ())
+            return answer
+    
         ''' Write the query. '''
         
         machine_question = {
@@ -160,48 +165,45 @@ class Router:
                 "source_id" : node_id - 1,
                 "target_id" : node_id
             })
-        print("")
-        print (f"Generated Gamma machine question: {json.dumps(machine_question,indent=2)}")
+        print (f"Gamma machine question: {json.dumps(machine_question,indent=2)}")
 
         ''' Send the query to Gamma and return result. '''
-        print("")
-        print("starting builder query")
-        builder_query_url = "http://127.0.0.1:6010/api/"
-        builder_query_headers = {
-          'accept' : 'application/json',
-          'Content-Type' : 'application/json'
-          }
-        
-        robokop_query_data = machine_question
-        builder_query_response = requests.post(Conf.robokop_builder_build_url, \
-          headers = builder_query_headers, json = robokop_query_data)
-        builder_task_id = builder_query_response.json()
+        query_headers = {
+            'accept' : 'application/json',
+            'Content-Type' : 'application/json'
+        }
+        print (f"executing builder query.")
+        builder_task_id = requests.post(
+            url = Conf.robokop_builder_build_url, \
+            headers = query_headers,
+            json = machine_question).json()
+        print (f"{json.dumps(builder_task_id,indent=2)}")
         builder_task_id_string = builder_task_id["task id"]
+        print (f"--------------")
         
         break_loop = False
-        print("")
-        print("Waiting for ROBOKOP Builder to update the Knowledge Graph")
+        print("Waiting for builder to update the Knowledge Graph")
         while not break_loop:
           time.sleep(1)
-          builder_task_status_response = requests.get(Conf.robokop_builder_task_status_url+builder_task_id_string)
-          builder_status = builder_task_status_response.json()
-          if builder_status['status'] == 'SUCCESS':
-            break_loop = True
+          url = f"{Conf.robokop_builder_task_status_url}{builder_task_id_string}"
+          builder_status = requests.get(url).json ()
+          #print (f"{json.dumps(builder_status, indent=2)}-------------------\n")
+          #print (f"{builder_status['status']}")
+          print (f"{builder_status}")
+          if isinstance(builder_status, dict) and builder_status['status'] == 'SUCCESS':
+              break_loop = True
          
-        print("")
-        print("Builder has finished updating the Knowledge Graph")
-        print("")
-        print("Sending the machine question to the ROBOKOP Ranker")
-        ranker_now_query_headers = {
-          'accept' : 'application/json',
-          'Content-Type' : 'application/json'
-          }
-        robokop_query_data = machine_question
-        ranker_now_query_response = requests.post(Conf.robokop_ranker_answers_now_url, \
-          headers = builder_query_headers, json = robokop_query_data)
-        self.ranker_answer = ranker_now_query_response.json()
-        return self.ranker_answer  
+        answer = requests.post(
+            url = Conf.robokop_ranker_answers_now_url, \
+            headers = query_headers,
+            json = machine_question).json()
         
+        print (f"{json.dumps(answer,indent=2)}")
+        with open("ranker.json", "w") as stream:
+            stream.write (json.dumps (answer, indent=2))
+            
+        return answer
+
 class Env:
     ''' Process utilities. '''
     @staticmethod
@@ -237,32 +239,50 @@ class Parser:
 
 class Workflow:
     ''' Execution logic. '''
-    def __init__(self, inputs, spec):
+    def __init__(self, spec, inputs={}):
         assert spec, "Could not find workflow."
-        self.router = Router (workflow=spec)
         self.inputs = inputs
         self.stack = []
-
-    def push (self, op_node):
-        self.stack.push (op_node)
-    def pop (self):
-        self.stack.pop ()
-        
-    def execute (self):
+        self.spec = spec
+        self.uuid = uuid.uuid4 ()
+        dag = nx.DiGraph ()
+        operators = self.spec.get ("workflow", {}) 
+        self.dependencies = {}
+        jobs = {} 
+        job_index = 0 
+        for operator in operators: 
+            job_index = job_index + 1 
+            op_node = operators[operator] 
+            op_code = op_node['code'] 
+            args = op_node['args'] 
+            print (f"Mapping workflow job {operator} with job_id: {job_index} and op code {op_code}.")
+            dag.add_node (operator, attr_dict={ "op_node" : op_node }) 
+            dependencies = self.get_dependent_job_names (op_node) 
+            for d in dependencies: 
+                dag.add_edge (operator, d, attr_dict={})
+        for job_name, op_node in self.spec.get("workflow",{}).items ():
+            self.dependencies[job_name] = self.generate_dependent_jobs (self.spec, job_name, dag)
+        self.topsort = [ t for t in reversed([
+            t for t in lexicographical_topological_sort (dag) ])
+        ]
+    def set_result(self, job_name, value):
+        self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
+    def get_result(self, job_name, value):
+        return self.spec.get("workflow",{}).get(job_name,{})["result"]
+    def execute (self, router):
         ''' Execute this workflow. '''
-        operators = self.router.workflow.get ("workflow", {})
+        operators = router.workflow.get ("workflow", {})
         for operator in operators:
             print("")
             print (f"Executing operator: {operator}")
             op_node = operators[operator]
             op_code = op_node['code']
             args = op_node['args']
-            op_node["result"] = self.router.route (self, op_node, op_code, args)
+            result = router.route (self, operator, op_node, op_code, args)
+            self.persist_result (operator, result)
         return self.get_step("return")["result"]
-    
     def get_step (self, name):
         return self.router.workflow.get("workflow",{}).get (name)
-    
     def resolve_arg (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
@@ -274,7 +294,56 @@ class Workflow:
             if "," in value:
                 value = value.split (",")
         return value
+    def to_camel_case(self, snake_str): 
+        components = snake_str.split('_') 
+        # We capitalize the first letter of each component except the first one
+        # with the 'title' method and join them together.
+        return components[0] + ''.join(x.title() for x in components[1:]) 
+    def get_dependent_job_names(self, op_node): 
+        dependencies = [] 
+        from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
+        if from_job: 
+            dependencies.append (from_job) 
+        elements = op_node.get("args",{}).get("elements",None) 
+        if elements: 
+            dependencies = elements 
+        return dependencies 
+    def generate_dependent_jobs(self, workflow_model, operator, dag):
+        dependencies = []
+        adjacency_list = { ident : deps for ident, deps in dag.adjacency() }
+        op_node = self.spec["workflow"][operator]
+        dependency_tasks = adjacency_list[operator].keys ()
+        return [ d for d in dependency_tasks ]
+    def json (self):
+        return {
+            "uuid" : self.uuid,
+            "spec" : self.spec,
+            "inputs" : self.inputs,
+            "dependencies" : self.dependencies,
+            "topsort" : self.topsort,
+            "running" : {},
+            "failed" : {},
+            "done" : {}
+        }
 
+class RedisBackedWorkflow(Workflow):
+    def __init__(self, spec, inputs):
+        super(RedisBackedWorkflow, self).__init__(spec, inputs)
+        '''
+        self.redis = redis.Redis(
+            host='hostname',
+            port=port)
+        '''
+        self.redis = Redis (url=Conf.celery_result_backend.replace ("0", "1"))
+    def form_key (self, job_name):
+        return f"{self.uuid}.{job_name}.result",
+    def set_result (self, job_name, value):
+        self.redis.set (
+            name=self.form_key(job_name),
+            value=value)
+    def get_result (self, job_name):
+        return self.redis (name=self.form_key(job_name))
+    
 if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser(description='Rosetta Workflow')
@@ -286,9 +355,11 @@ if __name__ == "__main__":
 
     parser = Parser ()
     workflow = Workflow (
-        inputs = parser.parse_args (args.args),
-        spec = parser.parse (args.workflow))
-    result = workflow.execute ()
+        spec = parser.parse (args.workflow),
+        inputs = parser.parse_args (args.args))
+
+    router = Router (workflow=workflow.spec)
+    result = workflow.execute (router)
     print (f"result> {json.dumps(result,indent=2)}")
     
     # python parser.py -w mq2.yaml -a drug_name=imatinib

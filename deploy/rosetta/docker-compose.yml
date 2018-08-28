@@ -1,7 +1,7 @@
 version: "3.4"
 services:
 
-  # A Redis instance for celery task storage.
+  # A Redis instance for celery task result storage.
   redis:
     image: redis
     ports:
@@ -19,11 +19,11 @@ services:
       - RABBITMQ_DEFAULT_PASS
     hostname: rabbit_node_1
     ports:      
-      - "${BROKER_PORT}:5672"
+      - "${BROKER_PORT}2:5672"
       - "${BROKER_ADMIN_PORT}:15672"
     hostname: amqp
 
-  # The Rosetta service.
+  # The Rosetta distributed task queue.
   rosetta_task_queue:
     # image: greent/robokop-rank
     build:
@@ -36,7 +36,7 @@ services:
       - BROKER_HOST=amqp
     ports:
       - "${APP_PORT}:${APP_PORT}"
-      - "${SUPERVISOR_PORT}:${SUPERVISOR_PORT}"
+#      - "${SUPERVISOR_PORT}:${SUPERVISOR_PORT}"
     links:
       - redis
       - amqp

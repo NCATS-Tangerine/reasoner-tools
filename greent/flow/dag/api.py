@@ -10,7 +10,7 @@ from datetime import datetime
 from flask_restful import Resource
 from flask import request
 from greent.flow.dag.api_setup import api, app
-from greent.flow.dag.tasks import execute_workflow
+from greent.flow.dag.run_tasks import CeleryDAGExecutor
 
 logger = logging.getLogger("rosetta")
 
@@ -47,10 +47,15 @@ class ExecuteWorkflow(Resource):
         logger.debug(f"Received request {workflow_spec}.")        
         print (f"Received request {json.dumps(workflow_spec,indent=2)}.")
 
-        response = execute_workflow (
-            inputs=workflow_spec['args'],
-            workflow_spec=workflow_spec)
 
+        executor = CeleryDAGExecutor (
+            spec=get_workflow (),
+            inputs={
+                "drug_name" : "imatinib",
+                "disease_name" : "asthma"
+        })
+        response = executor.execute () 
+        
         return response, 200
 
 api.add_resource(ExecuteWorkflow, '/executeWorkflow')
@@ -61,7 +66,7 @@ if __name__ == '__main__':
     
     server_host = '0.0.0.0'
     server_port = int(os.environ['ROSETTA_WF_PORT'])
-
+    print (f"Serving Rosettta WF on port: {server_port}")
     app.run(host=server_host,\
         port=server_port,\
         debug=False,\
