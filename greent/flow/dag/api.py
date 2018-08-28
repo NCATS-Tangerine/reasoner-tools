@@ -8,6 +8,7 @@ import json
 import redis
 from datetime import datetime
 from flask import request
+from flask_restful import Resource
 from greent.flow.dag.api_setup import api, app
 from greent.flow.dag.run_tasks import CeleryDAGExecutor
 
