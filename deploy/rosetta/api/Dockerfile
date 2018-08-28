@@ -10,5 +10,6 @@ RUN useradd -m -s /bin/bash rosetta
 
 ADD ./setenv.sh setenv.sh
 ADD ./conf.sh conf.sh
+ADD ./start_api_wrapper.sh start_api_wrapper.sh
 
-CMD ["./greent/flow/dag/start_api.sh"]
+CMD ["./start_api_wrapper.sh"]
