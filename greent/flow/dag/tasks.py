@@ -2,14 +2,9 @@ from __future__ import absolute_import
 import json
 import time
 import greent.flow.dag.conf as Conf
-#import networkx as nx
-#import uuid
-#from networkx.algorithms import lexicographical_topological_sort
 from greent.flow.dag.celery_app import app
 from greent.flow.rosetta_wf import Workflow
-from greent.flow.rosetta_wf import Router
-#from celery.utils.graph import DependencyGraph
-#from celery import group
+from greent.flow.router import Router
 
 def json2model(json):
     model = Workflow (spec={ "a" : "b"})
