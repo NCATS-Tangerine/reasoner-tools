@@ -1,6 +1,6 @@
 import json
 import pronto
-import sys
+
 import re
 import logging
 from greent.util import LoggingUtil
@@ -9,6 +9,8 @@ from pronto.relationship import Relationship
 from greent.servicecontext import ServiceContext
 from flask import jsonify
 logger = LoggingUtil.init_logging(__name__, level=logging.DEBUG)
+
+#import sys
 
 class GenericOntology(Service):
     """ Sure, don't just dig around in obo files they say. But when the SPARQL is dry, we will drink straight from the obo if need be. """
@@ -132,3 +134,31 @@ class GenericOntology(Service):
         if not id_list:
             id_list = None
         return id_list
+
+    
+    def exactMatch(self, identifier):
+        
+        result = []
+        #print(identifier)
+        if identifier in self.ont:
+            term = self.ont[identifier]
+            result = term.other['property_value']  if 'property_value' in term.other else []
+
+        exactMatches = [x.replace('exactMatch ', '') for x in result if 'exactMatch' in x]
+
+        return exactMatches
+
+
+    def closeMatch(self, identifier):
+        
+        result = []
+        
+        if identifier in self.ont:
+            term = self.ont[identifier]
+            result = term.other['property_value']  if 'property_value' in term.other else []
+
+        closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
+        
+        #result = [ x.split(' ') if ' ' in x else [x, ''] for x in result ]
+        #result = [ { 'id' : x[0], 'desc' : ' '.join(x[1:]) } for x in result if len(x) > 1 and ':' in x[0] ]
+        return closeMatches
