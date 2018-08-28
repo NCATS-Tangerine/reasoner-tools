@@ -46,8 +46,6 @@ class ExecuteWorkflow(Resource):
         
         logger.debug(f"Received request {workflow_spec}.")        
         print (f"Received request {json.dumps(workflow_spec,indent=2)}.")
-
-
         executor = CeleryDAGExecutor (
             spec=workflow_spec,
             inputs={
