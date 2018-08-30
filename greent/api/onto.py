@@ -382,10 +382,8 @@ def descendants (curie):
        description: ...
    """
    ont = get_core (curie)
-
-   obonet_stuff = ont.descendants(curie)
-
-   return jsonify({ "descendants" : obonet_stuff })
+   obo_ont_descendants = ont.descendants(curie)
+   return jsonify({ "descendants" : obo_ont_descendants }  )
 
 @app.route('/ancestors/<curie>')
 def ancestors (curie):
@@ -408,7 +406,33 @@ def ancestors (curie):
         description: ...
    """
    ont = get_core (curie)
-   return jsonify ({'ancestors' : ont.ancestors(curie)})
+   obo_ont_ancestors = ont.ancestors(curie)
+   return jsonify({ "ancestors" : obo_ont_ancestors }  )
+
+@app.route('/siblings/<curie>')
+def siblings (curie):
+   """ Use a CURIE to return a list of ontological ancestors.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004631"
+       description: "Use a CURIE to find that term's ancestors."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /siblings/{{ curie }}/
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie)
+   #obo_ont_ancestors = ont.siblings(curie)
+   #return jsonify({ "siblings" : obo_ont_siblings }  )
+   return jsonify({"siblings" : ["WORK IN PROGRESS"]})
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')

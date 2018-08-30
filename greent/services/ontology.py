@@ -22,7 +22,7 @@ class GenericOntology(Service):
         """ Load an obo file. """
         super(GenericOntology, self).__init__("go", context)
         self.ont = pronto.Ontology (obo)
-        self.pronto_ont = pronto.Ontology (obo)
+        #self.pronto_ont = pronto.Ontology (obo)
         self.obo_ont = obonet.read_obo(obo)
         
     
@@ -174,9 +174,8 @@ class GenericOntology(Service):
 
     def ancestors(self, identifier):
 
-        
-
-        return
+        obo_ont_netx_ancestors = networkx.ancestors(self.obo_ont, identifier)
+        return list(obo_ont_netx_ancestors)
 
     def descendants(self, identifier):
 
@@ -185,4 +184,10 @@ class GenericOntology(Service):
 
     def siblings(self, identifiers):
 
-        return
+        pronto_ont_parents = self.ont.rparents()
+        #print(pronto_ont_parents)
+
+        #if pronto_ont_parents:
+
+        
+        return 
