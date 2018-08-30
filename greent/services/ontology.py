@@ -1,5 +1,8 @@
 import json
+
 import pronto
+import networkx
+import obonet
 
 import re
 import logging
@@ -19,7 +22,9 @@ class GenericOntology(Service):
         """ Load an obo file. """
         super(GenericOntology, self).__init__("go", context)
         self.ont = pronto.Ontology (obo)
-        #self.obonet = obonet.parse_obo (obo)
+        self.pronto_ont = pronto.Ontology (obo)
+        self.obo_ont = obonet.read_obo(obo)
+        
     
     def label(self,identifier):
         """Return the exitlabel for an identifier"""
@@ -157,7 +162,6 @@ class GenericOntology(Service):
         if identifier in self.ont:
             term = self.ont[identifier]
             result = term.other['property_value']  if 'property_value' in term.other else []
-        closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
 
         raw_closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
         url_stripped_closeMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_closeMatches]
@@ -167,3 +171,18 @@ class GenericOntology(Service):
         normal_closeMatches = [x for x in formatted_closeMatches if "resource" not in x]
         all_closeMatches = normal_closeMatches + umls_closeMatches
         return all_closeMatches
+
+    def ancestors(self, identifier):
+
+        
+
+        return
+
+    def descendants(self, identifier):
+
+        obo_ont_netx_descendants = networkx.descendants(self.obo_ont, identifier)
+        return list(obo_ont_netx_descendants)
+
+    def siblings(self, identifiers):
+
+        return
