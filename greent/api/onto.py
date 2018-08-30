@@ -153,7 +153,7 @@ def label (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "An identifier from an ontology. eg, GO:2001317"
        x-valueType:
          - http://schema.org/string
@@ -238,7 +238,7 @@ def xrefs (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Curie designating an ontology. eg, GO:2001317"
        x-valueType:
          - http://schema.org/string
@@ -289,7 +289,7 @@ def synonyms (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Curie designating an ontology. eg, GO:0000009"
        x-valueType:
          - http://schema.org/string
@@ -324,7 +324,7 @@ def exactMatch (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Use a CURIE to find EXACTLY related CURIEs."
        x-valueType:
          - http://schema.org/string
@@ -347,7 +347,7 @@ def closeMatch (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Use a CURIE to find closely related CURIEs."
        x-valueType:
          - http://schema.org/string
@@ -370,7 +370,7 @@ def descendants (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Use a CURIE to find that term's descendants (children)."
        x-valueType:
          - http://schema.org/string
@@ -394,7 +394,7 @@ def ancestors (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Use a CURIE to find that term's ancestors."
        x-valueType:
          - http://schema.org/string
@@ -418,7 +418,7 @@ def siblings (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0004631"
+       default: "MONDO:0004634"
        description: "Use a CURIE to find that term's siblings."
        x-valueType:
          - http://schema.org/string

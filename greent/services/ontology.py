@@ -172,22 +172,22 @@ class GenericOntology(Service):
         all_closeMatches = normal_closeMatches + umls_closeMatches
         return all_closeMatches
 
-    def ancestors(self, identifier):
-
-        obo_ont_netx_ancestors = networkx.ancestors(self.obo_ont, identifier)
-        return list(obo_ont_netx_ancestors)
-
     def descendants(self, identifier):
-
-        obo_ont_netx_descendants = networkx.descendants(self.obo_ont, identifier)
+        # networkx.ancestors returns SUBTERMS (DESCENDANTS)
+        # networkx.ancestors(<file>.obo, CURIE) ---> this says
+        # that CURIE is the ancestor and DESCENDANTS will be returned...
+        obo_ont_netx_descendants = networkx.ancestors(self.obo_ont, identifier)
         return list(obo_ont_netx_descendants)
+
+    def ancestors(self, identifier):
+        # networkx.descendants returns SUPERTERMS (ANCESTORS)
+        # networkx.descendants(<file>.obo, CURIE) --> this says
+        # that CURIE is the descendant and ANCESTORS will be returned
+        obo_ont_netx_ancestors = networkx.descendants(self.obo_ont, identifier)
+        return list(obo_ont_netx_ancestors)
 
     def siblings(self, identifiers):
 
         pronto_ont_parents = self.ont.rparents()
-        #print(pronto_ont_parents)
 
-        #if pronto_ont_parents:
-
-        
         return 
