@@ -87,6 +87,20 @@ def test_exactMatch(ontology):
     result = ontology.exactMatch('MONDO:0004634')
     assert result[-1] == "umls:C0235522"
 
+# test 9
+
 def test_closeMatch(ontology):
     result = ontology.closeMatch('MONDO:0004634')
     assert result[-1] == "umls:C0155774"
+
+# test 10
+
+def test_ancestors(ontology):
+    result = ontology.ancestors('MONDO:0005586')
+    assert 'MONDO:0000500' in result
+
+# test 11
+
+def test_descendants(ontology):
+    result = ontology.descendants('MONDO:0000500')
+    assert 'MONDO:0005586' in result
