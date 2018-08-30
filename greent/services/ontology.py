@@ -177,7 +177,6 @@ class GenericOntology(Service):
         # networkx.ancestors(<file>.obo, CURIE) ---> this says
         # that CURIE is the ancestor and DESCENDANTS will be returned...
         obo_ont_netx_descendants = networkx.ancestors(self.obo_ont, identifier)
-        
         return list(obo_ont_netx_descendants)
 
     def ancestors(self, identifier):
@@ -188,16 +187,20 @@ class GenericOntology(Service):
         return list(obo_ont_netx_ancestors)
 
     def parents(self,identifier):
+        # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
         predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
         parents = [key for key, value in predecessor_lineage.items() if identifier in value]
         return parents
 
     def children(self, identifier):
+        # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
+        successors = networkx.DiGraph.predecessors(self.obo_ont, identifier)
+        children = list(successors)
+        return children
 
-        return
-
-    def siblings(self, identifiers):
-
-        pronto_ont_parents = self.ont.rparents()
-
-        return 
+    def siblings(self, identifier):
+        # predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
+        # parents = [key for key, value in predecessor_lineage.items() if identifier in value]
+        # siblings = [list(networkx.DiGraph.predecessors(self.obo_ont, identifier)) for x in parents]
+        # print(siblings)
+        return #siblings
