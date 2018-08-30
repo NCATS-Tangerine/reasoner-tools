@@ -95,12 +95,18 @@ def test_closeMatch(ontology):
 
 # test 10
 
-def test_ancestors(ontology):
-    result = ontology.ancestors('MONDO:0005586')
-    assert 'MONDO:0000500' in result
+# def test_ancestors(ontology):
+#     result = ontology.ancestors('MONDO:0005586')
+#     assert 'MONDO:0000500' in result
 
 # test 11
 
-def test_descendants(ontology):
-    result = ontology.descendants('MONDO:0000500')
-    assert 'MONDO:0005586' in result
+# def test_descendants(ontology):
+#     result = ontology.descendants('MONDO:0000500')
+#     assert 'MONDO:0005586' in result
+    
+# test 12
+
+def test_parents(ontology):
+    result = ontology.parents('MONDO:0004634')
+    assert 'MONDO:0005385' in result
