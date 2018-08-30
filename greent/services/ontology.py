@@ -1,9 +1,7 @@
 import json
-
 import pronto
 import networkx
 import obonet
-
 import re
 import logging
 from greent.util import LoggingUtil
@@ -12,8 +10,6 @@ from pronto.relationship import Relationship
 from greent.servicecontext import ServiceContext
 from flask import jsonify
 logger = LoggingUtil.init_logging(__name__, level=logging.DEBUG)
-
-#import sys
 
 class GenericOntology(Service):
     """ Sure, don't just dig around in obo files they say. But when the SPARQL is dry, we will drink straight from the obo if need be. """
@@ -25,7 +21,6 @@ class GenericOntology(Service):
         #self.pronto_ont = pronto.Ontology (obo)
         self.obo_ont = obonet.read_obo(obo)
         
-    
     def label(self,identifier):
         """Return the exitlabel for an identifier"""
         return self.ont[identifier].name if identifier in self.ont else None

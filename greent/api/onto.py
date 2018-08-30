@@ -12,7 +12,6 @@ from greent.servicecontext import ServiceContext
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 
-
 app = Flask(__name__)
 
 template = {
@@ -75,7 +74,6 @@ def get_core (curie=None):
             curie = curie.split(":")[0]
         result = core.ont (curie)
     return result
-     
 
 @app.route('/id_list/<curie>')
 
@@ -313,7 +311,6 @@ def synonyms (curie):
                    "xref"     : syn.xref
                })
    return jsonify (result)
-
 
 @app.route('/exactMatch/<curie>')
 def exactMatch (curie):
