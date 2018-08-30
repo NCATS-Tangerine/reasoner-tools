@@ -340,7 +340,7 @@ def exactMatch (curie):
 
 @app.route('/closeMatch/<curie>')
 def closeMatch (curie):
-   """ Use a CURIE to return a list of exactly matching IDs.
+   """ Use a CURIE to return a list of closely matching IDs.
    ---
    parameters:
      - name: curie
@@ -363,7 +363,7 @@ def closeMatch (curie):
 
 @app.route('/descendants/<curie>')
 def descendants (curie):
-   """ Use a CURIE to return a list of ontological descendents (children).
+   """ Use a CURIE to return a list of ontological descendants (children).
    ---
    parameters:
      - name: curie
@@ -371,12 +371,12 @@ def descendants (curie):
        type: string
        required: true
        default: "MONDO:0004631"
-       description: "Use a CURIE to find that term's descendents (children)."
+       description: "Use a CURIE to find that term's descendants (children)."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /descendents/{{ curie }}/
+           template: /descendants/{{ curie }}/
    responses:
      200:
        description: ...
@@ -411,7 +411,7 @@ def ancestors (curie):
 
 @app.route('/siblings/<curie>')
 def siblings (curie):
-   """ Use a CURIE to return a list of ontological ancestors.
+   """ Use a CURIE to return a list of ontological siblings.
    ---
    parameters:
      - name: curie
@@ -419,7 +419,7 @@ def siblings (curie):
        type: string
        required: true
        default: "MONDO:0004631"
-       description: "Use a CURIE to find that term's ancestors."
+       description: "Use a CURIE to find that term's siblings."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
