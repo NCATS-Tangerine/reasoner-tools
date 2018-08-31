@@ -171,15 +171,15 @@ class GenericOntology(Service):
         # networkx.ancestors returns SUBTERMS (DESCENDANTS)
         # networkx.ancestors(<file>.obo, CURIE) ---> this says
         # that CURIE is the ancestor and DESCENDANTS will be returned...
-        obo_ont_netx_descendants = networkx.ancestors(self.obo_ont, identifier)
-        return list(obo_ont_netx_descendants)
+        descendants = networkx.ancestors(self.obo_ont, identifier)
+        return list(descendants)
 
     def ancestors(self, identifier):
         # networkx.descendants returns SUPERTERMS (ANCESTORS)
         # networkx.descendants(<file>.obo, CURIE) --> this says
         # that CURIE is the descendant and ANCESTORS will be returned
-        obo_ont_netx_ancestors = networkx.descendants(self.obo_ont, identifier)
-        return list(obo_ont_netx_ancestors)
+        ancestors = networkx.descendants(self.obo_ont, identifier)
+        return list(ancestors)
 
     def parents(self,identifier):
         # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
@@ -198,4 +198,10 @@ class GenericOntology(Service):
         # parents = [key for key, value in predecessor_lineage.items() if identifier in value]
         # siblings = [list(networkx.DiGraph.predecessors(self.obo_ont, identifier)) for x in parents]
         # print(siblings)
-        return #siblings
+        predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
+        parents = [key for key, value in predecessor_lineage.items() if identifier in value]
+        sibling_lists = [networkx.DiGraph.predecessors(self.obo_ont, x) for x in parents]
+        siblings = [list(x) for x in sibling_lists]
+        # the following lines turns the list of lists into a single list
+        siblings = [x for y in siblings for x in y]
+        return siblings

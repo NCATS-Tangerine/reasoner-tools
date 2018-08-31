@@ -379,8 +379,7 @@ def descendants (curie):
        description: ...
    """
    ont = get_core (curie)
-   obo_ont_descendants = ont.descendants(curie)
-   return jsonify({ "descendants" : obo_ont_descendants }  )
+   return jsonify({ "descendants" : ont.descendants(curie) }  )
 
 @app.route('/ancestors/<curie>')
 def ancestors (curie):
@@ -403,8 +402,7 @@ def ancestors (curie):
         description: ...
    """
    ont = get_core (curie)
-   obo_ont_ancestors = ont.ancestors(curie)
-   return jsonify({ "ancestors" : obo_ont_ancestors }  )
+   return jsonify({ "ancestors" : ont.ancestors(curie) }  )
 
 @app.route('/siblings/<curie>')
 def siblings (curie):
@@ -427,8 +425,7 @@ def siblings (curie):
         description: ...
    """
    ont = get_core (curie)
-  #  return jsonify({"siblings" : siblings = ont.siblings(curie)})
-   return jsonify({"siblings" : "WORK IN PROGRESS"})
+   return jsonify({"siblings" : ont.siblings(curie)})
 
 @app.route('/parents/<curie>')
 def parents (curie):
@@ -475,6 +472,8 @@ def children (curie):
    """
    ont = get_core (curie) 
    return jsonify({"children" : ont.children(curie)})
+
+   
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')
