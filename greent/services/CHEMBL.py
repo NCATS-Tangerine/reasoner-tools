@@ -5,17 +5,16 @@ from greent.util import LoggingUtil
 
 logger = LoggingUtil.init_logging(__name__)
 
-class HGNC(Service):
+class CHEMBL(Service):
     def __init__(self, name, context):
-        super(HGNC,self).__init__(name, context)
+        super(CHEMBL,self).__init__(name, context)
         self.name = name
     def get_label(self, identifier):
         obj = requests.get(
-            url = f"{self.url}/fetch/hgnc_id/{identifier}",
+            url = f"{self.url}/data/compound_record/{identifier}",
             headers = {
                 "Accept" : "application/json"
             }).json ()
-        val = obj.get("response", {}).get ("docs", [])[0]["symbol"]
-        return { "label" : val }
+        return { "label" : obj.get("compound_name", "") }
 
     
