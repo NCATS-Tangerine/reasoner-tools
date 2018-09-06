@@ -1,6 +1,7 @@
 import json
 import pronto
-import sys
+import networkx
+import obonet
 import re
 import logging
 from greent.util import LoggingUtil
@@ -17,8 +18,9 @@ class GenericOntology(Service):
         """ Load an obo file. """
         super(GenericOntology, self).__init__("go", context)
         self.ont = pronto.Ontology (obo)
-        #self.obonet = obonet.parse_obo (obo)
-    
+        #self.pronto_ont = pronto.Ontology (obo)
+        self.obo_ont = obonet.read_obo(obo)
+        
     def label(self,identifier):
         """Return the exitlabel for an identifier"""
         return self.ont[identifier].name if identifier in self.ont else None
@@ -132,3 +134,74 @@ class GenericOntology(Service):
         if not id_list:
             id_list = None
         return id_list
+
+    def exactMatch(self, identifier):
+        
+        result = []
+        if identifier in self.ont:
+            term = self.ont[identifier]
+            result = term.other['property_value']  if 'property_value' in term.other else []
+        
+        raw_exactMatches = [x.replace('exactMatch ', '') for x in result if 'exactMatch' in x]
+        url_stripped_exactMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_exactMatches]
+        formatted_exactMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_exactMatches]     
+        # the umls URIs have a peculiar format, we handle that as follows:
+        umls_exactMatches = [re.sub(r"(?:(resource:)|(id:))","", str(x)) for x in formatted_exactMatches if "resource" in x]
+        normal_exactMatches = [x for x in formatted_exactMatches if "resource" not in x]
+        all_exactMatches = normal_exactMatches + umls_exactMatches
+        return all_exactMatches
+
+    def closeMatch(self, identifier):
+        
+        result = []
+        if identifier in self.ont:
+            term = self.ont[identifier]
+            result = term.other['property_value']  if 'property_value' in term.other else []
+
+        raw_closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
+        url_stripped_closeMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_closeMatches]
+        formatted_closeMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_closeMatches]     
+        # the umls URIs have a peculiar format, we handle that as follows:
+        umls_closeMatches = [re.sub(r"(?:(resource:)|(id:))","", str(x)) for x in formatted_closeMatches if "resource" in x]
+        normal_closeMatches = [x for x in formatted_closeMatches if "resource" not in x]
+        all_closeMatches = normal_closeMatches + umls_closeMatches
+        return all_closeMatches
+
+    def descendants(self, identifier):
+        # networkx.ancestors returns SUBTERMS (DESCENDANTS)
+        # networkx.ancestors(<file>.obo, CURIE) ---> this says
+        # that CURIE is the ancestor and DESCENDANTS will be returned...
+        descendants = networkx.ancestors(self.obo_ont, identifier)
+        return list(descendants)
+
+    def ancestors(self, identifier):
+        # networkx.descendants returns SUPERTERMS (ANCESTORS)
+        # networkx.descendants(<file>.obo, CURIE) --> this says
+        # that CURIE is the descendant and ANCESTORS will be returned
+        ancestors = networkx.descendants(self.obo_ont, identifier)
+        return list(ancestors)
+
+    def parents(self,identifier):
+        # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
+        predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
+        parents = [key for key, value in predecessor_lineage.items() if identifier in value]
+        return parents
+
+    def children(self, identifier):
+        # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
+        successors = networkx.DiGraph.predecessors(self.obo_ont, identifier)
+        children = list(successors)
+        return children
+
+    def siblings(self, identifier):
+        # predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
+        # parents = [key for key, value in predecessor_lineage.items() if identifier in value]
+        # siblings = [list(networkx.DiGraph.predecessors(self.obo_ont, identifier)) for x in parents]
+        # print(siblings)
+        predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
+        parents = [key for key, value in predecessor_lineage.items() if identifier in value]
+        sibling_lists = [networkx.DiGraph.predecessors(self.obo_ont, x) for x in parents]
+        siblings = [list(x) for x in sibling_lists]
+        # the following lines turns the list of lists into a single list
+        siblings = [x for y in siblings for x in y]
+        return siblings

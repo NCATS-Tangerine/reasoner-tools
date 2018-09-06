@@ -6,6 +6,7 @@ import re
 import requests
 import yaml
 import shutil
+from lru import LRU
 from greent.services.ontology import GenericOntology
 from greent.servicecontext import ServiceContext
 from flask import Flask, jsonify, g, Response, request
@@ -27,17 +28,18 @@ template = {
     "termsOfService": "http://renci.org/terms",
     "version": "0.0.1"
   },
-#  "basePath": "/onto/api",
+
   "schemes": [
     "https",
     "http"
   ]
 }
 app.config['SWAGGER'] = {
-   'title': 'Ontology Service'
+   'title': 'Onto API'
 }
 
 swagger = Swagger(app, template=template)
+cache = LRU(10)
 
 class Core:
     
@@ -50,10 +52,12 @@ class Core:
         data_pattern = os.path.join (data_dir, "*.obo")
         ontology_files = glob.glob (data_pattern)
         for f in ontology_files:
+            
             print (f"loading {f}")
             file_name = os.path.basename (f)
             name = file_name.replace (".obo", "")
-            self.onts[name] = GenericOntology(self.context, f) 
+            self.onts[name] = GenericOntology(self.context, f)
+            cache[f] = self.onts[name]
     def ont (self, curie):
         return self.onts[curie.lower()] if curie and curie.lower() in self.onts else None
     
@@ -70,7 +74,6 @@ def get_core (curie=None):
             curie = curie.split(":")[0]
         result = core.ont (curie)
     return result
-     
 
 @app.route('/id_list/<curie>')
 
@@ -95,7 +98,6 @@ def id_list(curie):
        description: ...
    """
   ont = get_core (curie)
-  print(ont)
   return jsonify(ont.id_list(curie))
 
 @app.route('/is_a/<curie>/<ancestors>/')
@@ -118,7 +120,7 @@ def is_a (curie, ancestors):
        in: path
        type: array
        required: true
-       default: GO:1901362
+       default: "MONDO:0004631"
        items:
          type: string
        description: "A comma separated list of identifiers. eg, GO:1901362"
@@ -149,7 +151,7 @@ def label (curie):
        in: path
        type: string
        required: true
-       default: GO:2001317
+       default: "MONDO:0004634"
        description: "An identifier from an ontology. eg, GO:2001317"
        x-valueType:
          - http://schema.org/string
@@ -234,7 +236,7 @@ def xrefs (curie):
        in: path
        type: string
        required: true
-       default: "MONDO:0001106"
+       default: "MONDO:0004634"
        description: "Curie designating an ontology. eg, GO:2001317"
        x-valueType:
          - http://schema.org/string
@@ -285,7 +287,7 @@ def synonyms (curie):
        in: path
        type: string
        required: true
-       default: "GO:0000009"
+       default: "MONDO:0004634"
        description: "Curie designating an ontology. eg, GO:0000009"
        x-valueType:
          - http://schema.org/string
@@ -309,6 +311,169 @@ def synonyms (curie):
                    "xref"     : syn.xref
                })
    return jsonify (result)
+
+@app.route('/exactMatch/<curie>')
+def exactMatch (curie):
+   """ Use a CURIE to return a list of exactly matching IDs.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to find EXACTLY related CURIEs."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /exactMatch/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify ({'exact matches' : ont.exactMatch(curie)})
+
+@app.route('/closeMatch/<curie>')
+def closeMatch (curie):
+   """ Use a CURIE to return a list of closely matching IDs.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to find closely related CURIEs."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /closeMatch/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify ({'close matches' : ont.closeMatch(curie)})
+
+@app.route('/descendants/<curie>')
+def descendants (curie):
+   """ Use a CURIE to return a list of ontological descendants (children).
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to find that term's descendants (children)."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /descendants/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify({ "descendants" : ont.descendants(curie) }  )
+
+@app.route('/ancestors/<curie>')
+def ancestors (curie):
+   """ Use a CURIE to return a list of ontological ancestors.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to find that term's ancestors."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /ancestors/{{ curie }}/
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie)
+   return jsonify({ "ancestors" : ont.ancestors(curie) }  )
+
+@app.route('/siblings/<curie>')
+def siblings (curie):
+   """ Use a CURIE to return a list of ontological siblings.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to find that term's siblings."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /siblings/{{ curie }}/
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie)
+   return jsonify({"siblings" : ont.siblings(curie)})
+
+@app.route('/parents/<curie>')
+def parents (curie):
+   """ Use a CURIE to return a list of ontological parents (1st gen. ancestors).
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to return a list of ontological parents (1st gen. ancestors)"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /parents/{{ curie }}/
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie) 
+   return jsonify({"parents" : ont.parents(curie)})
+
+@app.route('/children/<curie>')
+def children (curie):
+   """ Use a CURIE to return a list of ontological children (1st gen. descendants).
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to return a list of ontological children (1st gen. descendants)"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /children/{{ curie }}/
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie) 
+   return jsonify({"children" : ont.children(curie)})
+
+   
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')

@@ -109,3 +109,4 @@ venv.bak/
 
 # text files for internal testing purposes
 *.txt
+*.obo
