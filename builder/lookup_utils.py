@@ -16,10 +16,10 @@ def lookup_phenotype_by_name( name, greent ):
     return hpo_ids
 
 def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):  
-    CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/").json()
+    CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/?regex=true").json()
     matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
     if not matches_from_CTD_query:
-        CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/").json()
+        CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/?regex=true").json()
         synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query]
         matches_from_CTD_query = matches_from_CTD_query + synonym_matches_from_CTD_query
     return matches_from_CTD_query
