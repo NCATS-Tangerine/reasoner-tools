@@ -5,6 +5,8 @@ import requests
 import sys
 import time
 import yaml
+from greent.flow.router import Router
+from greent.flow.rosetta_wf import Workflow
 from greent.flow.dag.tasks import exec_operator
 from greent.flow.dag.tasks import calc_dag
 from celery import group
@@ -102,10 +104,20 @@ class CeleryDAGExecutor:
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Rosetta Workflow CLI')
     arg_parser.add_argument('-a', '--api', action="store_true")
+    arg_parser.add_argument('-b', '--beta', action="store_true")
     args = arg_parser.parse_args ()
 
     if args.api:
         call_api ()
+    elif args.beta:
+        workflow = Workflow (
+            spec = get_workflow (),
+            inputs = {
+                "drug_name" : "imatinib",
+                "disease_name" : "asthma"
+            })
+        router = Router (workflow)
+        print (workflow.execute (router))
     else:
         executor = CeleryDAGExecutor (
             spec=get_workflow (),

@@ -25,7 +25,8 @@ class Router:
         self.r = {
             'naming.to_id' : self.naming_to_id,
             'gamma'        : self.gamma_query,
-            'union'        : self.union
+            'union'        : self.union,
+            'http.get'     : self.http_get
         }
         self.workflow = workflow
         self.prototyping_count = 0
@@ -48,13 +49,20 @@ class Router:
     def union (self, context, node, elements):
         return [ context.get_step(self, e)["result"] for e in elements ]
 
+    def http_get(self, context, node, pattern, inputs):
+        return requests.get(
+            url = pattern.format (**inputs),
+            headers = {
+                'accept': 'application/json'
+            }).json ()
+    
     def naming_to_id (self, context, node, type, input):
         ''' An interface to bionames for resolving words to ids. '''
         print (f"type: {type} input: {input}")
         input = context.resolve_arg (input)
-        print (f"----> bionames input: {input}")
-                
-        bionames_request = requests.get(url = 'https://bionames.renci.org/lookup/'+input+'/'+type+'/', headers = {'accept': 'application/json'})
+        bionames_request = requests.get(
+            url = f'https://bionames.renci.org/lookup/{input}/{type}/',
+            headers = { 'accept': 'application/json' })
         bionames_request_json = bionames_request.json()
         return bionames_request_json
         
@@ -120,19 +128,20 @@ class Router:
             raise ValueError ("no values selected")
 
         # Read a cached local version.
-        if os.path.exists ("gamma_answer_1.json"):
-            answer = None
-            with open("gamma_answer_1.json", "r") as stream:
-                answer = json.loads (stream.read ())
-            return answer
-        if os.path.exists ("ranker.json"):
-            answer = None
-            with open("ranker.json", "r") as stream:
-                answer = json.loads (stream.read ())
-            return answer
-    
+        cache = True
+        if cache:
+            if os.path.exists ("gamma_answer_1.json"):
+                answer = None
+                with open("gamma_answer_1.json", "r") as stream:
+                    answer = json.loads (stream.read ())
+                return answer
+            if os.path.exists ("ranker.json"):
+                answer = None
+                with open("ranker.json", "r") as stream:
+                    answer = json.loads (stream.read ())
+                return answer
+
         ''' Write the query. '''
-        
         machine_question = {
             "machine_question": {
                 "edges" : [],
@@ -157,7 +166,7 @@ class Router:
         machine_question["machine_question"]["nodes"].append ({
             "curie" : values[0],
             "id" : node_id,
-            "name" : name,
+#            "name" : name,
             "type" : transitions[0]
         })
         for transition in transitions[1:]:
@@ -177,29 +186,37 @@ class Router:
             'accept' : 'application/json',
             'Content-Type' : 'application/json'
         }
+        print (f"{machine_question}")
         print (f"executing builder query.")
         builder_task_id = requests.post(
             url = Conf.robokop_builder_build_url, \
             headers = query_headers,
             json = machine_question).json()
         print (f"{json.dumps(builder_task_id,indent=2)}")
-        builder_task_id_string = builder_task_id["task id"]
-        print (f"--------------")
+        task_id = builder_task_id["task id"]
         
         break_loop = False
         print("Waiting for builder to update the Knowledge Graph")
         while not break_loop:
           time.sleep(1)
-          url = f"{Conf.robokop_builder_task_status_url}{builder_task_id_string}"
+          url = f"{Conf.robokop_builder_task_status_url}{task_id}"
           builder_status = requests.get(url).json ()
-          #print (f"{json.dumps(builder_status, indent=2)}-------------------\n")
-          #print (f"{builder_status['status']}")
           print (f"{builder_status}")
           if isinstance(builder_status, dict) and builder_status['status'] == 'SUCCESS':
               break_loop = True
-         
-        answer = requests.post(
-            url = Conf.robokop_ranker_answers_now_url, \
+
+        '''
+        ranker_url = f"{Conf.robokop_ranker_result_url}/{task_id}"
+        print (f"ranker url: {ranker_url}")
+        answer = requests.get(
+            url = ranker_url,
+            headers = query_headers1).json()
+        '''
+        
+        ranker_url = f"{Conf.robokop_ranker_now_url}"
+        print (f"ranker url: {ranker_url}")
+        answer = requests.post (
+            url = ranker_url,
             headers = query_headers,
             json = machine_question).json()
         

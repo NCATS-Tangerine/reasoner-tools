@@ -140,7 +140,7 @@ class Workflow:
             "failed" : {},
             "done" : {}
         }
-
+                
 class RedisBackedWorkflow(Workflow):
     def __init__(self, spec, inputs):
         super(RedisBackedWorkflow, self).__init__(spec, inputs)
