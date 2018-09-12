@@ -6,7 +6,8 @@ import re
 import requests
 import yaml
 import shutil
-from flask import Flask, jsonify, g, Response
+# import flask
+from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from lru import LRU
 from greent.services.bionames import BioNames
@@ -18,7 +19,7 @@ template = {
   "swagger": "2.0",
   "info": {
     "title": "BioNames API",
-    "description": "Generic facility aggregating bio-ontology lookup services to get ids based on natural language names.",
+    "description": "Generic facility aggregating bio-ontology lookup services to retrieve names from IDs or IDs based on Natural Language names.",
     "contact": {
       "responsibleOrganization": "renci.org",
       "responsibleDeveloper": "scox@renci.org",
@@ -50,8 +51,8 @@ def lookup (q, concept):
        in: path
        type: string
        required: true
-       default: aspirin
-       description: "A text string of interest. Can be a fragment."
+       default: asthma
+       description: "A text string of interest. This may be a fragment if 'include_similar' is set to true."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -62,31 +63,75 @@ def lookup (q, concept):
        in: path
        type: string
        required: false
-       default: drug
+       default: disease
        description: "A biolink-model concept name, e.g. 'drug', 'disease', 'phenotypic feature', 'gene', 'cell', or 'anatomical entity'"
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
            template: /is_a/{{ input }}/{{ input2 }}
+
+     - name: include_similar
+       in: query
+       type: boolean
+       default: true
+       x-valueType:
+         - http://schema.org/boolean
+       x-requestTemplate:
+         - valueType: http://schema.org/boolean
    responses:
      200:
        description: ...
    """
    assert q, "A string must be entered as a query."
    assert concept, "A string must be entered as a query."
-  
+   include_similar = request.args.get('include_similar')
+
    # the below separation of keys ensures that a search for q = 'diabetes' returns
    # a result distinct and different if concept = 'drug' OR concept = 'disease'
    # any unique, two-term search will yield distinct results and cache them
    q_key = f"{q}"
    concept_key = f"{concept}"
-   full_key = q_key + concept_key 
+   include_similar_key = f"{include_similar}"
+   full_key = q_key + concept_key + include_similar_key
+  
    if full_key in cache:
       result = cache[full_key]
    else:  
       result = core.lookup_router(q_key, concept=concept_key)
+      if include_similar_key == 'false':
+        result = [x for x in result if x['label'] == q_key]
       cache[full_key] = result
+   return jsonify(result)
+
+@app.route('/ID_to_label/<ID>/')
+def ID_to_label (ID):
+   """ Find Natural Language labels based on an input ID.
+   ---
+   parameters:
+     - name: ID
+       in: path
+       type: string
+       required: true
+       default: MONDO:0004634
+       description: "An ID (CURIE) of interest, e.g. GO:2001317 or MESH:D001241"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /ID_to_label/{{ input }}
+
+   responses:
+     200:
+       description: ...
+   """  
+   ID_key = f"{ID}"
+   if ID_key in cache:
+     result = cache[ID_key]
+   else:
+     result = core.ID_to_label_lookup(ID=ID_key)
+     cache[ID_key] = result
+
    return jsonify(result)
 
 if __name__ == "__main__":

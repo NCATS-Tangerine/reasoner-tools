@@ -1,6 +1,6 @@
 import json
 import pronto
-import networkx
+import networkx #KEEP networkx VERSION 2.0 ... the naming conventions are bizarre and could change!
 import obonet
 import re
 import logging

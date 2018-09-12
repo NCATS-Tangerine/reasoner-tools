@@ -3,6 +3,8 @@ import requests
 import traceback
 import logging
 from greent.service import Service
+from greent.services.mesh import MeshKS
+from greent.servicecontext import ServiceContext
 from greent.util import LoggingUtil
 from builder.lookup_utils import chemical_ids_from_drug_names
 
@@ -85,8 +87,27 @@ class BioNames(Service):
             traceback.print_exc ()
         return result
 
-# IF WE WANT TO CHANGE THE CTD DRUG LOOKUP TO THE "INTERNAL LOOKUP", continue below
-    # def _search_ctd(self, q, concept=None)
-    #     result = []
-    #     try:
-    #         result = self.context.core.ctd
+    def ID_to_label_lookup(self, ID):
+        result = []
+        onto_result = []
+        mesh_result = []
+        if ID.startswith('MESH'):
+            try:
+                ID_split = ID.split(':')
+                ID_split[0] = ID_split[0].lower()
+                mesh_ID_formatted = ID_split[0]+':'+ID_split[1]
+                url = "http://id.nlm.nih.gov/mesh/sparql"
+                mesh_response = MeshKS(ServiceContext.create_context(), url).get_label_by_id(mesh_ID_formatted)
+                print (mesh_response[0]['label'])
+                mesh_result = result + [{ "id" : ID, "label" : mesh_response[0]['label']} ]
+                print(mesh_result)
+            except:
+                traceback.print_exc ()
+        else:
+            try:
+                onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) } ]
+                print (onto_result)
+            except:
+                traceback.print_exc ()
+        all_results = onto_result + mesh_result
+        return all_results
