@@ -51,8 +51,8 @@ class ExecuteWorkflow(Resource):
             inputs={
                 "drug_name" : "imatinib",
                 "disease_name" : "asthma"
-        })
-        response = executor.execute () 
+            })
+        response = executor.execute (async=True) 
         return response, 200
 
 api.add_resource(ExecuteWorkflow, '/executeWorkflow')
