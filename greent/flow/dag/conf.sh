@@ -24,7 +24,7 @@ export CELERY_RESULT_BACKEND="redis://$RESULTS_HOST:$RESULTS_PORT/$RESULTS_DB"
 export CELERY_APP_PACKAGE="greent.flow.dag"
 
 # Gamma config.
-export GAMMA_HOST=${BUILDER_HOST:-localhost}
+export GAMMA_HOST=${BUILDER_HOST:-robokop.renci.org}
 export BUILDER_PORT=6010
 export RANKER_PORT=6011
 export BUILDER_BUILD_GRAPH_ENDPOINT=api/
