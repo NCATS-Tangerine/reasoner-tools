@@ -17,15 +17,17 @@ class BioNames(Service):
         """ Construct a bionames object and router for channeling searches. """
         super(BioNames, self).__init__("bionames", context)
         self.router_directory = {
-            "chemical_substance" : self._find_chemical_substance,
-            "disease"            : self._find,
-            "phenotypic_feature" : self._find,
-            "cell"               : self._find,
-            "anatomical_entity"  : self._find,
-            "gene"               : self._find
+            "chemical_substance"                : self._find_chemical_substance,
+            "disease"                           : self._find,
+            "phenotypic_feature"                : self._find,
+            "cell"                              : self._find,
+            "anatomical_entity"                 : self._find,
+            "gene"                              : self._find,
+            "biological_process_or_activity"    : self._find
         }
         self.normalize = {
             "drug" : "chemical_substance",
+            "metabolite" : "chemical_substance",
             "medication" : "chemical_substance",
             "pharmaceutical" : "chemical_substance",
             "chemical substance" : "chemical_substance",
@@ -35,7 +37,11 @@ class BioNames(Service):
             "phenotypic_trait" : "phenotypic_feature",
             "phenotypic trait" : "phenotypic_feature",
             "phenotype trait" : "phenotypic_feature",
-            "anatomical entity" : "anatomical_entity"
+            "anatomical entity" : "anatomical_entity",
+            "biological process" : "biological_process_or_activity",
+            "Molecular Activity" : "biological_process_or_activity",
+            "genetic_condition" : "disease"
+
         }
         
     def lookup_router(self, q, concept=None):
