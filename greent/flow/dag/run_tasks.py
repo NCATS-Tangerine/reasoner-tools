@@ -39,8 +39,8 @@ def call_api(workflow="mq2.yaml"):
 def run_job(j, wf_model, asynchronous=False):
     wf_model.topsort.remove (j)
     print (f"  run: {j}")
-    print (f"    sort> {wf_model.topsort}")
-    print (f"    done> {wf_model.done.keys()}")
+#    print (f"    sort> {wf_model.topsort}")
+#    print (f"    done> {wf_model.done.keys()}")
     if asynchronous:
         wf_model.running[j] = exec_operator.delay (model2json(wf_model), j)
     else:
@@ -73,7 +73,7 @@ class CeleryDAGExecutor:
         ''' Iterate over topologically sorted job names. '''
         while len(model.topsort) > 0:
             for j in model.topsort:
-                print (f"test: {j}")
+                #print (f"test: {j}")
                 if j in model.done:
                     break
                 dependencies = model.dependencies[j]

@@ -44,7 +44,7 @@ class ExecuteWorkflow(Resource):
         """
         workflow_spec = request.json
         
-        logger.debug(f"Received request {workflow_spec}.")        
+        logger.debug(f"Received request {workflow_spec}.")
         print (f"Received request {json.dumps(workflow_spec,indent=2)}.")
         executor = CeleryDAGExecutor (
             spec=workflow_spec,
@@ -52,13 +52,13 @@ class ExecuteWorkflow(Resource):
                 "drug_name" : "imatinib",
                 "disease_name" : "asthma"
             })
-        response = executor.execute (async=True) 
+        response = executor.execute (async=False) 
         return response, 200
 
 api.add_resource(ExecuteWorkflow, '/executeWorkflow')
 
 if __name__ == '__main__':
-    # Get host and port from environmental variables
+    # Get host and port from environment variables
     server_host = '0.0.0.0'
     server_port = int(os.environ['ROSETTA_WF_PORT'])
     print (f"Serving Rosettta WF on port: {server_port}")

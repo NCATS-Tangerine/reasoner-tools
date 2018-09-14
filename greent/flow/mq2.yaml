@@ -1,19 +1,38 @@
 
 # TODO 1: Use Rosetta core config to construct multidirectional queries and validate paths.
 #       https://github.com/NCATS-Gamma/robokop-interfaces/blob/master/greent/rosetta.yml
-
+#       This can be generalized with metadata from each module answering endpoint.
+#       i.e. we should have enough information to assert to the user whether the requested path is traversable.
+# 
 # TODO 2: Process asynchronously, and in parallel, as a workflow:
 #       https://medium.com/@pavloosadchyi/parallel-running-dag-of-tasks-in-pythons-celery-4ea73c88c915
 
 # python parser.py -w mq2.yaml -a drug_name=imatinib
 
-workflow:
+templates:
+
+  name2id:
+    code: get
+    args:
+      pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
 
   drugs:
     doc: |
       Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
       For all operators, we store the result in a result node that can be referenced by subsequent steps.
-    code: naming.to_id
+    code: name2id
+    args:
+      inputs:
+        - input: $drug_name
+          type: chemical_substance
+
+workflow:
+  
+  drugs:
+    doc: |
+      Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
+      For all operators, we store the result in a result node that can be referenced by subsequent steps.
+    code: name2id
     args:
       type: chemical_substance
       input: $drug_name
@@ -21,11 +40,18 @@ workflow:
   diseases:
     doc: |
       Analogous English to ontological identifier transformation for disease.
-    code: naming.to_id
+    code: name2id
     args:
       type: disease
       input: $disease_name
 
+  test:
+    code: get
+    args:
+      pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
+      inputs:
+        - { "input" : "asthma", "type" : "disease" }
+        
   drug_to_phenotypic_feature:
     doc: |
       Selects elements from the previous result, forms a machine question, and queries Gamma.
@@ -47,8 +73,10 @@ workflow:
         transitions:
           - drug
           - gene
-          - anatomical_entity
-          - phenotypic_feature
+          - biological_process_or_activity
+          - cell
+#          - anatomical_entity
+#          - phenotypic_feature
 
   disease_to_phenotypic_feature:
     doc: |
@@ -63,6 +91,20 @@ workflow:
           - disease
           - phenotypic_feature
 
+
+  disease_to_gene:
+    doc: |
+      A chained Gamma query with a more complex select statement.
+    code: gamma
+    args:
+      inputs:
+        select: $.[*].id
+        from:   diseases
+      question:
+        transitions:
+          - disease
+          - gene
+
   return:
     doc: |
       Union answers from preceeding steps.
@@ -71,6 +113,7 @@ workflow:
       elements:
         - drug_to_phenotypic_feature
         - disease_to_phenotypic_feature
+        - disease_to_gene
 
 
 

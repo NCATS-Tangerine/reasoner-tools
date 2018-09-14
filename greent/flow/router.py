@@ -5,6 +5,7 @@ import os
 import sys
 import yaml
 import time
+import traceback
 import greent.flow.dag.conf as Conf
 from greent.util import Resource
 from jsonpath_rw import jsonpath, parse
@@ -18,18 +19,37 @@ def read_json (f):
     print (f"{obj}")
     return obj
 
+class Template:
+    def __init__(self, definition, extension, router):
+        self.definition = definition
+        self.extension = extension
+        self.router = router
+    def invoke (self, workflow):
+        template = workflow.spec.get ("templates", {}).get (self.definition, None)
+        method = self.router.r.get (template['code'])
+        
 class Router:
+    req = 0
     ''' Route operator invocations through a common interface. '''
     ''' TODO: make this modular so that operators can be defined externally. Consider dynamic invocation. '''
     def __init__(self, workflow):
         self.r = {
-            'naming.to_id' : self.naming_to_id,
-            'gamma'        : self.gamma_query,
-            'union'        : self.union,
-            'http.get'     : self.http_get
+            'name2id' : self.naming_to_id,
+            'gamma'   : self.gamma_query,
+            'union'   : self.union,
+            'get'     : self.http_get
         }
         self.workflow = workflow
         self.prototyping_count = 0
+
+        return # still working on templates.
+        for name, template in self.workflow.spec.get("templates", {}).items ():
+            op = template.get ("code", None)
+            print (template)
+            print (op)
+            method = self.r.get (op, None)
+            if method:
+                self.r[op] = lambda context, node, method=method, **kwargs: method(self, context, node, **kwargs)
         
     def route (self, context, job_name, op_node, op, args):
         ''' Invoke an operator known to this router. '''
@@ -42,24 +62,31 @@ class Router:
             }
             a.update (args)
             result = self.r[op](**a)
+            text = self.short_text (str(result))
+            print (f"      result: {text}")
         else:
             raise ValueError (f"Unknown operator: {op}")
         return result
+
+    def short_text(self, text, max_len=85):
+        return (text[:max_len] + '..') if len(text) > max_len else text
 
     def union (self, context, node, elements):
         return [ context.get_step(self, e)["result"] for e in elements ]
 
     def http_get(self, context, node, pattern, inputs):
-        return requests.get(
-            url = pattern.format (**inputs),
-            headers = {
-                'accept': 'application/json'
-            }).json ()
+        return [
+            requests.get(
+                url = pattern.format (**input),
+                headers = {
+                    'accept': 'application/json'
+                }).json () for input in inputs
+        ]
     
     def naming_to_id (self, context, node, type, input):
         ''' An interface to bionames for resolving words to ids. '''
-        print (f"type: {type} input: {input}")
         input = context.resolve_arg (input)
+        print (f"    *job(bionames): type: {type} input: {input}")
         bionames_request = requests.get(
             url = f'https://bionames.renci.org/lookup/{input}/{type}/',
             headers = { 'accept': 'application/json' })
@@ -75,6 +102,8 @@ class Router:
         jsonpath_query = parse (select)
         source = inputs['from']
 
+        print (f"    *job(gamma): select: {select} from: {source}")
+
         ''' Get the data source. '''
         operators = self.workflow.spec.get ("workflow", {})
         if not source in operators:
@@ -85,8 +114,6 @@ class Router:
         if not "result" in operators[source]:
             print (f"Error: Source {source} has not computed a result.")
         data_source = operators[source]["result"]
-        print("")
-        print (f"data source> {data_source}")
         
         ''' Execute the query. '''
         values = [ match.value for match in jsonpath_query.find (data_source) ]
@@ -128,18 +155,19 @@ class Router:
             raise ValueError ("no values selected")
 
         # Read a cached local version.
-        cache = True
+        self.req = self.req + 1
+        cache = False #True
         if cache:
-            if os.path.exists ("gamma_answer_1.json"):
+            cache_file = f"ranker_{self.req}.json"
+            if os.path.exists (cache_file):
                 answer = None
-                with open("gamma_answer_1.json", "r") as stream:
+                with open(cache_file, "r") as stream:
                     answer = json.loads (stream.read ())
-                return answer
-            if os.path.exists ("ranker.json"):
+            elif os.path.exists ("ranker.json"):
                 answer = None
                 with open("ranker.json", "r") as stream:
                     answer = json.loads (stream.read ())
-                return answer
+            return answer
 
         ''' Write the query. '''
         machine_question = {
@@ -187,7 +215,7 @@ class Router:
             'Content-Type' : 'application/json'
         }
         print (f"{machine_question}")
-        print (f"executing builder query.")
+        print (f"executing builder query: {Conf.robokop_builder_build_url}")
         builder_task_id = requests.post(
             url = Conf.robokop_builder_build_url, \
             headers = query_headers,
@@ -196,32 +224,33 @@ class Router:
         task_id = builder_task_id["task id"]
         
         break_loop = False
-        print("Waiting for builder to update the Knowledge Graph")
+        print(f"Waiting for builder to update the Knowledge Graph.")
         while not break_loop:
           time.sleep(1)
           url = f"{Conf.robokop_builder_task_status_url}{task_id}"
           builder_status = requests.get(url).json ()
-          print (f"{builder_status}")
+          print (f"{builder_status} {url}")
           if isinstance(builder_status, dict) and builder_status['status'] == 'SUCCESS':
               break_loop = True
-
-        '''
-        ranker_url = f"{Conf.robokop_ranker_result_url}/{task_id}"
-        print (f"ranker url: {ranker_url}")
-        answer = requests.get(
-            url = ranker_url,
-            headers = query_headers1).json()
-        '''
         
         ranker_url = f"{Conf.robokop_ranker_now_url}"
         print (f"ranker url: {ranker_url}")
         answer = requests.post (
             url = ranker_url,
             headers = query_headers,
-            json = machine_question).json()
+            json = machine_question).text #json()
+
+        #print (f"---------> {answer}")
+        try:
+            obj = json.loads (answer)
+            answer = obj
+            #print (f"{obj}")
+            #print (f"{json.dumps(answer,indent=2)}")
+            file_name= f"ranker-{self.req}.json"
+            with open(file_name, "w") as stream:
+                stream.write (json.dumps (obj, indent=2))
+        except:
+            print (f"unable to parse ----------- {answer}")
+            traceback.print_exc ()
         
-        print (f"{json.dumps(answer,indent=2)}")
-        with open("ranker.json", "w") as stream:
-            stream.write (json.dumps (answer, indent=2))
-            
         return answer

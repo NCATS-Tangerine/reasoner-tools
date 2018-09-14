@@ -5,6 +5,7 @@ import os
 import sys
 import yaml
 import time
+import traceback
 import greent.flow.dag.conf as Conf
 from greent.flow.router import Router
 from greent.util import Resource
@@ -115,10 +116,13 @@ class Workflow:
         # with the 'title' method and join them together.
         return components[0] + ''.join(x.title() for x in components[1:]) 
     def get_dependent_job_names(self, op_node): 
-        dependencies = [] 
-        from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
-        if from_job: 
-            dependencies.append (from_job) 
+        dependencies = []
+        try:
+            from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
+            if from_job:
+                dependencies.append (from_job)
+        except:
+            traceback.print_exc ()
         elements = op_node.get("args",{}).get("elements",None) 
         if elements: 
             dependencies = elements 
