@@ -73,3 +73,52 @@ class Resource:
             if format in m:
                 result = m[format](path)
         return result
+
+    @staticmethod
+    # Modified from:
+    # Copyright Ferry Boender, released under the MIT license.
+    def deepupdate(target, src, overwrite_keys = [], skip = []):
+        """Deep update target dict with src
+        For each k,v in src: if k doesn't exist in target, it is deep copied from
+        src to target. Otherwise, if v is a list, target[k] is extended with
+        src[k]. If v is a set, target[k] is updated with v, If v is a dict,
+        recursively deep-update it.
+
+        Updated to deal with yaml structure: if you have a list of yaml dicts,
+        want to merge them by "name"
+
+        If there are particular keys you want to overwrite instead of merge, send in overwrite_keys
+        """
+        if type(src) == dict:
+            for k, v in src.items():
+                if k in overwrite_keys:
+                    target[k] = copy.deepcopy(v)
+                elif type(v) == list:
+                    if not k in target:
+                        target[k] = copy.deepcopy(v)
+                    elif type(v[0]) == dict:
+                        Resource.deepupdate(target[k],v,overwrite_keys)
+                    else:
+                        target[k].extend(v)
+                elif type(v) == dict:
+                    if not k in target:
+                        target[k] = copy.deepcopy(v)
+                    else:
+                        Resource.deepupdate(target[k], v,overwrite_keys)
+                elif type(v) == set:
+                    if not k in target:
+                        target[k] = v.copy()
+                    else:
+                        target[k].update(v.copy())
+                else:
+                    if not k in skip:
+                        target[k] = copy.copy(v)
+        else:
+            #src is a list of dicts, target is a list of dicts, want to merge by name (yikes)
+            src_elements = { x['name']: x for x in src }
+            target_elements = { x['name']: x for x in target }
+            for name in src_elements:
+                if name in target_elements:
+                    Resource.deepupdate(target_elements[name], src_elements[name],overwrite_keys)
+                else:
+                    target.append( src_elements[name] )

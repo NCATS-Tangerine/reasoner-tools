@@ -75,13 +75,29 @@ class Router:
         return [ context.get_step(self, e)["result"] for e in elements ]
 
     def http_get(self, context, node, pattern, inputs):
-        return [
+        result = []
+        for input in inputs:
+            for k, v in input.items ():
+                input[k] = context.resolve_arg (v)
+
+            url = pattern.format (**input)
+            print (f"url ---------> {url}")
+            result.append (requests.get(
+                url = url,
+                headers = {
+                    'accept': 'application/json'
+                }).json ())
+        '''
+        result = [
             requests.get(
                 url = pattern.format (**input),
                 headers = {
                     'accept': 'application/json'
                 }).json () for input in inputs
         ]
+        '''
+        print (f"------> {json.dumps(result,indent=2)}")
+        return result
     
     def naming_to_id (self, context, node, type, input):
         ''' An interface to bionames for resolving words to ids. '''
@@ -183,18 +199,11 @@ class Router:
         ''' ckc, aug 21: Indeed, MQs do not handle first node lists.'''
         transitions = question["transitions"]
         node_id = 0
-        print(data_source)
-        if data_source:
-            name = data_source[0]['label']
-        else:
-            name = ""
-        print("")
-        print("values:",values)
-        # For NOW, we can only use a single curie value until Builder/Ranker accept more!
+
+        ''' Build a machine question. '''
         machine_question["machine_question"]["nodes"].append ({
             "curie" : values[0],
             "id" : node_id,
-#            "name" : name,
             "type" : transitions[0]
         })
         for transition in transitions[1:]:
@@ -209,15 +218,15 @@ class Router:
             })
         print (f"Gamma machine question: {json.dumps(machine_question,indent=2)}")
 
-        ''' Send the query to Gamma and return result. '''
+        ''' Send the query to Gamma and handle result. '''
         query_headers = {
             'accept' : 'application/json',
             'Content-Type' : 'application/json'
         }
-        print (f"{machine_question}")
+
         print (f"executing builder query: {Conf.robokop_builder_build_url}")
         builder_task_id = requests.post(
-            url = Conf.robokop_builder_build_url, \
+            url = Conf.robokop_builder_build_url,
             headers = query_headers,
             json = machine_question).json()
         print (f"{json.dumps(builder_task_id,indent=2)}")
@@ -240,17 +249,14 @@ class Router:
             headers = query_headers,
             json = machine_question).text #json()
 
-        #print (f"---------> {answer}")
         try:
             obj = json.loads (answer)
             answer = obj
-            #print (f"{obj}")
-            #print (f"{json.dumps(answer,indent=2)}")
             file_name= f"ranker-{self.req}.json"
             with open(file_name, "w") as stream:
                 stream.write (json.dumps (obj, indent=2))
         except:
-            print (f"unable to parse ----------- {answer}")
+            print (f"unable to parse answer: {answer}")
             traceback.print_exc ()
         
         return answer

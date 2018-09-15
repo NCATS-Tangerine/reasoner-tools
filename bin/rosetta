@@ -1,0 +1,20 @@
+#!/bin/bash
+
+ROSETTA_HOME=~/dev/reasoner-tools
+cd $ROSETTA_HOME
+cd greent/flow
+source dag/setenv.sh
+source dag/conf.sh
+
+execute_workflow () {
+    python dag/run_tasks.py \
+           -s http://localhost \
+           -p 5008 \
+           --arg disease_name=asthma \
+           --arg drug_name=imatinib \
+           $*
+}
+
+execute_workflow $*
+
+exit 0

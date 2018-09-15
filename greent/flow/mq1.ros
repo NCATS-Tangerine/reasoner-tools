@@ -9,25 +9,8 @@
 
 # python parser.py -w mq2.yaml -a drug_name=imatinib
 
-templates:
-
-  name2id:
-    code: get
-    args:
-      pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
-
-  drugs:
-    doc: |
-      Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
-      For all operators, we store the result in a result node that can be referenced by subsequent steps.
-    code: name2id
-    args:
-      inputs:
-        - input: $drug_name
-          type: chemical_substance
-
 workflow:
-  
+
   drugs:
     doc: |
       Demonstrates an biolink-model enabled name to ID resolution interface using Bionames.
@@ -45,13 +28,6 @@ workflow:
       type: disease
       input: $disease_name
 
-  test:
-    code: get
-    args:
-      pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
-      inputs:
-        - { "input" : "asthma", "type" : "disease" }
-        
   drug_to_phenotypic_feature:
     doc: |
       Selects elements from the previous result, forms a machine question, and queries Gamma.
@@ -68,7 +44,7 @@ workflow:
     args:
       inputs:
         select: $.[*].id
-        from:   drugs
+        from: drugs
       question:
         transitions:
           - drug
@@ -90,7 +66,6 @@ workflow:
         transitions:
           - disease
           - phenotypic_feature
-
 
   disease_to_gene:
     doc: |

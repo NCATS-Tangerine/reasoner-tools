@@ -1,0 +1,96 @@
+import:
+  - bionames
+
+workflow:
+
+  drugs:
+    doc: |
+      This template accepts a $drug_name variable and specifies the biolink model type for chemical substances.
+    extends: name2id
+    args:
+      inputs:
+        - input: $drug_name
+          type: chemical_substance
+
+  diseases:
+    doc: |
+      Analogous English to ontological identifier transformation for disease.
+    code: name2id
+    args:
+      type: disease
+      input: $disease_name
+
+  http_get_example:
+    doc: |
+      Simple example of a direct get request.
+    code: get
+    args:
+      pattern: 'https://bionames.renci.org/lookup/{input}/{type}/'
+      inputs:
+        - { "input" : "asthma", "type" : "disease" }
+        
+  drug_to_phenotypic_feature:
+    doc: |
+      Selects elements from the previous result, forms a machine question, and queries Gamma.
+      The inputs arg supports a select language using
+         select - A jsonpath_rw to index into the response of the previous step
+         from   - The name of a completed worflow step
+         where  - An equality expression constraining values of a selected column
+         return - Required with where. Specifies which column to return
+      Construct a machine question based on the given transtions in the question.
+      For now, assume all edges flow in one direction from start type to end type.
+      Create input nodes based on the type of the first element in transitions.
+      For the nodes portion of the graph, create nodes with sequential ids for each element of transitions
+    code: gamma
+    args:
+      inputs:
+        select: $.[*].[*].id
+        from: drugs
+      question:
+        transitions:
+          - drug
+          - gene
+          - biological_process_or_activity
+          - cell
+#          - anatomical_entity
+#          - phenotypic_feature
+
+  disease_to_phenotypic_feature:
+    doc: |
+      A chained Gamma query with a more complex select statement.
+    code: gamma
+    args:
+      inputs:
+        select: $.[*].id
+        from:   diseases
+      question:
+        transitions:
+          - disease
+          - phenotypic_feature
+
+  disease_to_gene:
+    doc: |
+      A chained Gamma query with a more complex select statement.
+    code: gamma
+    args:
+      inputs:
+        select: $.[*].id
+        from:   diseases
+      question:
+        transitions:
+          - disease
+          - gene
+
+  return:
+    doc: |
+      Union answers from preceeding steps.
+    code: union
+    args:
+      elements:
+        - drug_to_phenotypic_feature
+        - disease_to_phenotypic_feature
+        - disease_to_gene
+
+
+
+              

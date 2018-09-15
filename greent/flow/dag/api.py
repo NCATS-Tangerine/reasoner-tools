@@ -42,16 +42,12 @@ class ExecuteWorkflow(Resource):
             400:
                 description: "Invalid status value"
         """
-        workflow_spec = request.json
-        
+        workflow_spec = request.json['workflow']        
         logger.debug(f"Received request {workflow_spec}.")
         print (f"Received request {json.dumps(workflow_spec,indent=2)}.")
         executor = CeleryDAGExecutor (
             spec=workflow_spec,
-            inputs={
-                "drug_name" : "imatinib",
-                "disease_name" : "asthma"
-            })
+            inputs=request.json['args'])
         response = executor.execute (async=False) 
         return response, 200
 

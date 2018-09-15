@@ -61,7 +61,18 @@ class Workflow:
         self.stack = []
         self.spec = spec
         self.uuid = uuid.uuid4 ()
-        dag = nx.DiGraph ()
+                        
+        # resolve templates.
+        templates = self.spec.get("templates", {})
+        workflows = self.spec.get("workflow", {})
+        for name, job in workflows.items ():
+            extends = job.get ("extends", None)
+            if extends:
+                Resource.deepupdate (workflows[name], templates[extends], skip=[ "doc" ])
+                #Resource.deepupdate (templates[extends], workflows[name], skip=[ "doc" ])
+                #print (f"{name}=>{json.dumps(workflows[name], indent=2)}")
+                
+        self.dag = nx.DiGraph ()
         operators = self.spec.get ("workflow", {}) 
         self.dependencies = {}
         jobs = {} 
@@ -71,16 +82,36 @@ class Workflow:
             op_node = operators[operator] 
             op_code = op_node['code'] 
             args = op_node['args'] 
-            print (f"Mapping workflow job {operator} with job_id: {job_index} and op code {op_code}.")
-            dag.add_node (operator, attr_dict={ "op_node" : op_node }) 
+            self.dag.add_node (operator, attr_dict={ "op_node" : op_node }) 
             dependencies = self.get_dependent_job_names (op_node) 
             for d in dependencies: 
-                dag.add_edge (operator, d, attr_dict={})
+                self.dag.add_edge (operator, d, attr_dict={})
         for job_name, op_node in self.spec.get("workflow",{}).items ():
-            self.dependencies[job_name] = self.generate_dependent_jobs (self.spec, job_name, dag)
+            self.dependencies[job_name] = self.generate_dependent_jobs (self.spec, job_name, self.dag)
         self.topsort = [ t for t in reversed([
-            t for t in lexicographical_topological_sort (dag) ])
+            t for t in lexicographical_topological_sort (self.dag) ])
         ]
+
+    @staticmethod
+    def get_workflow(workflow="mq2.ros", library_path=["."]):
+        workflow_spec = None
+        with open(workflow, "r") as stream:
+            workflow_spec = yaml.load (stream.read ())
+        return Workflow (Workflow.resolve_imports (workflow_spec, library_path))
+
+    @staticmethod
+    def resolve_imports (spec, library_path=["."]):
+        imports = spec.get ("import", [])
+        for i in imports:
+            for path in library_path:
+                file_name = os.path.join (path, f"{i}.ros")
+                if os.path.exists (file_name):
+                    with open (file_name, "r") as stream:
+                        obj = yaml.load (stream.read ())
+                        print (f"importing module: {i} from {file_name}")
+                        Resource.deepupdate (spec, obj, skip=[ "doc" ])
+        return spec
+    
     def set_result(self, job_name, value):
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
     def get_result(self, job_name, value):
@@ -118,9 +149,12 @@ class Workflow:
     def get_dependent_job_names(self, op_node): 
         dependencies = []
         try:
-            from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
-            if from_job:
-                dependencies.append (from_job)
+            inputs = op_node.get("args",{}).get("inputs",{})
+            if isinstance(inputs, dict):
+                from_job = inputs.get("from", None) 
+                if from_job:
+                    dependencies.append (from_job)
+                #from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
         except:
             traceback.print_exc ()
         elements = op_node.get("args",{}).get("elements",None) 

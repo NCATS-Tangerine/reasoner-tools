@@ -15,26 +15,21 @@ from celery.execute import send_task
 from types import SimpleNamespace
 from celery.result import AsyncResult
 
-def get_workflow(workflow="mq2.yaml"):
+def get_workflow(workflow="mq2.ros", library_path=["."]):
     workflow_spec = None
     with open(workflow, "r") as stream:
         workflow_spec = yaml.load (stream.read ())
-    return workflow_spec
+    return Workflow.resolve_imports (workflow_spec, library_path)
 
-def call_api(workflow="mq2.yaml"):
-    with open(workflow, "r") as stream:
-        workflow_spec = yaml.load (stream.read ())
-        host = "localhost"
-        port = os.environ["ROSETTA_WF_PORT"]
-        workflow_spec['args'] = {
-            "drug_name" : "imatinib",
-            "disease_name" : "asthma"
-        }
-        response = requests.post (
-            f"http://localhost:{port}/api/executeWorkflow",
-            json=workflow_spec)
-        
-        print (f"{json.dumps (response.json (), indent=2)}")
+def call_api(workflow="mq2.ros", host="localhost", port=os.environ["ROSETTA_WF_PORT"], args={}, library_path=["."]):
+    workflow_spec = get_workflow (workflow, library_path)
+    response = requests.post (
+        url = f"{host}:{port}/api/executeWorkflow",
+        json = {
+            "workflow" : workflow_spec,
+            "args"     : args
+        })
+    print (f"{json.dumps (response.json (), indent=2)}")
 
 def run_job(j, wf_model, asynchronous=False):
     wf_model.topsort.remove (j)
@@ -104,25 +99,26 @@ class CeleryDAGExecutor:
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Rosetta Workflow CLI')
     arg_parser.add_argument('-a', '--api', action="store_true")
+    arg_parser.add_argument('-w', '--workflow', help="workflow to run", default="mq2.ros")
     arg_parser.add_argument('-b', '--beta', action="store_true")
+    arg_parser.add_argument('-s', '--server', help="hostname of api server", default="localhost")
+    arg_parser.add_argument('-p', '--port', help="port of the server", default="80")
+    arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append')
+    arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append')
     args = arg_parser.parse_args ()
 
+    """ Parse input arguments. """
+    wf_args = { k : v for k, v in [ arg.split("=") for arg in args.arg ] }
+    
     if args.api:
-        call_api ()
-    elif args.beta:
-        workflow = Workflow (
-            spec = get_workflow (),
-            inputs = {
-                "drug_name" : "imatinib",
-                "disease_name" : "asthma"
-            })
-        router = Router (workflow)
-        print (workflow.execute (router))
+        """ Invoke a remote API endpoint. """
+        call_api (workflow=args.workflow,
+                  host=args.server,
+                  port=args.port,
+                  args=wf_args)
     else:
+        """ Execute the workflow in process. """
         executor = CeleryDAGExecutor (
             spec=get_workflow (),
-            inputs={
-                "drug_name" : "imatinib",
-                "disease_name" : "asthma"
-            })
+            inputs=wf_args)
         executor.execute ()
