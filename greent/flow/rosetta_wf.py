@@ -65,6 +65,7 @@ class Workflow:
         # resolve templates.
         templates = self.spec.get("templates", {})
         workflows = self.spec.get("workflow", {})
+        
         for name, job in workflows.items ():
             extends = job.get ("extends", None)
             if extends:
@@ -114,8 +115,8 @@ class Workflow:
     
     def set_result(self, job_name, value):
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
-    def get_result(self, job_name, value):
-        return self.spec.get("workflow",{}).get(job_name,{})["result"]
+    def get_result(self, job_name): #, value):
+        return self.spec.get("workflow",{}).get(job_name,{}).get("result", None)
     def execute (self, router):
         ''' Execute this workflow. '''
         operators = router.workflow.get ("workflow", {})
@@ -128,20 +129,29 @@ class Workflow:
             result = router.route (self, operator, op_node, op_code, args)
             self.persist_result (operator, result)
         return self.get_step(router, "return")["result"]
-    def get_step (self, router, name):
+    def get_step (self, name):
         return self.spec.get("workflow",{}).get (name)
+    def get_variable_name(self, name):
+        if isinstance(name, list):
+            name = name[0]
+        return name.replace ("$","") if name.startswith ("$") else None
     def resolve_arg (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
         if name.startswith ("$"):
             var = name.replace ("$","")
-            if not var in self.inputs:
-                Env.exit (f"Referenced undefined variable: {var}")
-            value = self.inputs[var]
-            if "," in value:
-                value = value.split (",")
+            ''' Is this a job result? '''
+            job_result = self.get_result (var) 
+            if var in self.inputs:
+                value = self.inputs[var]
+                if "," in value:
+                    value = value.split (",")
+            elif job_result:
+                value = job_result
+            else:
+                raise ValueError (f"Referenced undefined variable: {var}")
         return value
-    def to_camel_case(self, snake_str): 
+    def to_camel_case(self, snake_str):
         components = snake_str.split('_') 
         # We capitalize the first letter of each component except the first one
         # with the 'title' method and join them together.
@@ -149,6 +159,14 @@ class Workflow:
     def get_dependent_job_names(self, op_node): 
         dependencies = []
         try:
+            arg_list = op_node.get("args",{})
+            for arg_name, arg_val in arg_list.items ():
+                print (f" testing {arg_val} as dependency.")
+                name = self.get_variable_name (arg_val)
+                print (f"    name => {name}")
+                if name and self.get_step (name):
+                    print (f"      adding dep: {name}")
+                    dependencies.append (name)
             inputs = op_node.get("args",{}).get("inputs",{})
             if isinstance(inputs, dict):
                 from_job = inputs.get("from", None) 

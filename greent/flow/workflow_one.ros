@@ -1,0 +1,59 @@
+workflow:
+
+  disease_identifiers:
+    doc: |
+      Resolve an English disease name to an ontology identifier.
+    code: name2id
+    args:
+      type: disease
+      input: $disease_name
+        
+  condition_to_drug:
+    doc: |
+      Module 1
+        * What are the defining symptoms / phenotypes of [condition x]?
+        * What conditions present [symptoms]?
+        * Filter [conditions] to only keep ones with defined genetic causes.
+        * What subset of conditions are most representative of [conditions]? (find archetypes)
+      Module 2
+        * What genes are implicated in [condition]?
+        * What subset of genes are most representative of [conditions]?  (find archetypes)
+        * What pathways/processes are [genes] involved in?
+        * What genes are involved in [pathway/process]?
+        * What drugs/compounds target gene products of [gene]?
+      Invoke XRay module 1 and 2 given the disease identifier from bionames.
+      The graph argument references the entire bionames response.
+      The op argument specifies the XRay operation to execute.
+    code: xray
+    args:
+      op: condition_expansion_to_gene_pathway_drug
+      graph: $disease_identifiers
+
+  biothings_module_4_and_5
+    doc: |
+      Module 5
+        * What are the common side effects of [drug]?
+        * What is the approval status of [drug]?
+        * What are the approved indications for [drug]?
+        * What is the established pharm class for [drug]?
+      Uses BioThings to get drug annotations for each drug.
+      Accepts module 1s entire graph as input.
+    code: biothings
+    args:
+      op: annotate_drugs
+      graph: $condition_to_drug
+
+  return:
+    doc: |
+      Union answers.
+    code: union
+    args:
+      elements:
+        - biothings_module_4_and_5
+        
+
+        
+
+
+
+              

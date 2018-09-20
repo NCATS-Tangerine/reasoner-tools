@@ -52,6 +52,8 @@ workflow:
           - gene
           - biological_process_or_activity
           - cell
+
+          
 #          - anatomical_entity
 #          - phenotypic_feature
 

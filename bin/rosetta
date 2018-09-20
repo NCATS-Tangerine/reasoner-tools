@@ -12,6 +12,18 @@ execute_workflow () {
            -p 5008 \
            --arg disease_name=asthma \
            --arg drug_name=imatinib \
+           "$*"
+}
+
+execute_workflow () {
+    python dag/run_tasks.py $*
+}
+
+execute_workflow () {
+    python dag/run_tasks.py \
+           -s http://localhost \
+           -p 5008 \
+           --arg disease_name="diabetes mellitus type 2" \
            $*
 }
 

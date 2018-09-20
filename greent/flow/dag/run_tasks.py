@@ -14,6 +14,8 @@ from celery.utils.graph import DependencyGraph
 from celery.execute import send_task
 from types import SimpleNamespace
 from celery.result import AsyncResult
+from greent.flow.ndex import NDEx
+from jsonpath_rw import jsonpath, parse
 
 def get_workflow(workflow="mq2.ros", library_path=["."]):
     workflow_spec = None
@@ -97,14 +99,15 @@ class CeleryDAGExecutor:
         return model.done['return']
                 
 if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser(description='Rosetta Workflow CLI')
-    arg_parser.add_argument('-a', '--api', action="store_true")
-    arg_parser.add_argument('-w', '--workflow', help="workflow to run", default="mq2.ros")
-    arg_parser.add_argument('-b', '--beta', action="store_true")
-    arg_parser.add_argument('-s', '--server', help="hostname of api server", default="localhost")
-    arg_parser.add_argument('-p', '--port', help="port of the server", default="80")
+    arg_parser = argparse.ArgumentParser(description='Rosetta Workflow CLI',
+                                         formatter_class=lambda prog: argparse.HelpFormatter(prog,max_help_position=57))
+    arg_parser.add_argument('-a', '--api', help="Execute via API instead of locally.", action="store_true")
+    arg_parser.add_argument('-w', '--workflow', help="Workflow to execute.", default="mq2.ros")
+    arg_parser.add_argument('-s', '--server', help="Hostname of api server", default="localhost")
+    arg_parser.add_argument('-p', '--port', help="Port of the server", default="80")
     arg_parser.add_argument('-i', '--arg', help="Add an argument expressed as key=val", action='append')
     arg_parser.add_argument('-l', '--lib_path', help="A directory containing workflow modules.", action='append')
+    arg_parser.add_argument('-n', '--ndex_id', help="Publish the graph to NDEx")
     args = arg_parser.parse_args ()
 
     """ Parse input arguments. """
@@ -119,6 +122,15 @@ if __name__ == '__main__':
     else:
         """ Execute the workflow in process. """
         executor = CeleryDAGExecutor (
-            spec=get_workflow (),
+            spec=get_workflow (workflow=args.workflow),
             inputs=wf_args)
-        executor.execute ()
+        response = executor.execute ()
+        graph_text = json.dumps (response, indent=2)
+        print (f"{graph_text}")
+
+        if args.ndex_id:
+            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
+            graph = [ match.value for match in jsonpath_query.find (response) ]
+            print (f"{args.ndex_id} => {json.dumps(graph, indent=2)}")
+            ndex = NDEx ()
+            ndex.publish (args.ndex_id, graph)
