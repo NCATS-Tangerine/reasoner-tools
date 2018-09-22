@@ -29,7 +29,13 @@ workflow:
       op: condition_expansion_to_gene_pathway_drug
       graph: $disease_identifiers
 
-  biothings_module_4_and_5
+  module_3:
+    code: gamma
+    args:
+      op: module_wf1_mod3
+      graph: $condition_to_drug
+      
+  biothings_module_4_and_5:
     doc: |
       Module 5
         * What are the common side effects of [drug]?
@@ -41,7 +47,9 @@ workflow:
     code: biothings
     args:
       op: annotate_drugs
-      graph: $condition_to_drug
+      graph:
+        - $condition_to_drug
+        - $module_3
 
   return:
     doc: |
@@ -50,7 +58,7 @@ workflow:
     args:
       elements:
         - biothings_module_4_and_5
-        
+        - module_3
 
         
 

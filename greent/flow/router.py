@@ -16,6 +16,7 @@ from networkx.algorithms import lexicographical_topological_sort
 from greent.flow.biothings import Biothings
 from greent.flow.xray import XRay
 from greent.flow.ndex import NDEx
+from greent.flow.gamma import Gamma
 
 # scaffold
 def read_json (f):
@@ -40,7 +41,8 @@ class Router:
         self.r = {
             'name2id'   : self.naming_to_id,
             'biothings' : self.biothings,
-            'gamma'     : self.gamma_query,
+            'gamma'     : self.gamma,
+            'gamma_q'   : self.gamma_query,
             'xray'      : self.xray,
             'ndex'      : self.ndex,
             'union'     : self.union,
@@ -129,8 +131,17 @@ class Router:
                     ]
                 }
             ]
+        print (f"{bionames_response}")
         return bionames_response
+
+    def get_ids (self, nodes):
+        return [ val['id'] for val in nodes ]
     
+    def get_nodes_by_type (self, graph, target_type):
+        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+        compounds = [ match.value for match in jsonpath_query.find (graph) ]
+        return [ val for val in compounds if val['type'] == target_type ]
+
     def xray(self, context, node, op, graph):
         graph_obj = context.resolve_arg (graph)
         #print (f"xray input graph ({graph}=>{json.dumps(graph_obj, indent=2)}")
@@ -142,17 +153,40 @@ class Router:
         response = operator (disease_id)
         return response
 
+    def gamma(self, context, node, op, graph):
+        graph_obj = context.resolve_arg (graph)
+        diseases = self.get_ids(self.get_nodes_by_type (graph_obj, target_type='disease'))
+        gamma = Gamma ()
+        operator = getattr (gamma, op)
+        disease_id = context.resolve_arg (diseases[0])
+        #response = operator (disease_id)
+        response = {}
+        return response
+
     def biothings(self, context, node, op, graph):
         graph_obj = context.resolve_arg (graph)
-        #print (f"biothings input graph ({graph}=>{json.dumps(graph_obj, indent=2)}")
-        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
-        compounds = [ match.value for match in jsonpath_query.find (graph_obj) ]
-        drugs = [ val for val in compounds if val['id'].find ("CHEMBL.COMPOUND:") > -1 ]
-        #print (f"---- compounds --> {compounds}")
+        print (f"len graph obj {len(graph_obj)}")
         biothings = Biothings ()
         operator = getattr (biothings, op)
-        operator (drugs)
-        return graph_obj
+
+        if not isinstance(graph_obj, list):
+            graph_obj = [ graph_obj ]
+        result_graph = None
+        if len(graph_obj) > 0:
+            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+            result_graph = [ match.value for match in jsonpath_query.find (graph_obj[0]) ]
+
+        for i, g in enumerate(graph_obj):
+            #print (f"biothings input graph ({graph}=>{json.dumps(graph_obj, indent=2)}")
+            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+            compounds = [ match.value for match in jsonpath_query.find (graph_obj) ]
+            drugs = [ val for val in compounds if val['id'].find ("CHEMBL.COMPOUND:") > -1 ]
+            operator (drugs)
+            if i > 0:
+                for d in drugs:
+                    result_graph.append (d)
+            
+        return result_graph #graph_obj
     
     def ndex (self, context, node, op, key, graph):
         graph_obj = context.resolve_arg (graph)
