@@ -22,23 +22,54 @@ def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):
         CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/").json()
         synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query]
         matches_from_CTD_query = matches_from_CTD_query + synonym_matches_from_CTD_query
+    #print('CTD:', matches_from_CTD_query)
     return matches_from_CTD_query
 
 def pharos_drug_name_to_chemical_identifier(drug_name_as_string):
-    pharos_query = requests.get(f"https://pharos.nih.gov/idg/api/v1/ligands/search?q={drug_name_as_string}").json()
-    facets = pharos_query['facets']
-    values = [x['values'] for x in facets]
-    values = [val for sublist in values for val in sublist] #stripping off a superfluous outer list
-    labels = [x['label'] for x in values]
-    useful_labels = [x for x in labels if x.startswith('CHEMBL') and len(x) > len('CHEMBL')]
-    useful_labels_no_duplicates = []
-    for x in useful_labels:
-        if x not in useful_labels_no_duplicates:
-            useful_labels_no_duplicates.append(x)
-    added_string = ':CHEMBL'
-    added_string_location = len('CHEMBL')
-    useful_labels_modified = [x[:added_string_location]+added_string+x[added_string_location:] for x in useful_labels_no_duplicates]
-    return useful_labels_modified
+    # pharos_results = []
+    # pharos_query = requests.get(f"https://pharos.nih.gov/idg/api/v1/ligands/search?q={drug_name_as_string}").json()
+    # if pharos_query['content']:
+        
+    #     if drug_name_as_string in pharos_query['content'] or drug_name_as_string in pharos_query['facets']:
+    #         drug_specific_url = pharos_query['content'][0]["self"]
+    #         drug_specific_query = requests.get(drug_specific_url).json()
+
+    #         print(drug_specific_query["name"])
+    #         print(drug_specific_query["description"])
+    #         print(drug_specific_query["synonyms"])
+
+    #         if drug_name_as_string in drug_specific_query["name"] or drug_specific_query["description"] or drug_specific_query["synonyms"]:
+    #             if drug_specific_query["name"]:
+    #                 print(drug_specific_query["name"])
+    #             try:
+    #                 #drug_specific_query["synonyms"][1]["term"]:
+    #                 print(drug_specific_query["synonyms"][1]["term"])
+    #             except:
+    #                 print("no chembl ID")
+    #     else:
+    #         pass
+    
+    
+    # current method live on stars-c0, below:
+    # drug_name_as_string = drug_name_as_string.replace(' ','' '')
+    # pharos_query = requests.get(f"https://pharos.nih.gov/idg/api/v1/ligands/search?q={drug_name_as_string}").json()
+    # facets = pharos_query['facets']
+    # print(facets)
+    # values = [x['values'] for x in facets]
+    
+    # values = [val for sublist in values for val in sublist] #stripping off a superfluous outer list
+    # labels = [x['label'] for x in values]
+    # useful_labels = [x for x in labels if x.startswith('CHEMBL') and len(x) > len('CHEMBL')]
+    # useful_labels_no_duplicates = []
+    # for x in useful_labels:
+    #     if x not in useful_labels_no_duplicates:
+    #         useful_labels_no_duplicates.append(x)
+    # added_string = ':CHEMBL'
+    # added_string_location = len('CHEMBL')
+    # useful_labels_modified = [x[:added_string_location]+added_string+x[added_string_location:] for x in useful_labels_no_duplicates]
+    # print('pharos:', useful_labels_modified)
+    
+    return #pharos_results
 
 def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
     pubchem_query = requests.get(f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name_as_string}/property/MolecularFormula/JSON").json()
@@ -48,6 +79,7 @@ def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
     else:
         pubchem_IDs = [x['CID'] for x in pubchem_query['PropertyTable']['Properties']]
         pubchem_IDs_annotated = ["PUBCHEM:" + str(x) for x in pubchem_IDs]
+        #print('pubchem:', pubchem_IDs_annotated)
         return pubchem_IDs_annotated
 
 def chemical_ids_from_drug_names( drug_name_as_string ):
@@ -60,13 +92,13 @@ def chemical_ids_from_drug_names( drug_name_as_string ):
     ctd_ids = ctd_drug_name_string_to_chemical_identifier(drug_name_as_string)
     logger.debug(' CTD says: {}'.format(ctd_ids))
     # pharos_ids = 
-    pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name_as_string)
-    logger.debug(' pharos says: {}'.format(pharos_ids))
+    #pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name_as_string)
+    #logger.debug(' pharos says: {}'.format(pharos_ids))
     # pubchem_ids = 
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
     logger.debug(' pubchem says: {}'.format(pubchem_ids))
     # #all_ids:
-    chemical_ids_from_drug_names = ctd_ids + pharos_ids + pubchem_ids
+    chemical_ids_from_drug_names = ctd_ids + pubchem_ids #+ pharos_ids 
     logger.debug( chemical_ids_from_drug_names )
     return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
 
