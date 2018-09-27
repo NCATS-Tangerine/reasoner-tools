@@ -33,7 +33,6 @@ def pharos_drug_name_to_chemical_identifier(drug_name_as_string):
     #     if drug_name_as_string in pharos_query['content'] or drug_name_as_string in pharos_query['facets']:
     #         drug_specific_url = pharos_query['content'][0]["self"]
     #         drug_specific_query = requests.get(drug_specific_url).json()
-
     #         print(drug_specific_query["name"])
     #         print(drug_specific_query["description"])
     #         print(drug_specific_query["synonyms"])
