@@ -2,6 +2,7 @@ import argparse
 import json
 import requests
 import os
+import pandas as pd
 import sys
 import yaml
 import time
@@ -12,6 +13,10 @@ from jsonpath_rw import jsonpath, parse
 import networkx as nx
 import uuid
 from networkx.algorithms import lexicographical_topological_sort
+from greent.flow.biothings import Biothings
+from greent.flow.xray import XRay
+from greent.flow.ndex import NDEx
+from greent.flow.gamma import Gamma
 
 # scaffold
 def read_json (f):
@@ -34,14 +39,19 @@ class Router:
     ''' TODO: make this modular so that operators can be defined externally. Consider dynamic invocation. '''
     def __init__(self, workflow):
         self.r = {
-            'name2id' : self.naming_to_id,
-            'gamma'   : self.gamma_query,
-            'union'   : self.union,
-            'get'     : self.http_get
+            'name2id'   : self.naming_to_id,
+            'biothings' : self.biothings,
+            'gamma'     : self.gamma,
+            'gamma_q'   : self.gamma_query,
+            'xray'      : self.xray,
+            'ndex'      : self.ndex,
+            'union'     : self.union,
+            'get'       : self.http_get
         }
         self.workflow = workflow
         self.prototyping_count = 0
-
+        self.redis_graph = True
+        
         return # still working on templates.
         for name, template in self.workflow.spec.get("templates", {}).items ():
             op = template.get ("code", None)
@@ -72,7 +82,7 @@ class Router:
         return (text[:max_len] + '..') if len(text) > max_len else text
 
     def union (self, context, node, elements):
-        return [ context.get_step(self, e)["result"] for e in elements ]
+        return [ context.get_step(e)["result"] for e in elements ]
 
     def http_get(self, context, node, pattern, inputs):
         result = []
@@ -101,14 +111,92 @@ class Router:
     
     def naming_to_id (self, context, node, type, input):
         ''' An interface to bionames for resolving words to ids. '''
+        bionames_response = None
         input = context.resolve_arg (input)
         print (f"    *job(bionames): type: {type} input: {input}")
         bionames_request = requests.get(
             url = f'https://bionames.renci.org/lookup/{input}/{type}/',
             headers = { 'accept': 'application/json' })
-        bionames_request_json = bionames_request.json()
-        return bionames_request_json
-        
+        bionames_response = bionames_request.json ()
+        if self.redis_graph:
+            bionames_response = [
+                {
+                    "answers": [
+                        {
+                            "id": None,
+                            "answerset": None,
+                            "natural_answer": None,
+                            "nodes": bionames_response
+                        }
+                    ]
+                }
+            ]
+        print (f"{bionames_response}")
+        return bionames_response
+
+    def get_ids (self, nodes):
+        return [ val['id'] for val in nodes ]
+    
+    def get_nodes_by_type (self, graph, target_type):
+        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+        compounds = [ match.value for match in jsonpath_query.find (graph) ]
+        return [ val for val in compounds if val['type'] == target_type ]
+
+    def xray(self, context, node, op, graph):
+        graph_obj = context.resolve_arg (graph)
+        #print (f"xray input graph ({graph}=>{json.dumps(graph_obj, indent=2)}")
+        jsonpath_query = parse ("$.[*].answers.[*].nodes.[*].id")
+        diseases = [ match.value for match in jsonpath_query.find (graph_obj) ]
+        xray = XRay ()
+        operator = getattr (xray, op)
+        disease_id = context.resolve_arg (diseases[0])
+        response = operator (disease_id)
+        return response
+
+    def gamma(self, context, node, op, graph):
+        graph_obj = context.resolve_arg (graph)
+        diseases = self.get_ids(self.get_nodes_by_type (graph_obj, target_type='disease'))
+        gamma = Gamma ()
+        operator = getattr (gamma, op)
+        disease_id = context.resolve_arg (diseases[0])
+        #response = operator (disease_id)
+        response = {}
+        return response
+
+    def biothings(self, context, node, op, graph):
+        graph_obj = context.resolve_arg (graph)
+        print (f"len graph obj {len(graph_obj)}")
+        biothings = Biothings ()
+        operator = getattr (biothings, op)
+
+        if not isinstance(graph_obj, list):
+            graph_obj = [ graph_obj ]
+        result_graph = None
+        if len(graph_obj) > 0:
+            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+            result_graph = [ match.value for match in jsonpath_query.find (graph_obj[0]) ]
+
+        for i, g in enumerate(graph_obj):
+            #print (f"biothings input graph ({graph}=>{json.dumps(graph_obj, indent=2)}")
+            jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph.node_list.[*]")
+            compounds = [ match.value for match in jsonpath_query.find (graph_obj) ]
+            drugs = [ val for val in compounds if val['id'].find ("CHEMBL.COMPOUND:") > -1 ]
+            operator (drugs)
+            if i > 0:
+                for d in drugs:
+                    result_graph.append (d)
+            
+        return result_graph #graph_obj
+    
+    def ndex (self, context, node, op, key, graph):
+        graph_obj = context.resolve_arg (graph)
+        jsonpath_query = parse ("$.[*].result_list.[*].[*].result_graph")
+        graph = [ match.value for match in jsonpath_query.find (graph_obj) ]
+        print (f"{key} => {json.dumps(graph, indent=2)}")
+        ndex = NDEx ()
+        if op == "publish":
+            ndex.publish (key, graph)
+    
     def gamma_query (self, context, node, question, inputs):
         ''' An interface to the Gamma reasoner. '''
         # validate.

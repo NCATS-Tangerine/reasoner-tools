@@ -1,10 +1,15 @@
 #!/bin/bash
 
 ROSETTA_HOME=~/dev/reasoner-tools
+export PYTHONPATH=$ROSETTA_HOME
 cd $ROSETTA_HOME
+echo $PYTHONPATH
 cd greent/flow
 source dag/setenv.sh
 source dag/conf.sh
+ROSETTA_HOME=~/dev/reasoner-tools
+export PYTHONPATH=$ROSETTA_HOME
+python -c "from greent.flow.xray import XRay"
 
 execute_workflow () {
     python dag/run_tasks.py \
@@ -12,6 +17,18 @@ execute_workflow () {
            -p 5008 \
            --arg disease_name=asthma \
            --arg drug_name=imatinib \
+           "$*"
+}
+
+execute_workflow () {
+    python dag/run_tasks.py $*
+}
+
+execute_workflow () {
+    python dag/run_tasks.py \
+           -s http://localhost \
+           -p 5008 \
+           --arg disease_name="diabetes mellitus type 2" \
            $*
 }
 

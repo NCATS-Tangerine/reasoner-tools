@@ -65,6 +65,7 @@ class Workflow:
         # resolve templates.
         templates = self.spec.get("templates", {})
         workflows = self.spec.get("workflow", {})
+        
         for name, job in workflows.items ():
             extends = job.get ("extends", None)
             if extends:
@@ -114,8 +115,8 @@ class Workflow:
     
     def set_result(self, job_name, value):
         self.spec.get("workflow",{}).get(job_name,{})["result"] = value 
-    def get_result(self, job_name, value):
-        return self.spec.get("workflow",{}).get(job_name,{})["result"]
+    def get_result(self, job_name): #, value):
+        return self.spec.get("workflow",{}).get(job_name,{}).get("result", None)
     def execute (self, router):
         ''' Execute this workflow. '''
         operators = router.workflow.get ("workflow", {})
@@ -128,27 +129,58 @@ class Workflow:
             result = router.route (self, operator, op_node, op_code, args)
             self.persist_result (operator, result)
         return self.get_step(router, "return")["result"]
-    def get_step (self, router, name):
+    def get_step (self, name):
         return self.spec.get("workflow",{}).get (name)
+    def get_variable_name(self, name):
+        result = None
+        if isinstance(name, list):
+            result = [ n.replace("$","") for n in name if n.startswith ("$") ]
+        elif isinstance(name, str):
+            result = name.replace("$","") if name.startswith ("$") else None
+        return result
     def resolve_arg (self, name):
+        return [ self.resolve_arg_inner (v) for v in name ] if isinstance(name, list) else self.resolve_arg_inner (name)
+    def resolve_arg_inner (self, name):
+#        pass
+#    def resolve_arg (self, name):
         ''' Find the value of an argument passed to the workflow. '''
         value = name
         if name.startswith ("$"):
             var = name.replace ("$","")
-            if not var in self.inputs:
-                Env.exit (f"Referenced undefined variable: {var}")
-            value = self.inputs[var]
-            if "," in value:
-                value = value.split (",")
+            ''' Is this a job result? '''
+            job_result = self.get_result (var)
+            print (f"job result {var}  ==============> {job_result}")
+            if var in self.inputs:
+                value = self.inputs[var]
+                if "," in value:
+                    value = value.split (",")
+            elif job_result or isinstance(job_result, dict):
+                value = job_result
+            else:
+                raise ValueError (f"Referenced undefined variable: {var}")
         return value
-    def to_camel_case(self, snake_str): 
+    def to_camel_case(self, snake_str):
         components = snake_str.split('_') 
         # We capitalize the first letter of each component except the first one
         # with the 'title' method and join them together.
-        return components[0] + ''.join(x.title() for x in components[1:]) 
+        return components[0] + ''.join(x.title() for x in components[1:])
+    def add_step_dependency (self, arg_val, dependencies):
+        print (f" testing {arg_val} as dependency.")
+        name = self.get_variable_name (arg_val)
+        print (f"    name => {name}")
+        if name and self.get_step (name):
+            print (f"      adding dep: {name}")
+            dependencies.append (name)
     def get_dependent_job_names(self, op_node): 
         dependencies = []
         try:
+            arg_list = op_node.get("args",{})
+            for arg_name, arg_val in arg_list.items ():
+                if isinstance(arg_val, list):
+                    for i in arg_val:
+                        self.add_step_dependency (i, dependencies)
+                else:
+                    self.add_step_dependency (arg_val, dependencies)
             inputs = op_node.get("args",{}).get("inputs",{})
             if isinstance(inputs, dict):
                 from_job = inputs.get("from", None) 
@@ -160,7 +192,29 @@ class Workflow:
         elements = op_node.get("args",{}).get("elements",None) 
         if elements: 
             dependencies = elements 
-        return dependencies 
+        return dependencies
+    def get_dependent_job_names0(self, op_node): 
+        dependencies = []
+        try:
+            arg_list = op_node.get("args",{})
+            for arg_name, arg_val in arg_list.items ():
+                if isinstance(arg_val, list):
+                    for i in list:
+                        self.add_step_dependency (i, dependencies)
+                else:
+                    self.add_step_dependency (arg_val, dependencies)
+            inputs = op_node.get("args",{}).get("inputs",{})
+            if isinstance(inputs, dict):
+                from_job = inputs.get("from", None) 
+                if from_job:
+                    dependencies.append (from_job)
+                #from_job = op_node.get("args",{}).get("inputs",{}).get("from", None) 
+        except:
+            traceback.print_exc ()
+        elements = op_node.get("args",{}).get("elements",None) 
+        if elements: 
+            dependencies = elements 
+        return dependencies
     def generate_dependent_jobs(self, workflow_model, operator, dag):
         dependencies = []
         adjacency_list = { ident : deps for ident, deps in dag.adjacency() }
