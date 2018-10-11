@@ -473,9 +473,9 @@ def children (curie):
    ont = get_core (curie) 
    return jsonify({"children" : ont.children(curie)})
 
-@app.route('/properties/<curie>/<path:property_value>/')
-def properties (curie, property_value):
-   """ Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE.
+@app.route('/property_value/<curie>/<path:property_key>/')
+def property_value (curie, property_key):
+   """ Use a CURIE and a PROPERTY_KEY to retrieve the relevant PROPERTY_VALUE.
    ---
    parameters:
      - name: curie
@@ -483,24 +483,24 @@ def properties (curie, property_value):
        type: string
        required: true
        default: "CHEBI:30151"
-       description: "Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE."
+       description: "Input a CURIE for which you want PROPERTY_VALUE information."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /properties/{{ curie }}/{{ property_value }}
+           template: /property_value/{{ curie }}/{{ property_key }}
 
-     - name: property_value
+     - name: property_key
        in: path
        type: string
        required: true
        default: "http://purl.obolibrary.org/obo/chebi/inchikey"
-       description: "Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE."
+       description: "Input a PROPERTY_KEY to retrieve PROPERTY_VALUE information for the above CURIE."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /properties/{{ curie }}/{{ property_value }}
+           template: /property_value/{{ curie }}/{{ property_key }}
       
    responses:
      200:
@@ -509,7 +509,7 @@ def properties (curie, property_value):
 
    ont = get_core (curie)
 
-   return jsonify({"properties" : ont.properties(curie, property_value)})
+   return jsonify({"property_value" : ont.property_value(curie, property_key)})
 
    
 
