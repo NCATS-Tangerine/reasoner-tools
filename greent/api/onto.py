@@ -30,7 +30,7 @@ template = {
   },
 
   "schemes": [
-    "https",
+    "http",
     "http"
   ]
 }
@@ -473,7 +473,7 @@ def children (curie):
    ont = get_core (curie) 
    return jsonify({"children" : ont.children(curie)})
 
-@app.route('/properties/<curie>/<property_value>')
+@app.route('/properties/<curie>/<path:property_value>/')
 def properties (curie, property_value):
    """ Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE.
    ---
@@ -489,6 +489,7 @@ def properties (curie, property_value):
        x-requestTemplate:
          - valueType: http://schema.org/string
            template: /properties/{{ curie }}/{{ property_value }}
+
      - name: property_value
        in: path
        type: string
@@ -499,13 +500,20 @@ def properties (curie, property_value):
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /properties/{{ curie }}/{{ property }}
+           template: /properties/{{ curie }}/{{ property_value }}
+      
    responses:
      200:
         description: ...
    """
-   ont = get_core (curie) 
-   return jsonify({"properties" : ont.properties(curie, property_value)})
+
+   print(curie)
+
+   print(property_value)
+
+   ont = get_core (curie)
+
+   return jsonify({"properties" : ont.properties(curie)})
 
    
 

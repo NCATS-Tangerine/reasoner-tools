@@ -189,6 +189,7 @@ class GenericOntology(Service):
 
     def children(self, identifier):
         # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
+        print('ontology')
         successors = networkx.DiGraph.predecessors(self.obo_ont, identifier)
         children = list(successors)
         return children
@@ -206,10 +207,11 @@ class GenericOntology(Service):
         siblings = [x for y in siblings for x in y]
         return siblings
 
-    def properties(self, identifier, property_value):
+    def properties(self, identifier):
         
+        properties = []
         print(identifier)
-        print(property_value)
+        #print(property_value)
         if identifier in self.ont:
             term = self.ont[identifier]
             print(term)
