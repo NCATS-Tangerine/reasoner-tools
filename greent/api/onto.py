@@ -30,7 +30,7 @@ template = {
   },
 
   "schemes": [
-    "http",
+    "https",
     "http"
   ]
 }
