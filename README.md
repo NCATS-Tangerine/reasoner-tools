@@ -7,7 +7,7 @@
 
 ## BioNames API
 
-### RoboQuery v 0.1
+## RoboQuery v 0.1
 
 This was paired with ROBOKOP circa August 2018. May not interact with ROBOKOP
 effectively right out of the box at the present.
