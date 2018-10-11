@@ -473,6 +473,40 @@ def children (curie):
    ont = get_core (curie) 
    return jsonify({"children" : ont.children(curie)})
 
+@app.route('/properties/<curie>/<property_value>')
+def properties (curie, property_value):
+   """ Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "CHEBI:30151"
+       description: "Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /properties/{{ curie }}/{{ property_value }}
+     - name: property_value
+       in: path
+       type: string
+       required: true
+       default: "http://purl.obolibrary.org/obo/chebi/inchikey"
+       description: "Use a CURIE and a PROPERTY_VALUE label to retrieve the information for that PROPERTY_VALUE."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /properties/{{ curie }}/{{ property }}
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie) 
+   return jsonify({"properties" : ont.properties(curie, property_value)})
+
    
 
 if __name__ == "__main__":

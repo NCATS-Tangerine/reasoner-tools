@@ -205,3 +205,14 @@ class GenericOntology(Service):
         # the following lines turns the list of lists into a single list
         siblings = [x for y in siblings for x in y]
         return siblings
+
+    def properties(self, identifier, property_value):
+        
+        print(identifier)
+        print(property_value)
+        if identifier in self.ont:
+            term = self.ont[identifier]
+            print(term)
+            #result = term.other['property_value']  if 'property_value' in term.other else []
+
+        return properties
