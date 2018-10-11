@@ -3,12 +3,14 @@
 
 ### Tools Available:
 
-## Onto v 2
+## Onto API
 
-## BioNames v 2
-All functions working as expected based on bionames v1 performance
+## BioNames API
 
-## RoboQuery v 0.1
+### RoboQuery v 0.1
+
+This was paired with ROBOKOP circa August 2018. May not interact with ROBOKOP
+effectively right out of the box at the present.
 
 Framework established for a system which uses ROBOKOP Builder to instantiate a graph 
 and ROBOKOP Ranker to measure properties of that graph.
