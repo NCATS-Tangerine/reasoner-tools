@@ -207,11 +207,13 @@ class GenericOntology(Service):
         siblings = [x for y in siblings for x in y]
         return siblings
 
-    def properties(self, identifier):
+    def properties(self, identifier, property_value):
         
         properties = []
+        
         print(identifier)
-        #print(property_value)
+        
+        print(property_value)
         if identifier in self.ont:
             term = self.ont[identifier]
             print(term)

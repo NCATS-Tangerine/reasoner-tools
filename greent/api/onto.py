@@ -507,13 +507,9 @@ def properties (curie, property_value):
         description: ...
    """
 
-   print(curie)
-
-   print(property_value)
-
    ont = get_core (curie)
 
-   return jsonify({"properties" : ont.properties(curie)})
+   return jsonify({"properties" : ont.properties(curie, property_value)})
 
    
 
