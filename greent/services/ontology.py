@@ -212,7 +212,6 @@ class GenericOntology(Service):
         ontology_entry = self.ont[identifier]
         property_value = []
         property_value = [x for x in ontology_entry.other['property_value'] if property_key in x]
-        print('property_value:', property_value)
-        print('property_value[0]:', property_value[0])
-        property_value = property_value[0].replace(property_key+' "', "").replace('" xsd:string', "")
+        #print('property_value[0]:', property_value[0])
+        #property_value = property_value[0].replace(property_key+' "', "").replace('" xsd:string', "")
         return property_value
