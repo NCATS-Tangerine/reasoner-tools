@@ -213,10 +213,11 @@ class GenericOntology(Service):
         test_list = []
         for x in ontology_entry.other['property_value']:
             test_list.append(x)
-            
+        next_test = [x for x in test_list if property_key in x]
+        print(next_test)
             #if property_key+' ' in x:
              #   property_value = x
         #property_value = [x for x in ontology_entry.other['property_value'] if property_key in x]
         #print('property_value[0]:', property_value[0])
-        #property_value = property_value.replace(property_key+' "', "").replace('" xsd:string', "")
-        return test_list#property_value
+        #property_value = next_test[0].replace(property_key+' "', "").replace('" xsd:string', "")
+        return next_test #property_value
