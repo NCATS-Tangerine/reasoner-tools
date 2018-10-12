@@ -207,15 +207,12 @@ class GenericOntology(Service):
         siblings = [x for y in siblings for x in y]
         return siblings
 
-    def property_value(self, identifier, property_key=None):
+    def property_value(self, identifier, property_key):
         """ Get properties """
         ontology_entry = self.ont[identifier]
         property_value = []
-        if property_key == None:
-            property_value = [x for x in ontology_entry.other['property_value']]
-        else:
-            property_value = [x for x in ontology_entry.other['property_value'] if x.startswith(property_key)]
-            print('property_value:', property_value)
-            #print('property_value[0]:', property_value[0])
-            #property_value = property_value.replace(property_key+' "', "").replace('" xsd:string', "")
+        property_value = [x for x in ontology_entry.other['property_value'] if property_key in x]
+        print('property_value:', property_value)
+        print('property_value[0]:', property_value[0])
+        property_value = property_value[0].replace(property_key+' "', "").replace('" xsd:string', "")
         return property_value
