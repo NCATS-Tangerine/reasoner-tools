@@ -209,11 +209,15 @@ class GenericOntology(Service):
 
     def property_value(self, identifier, property_key):
         """ Get properties """
+        
+        if property_key.startswith('http://'):
+            property_key = property_key.replace('http://', '')
+        
         result = []
         if identifier in self.ont:
             term = self.ont[identifier]
             result = term.other['property_value']  if 'property_value' in term.other else []
-        property_key_modified = property_key.replace("http://", "")
-        property_value = [x.replace("http://", "") for x in result if property_key_modified in x]
-        property_value = property_value[0].replace(property_key_modified+' "', "").replace('" xsd:string', "")
+        #property_key_modified = property_key.replace("http://", "")
+        property_value = [x.replace("http://", "") for x in result if property_key in x]
+        property_value = property_value[0].replace(property_key+' "', "").replace('" xsd:string', "")
         return property_value
