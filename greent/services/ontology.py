@@ -221,3 +221,10 @@ class GenericOntology(Service):
         result = result[1:]
         result = result[:len(result)-1]
         return result
+
+    def all_properties(self, identifier):
+        """ Get ALL properties for a CURIE """
+        if identifier in self.ont:
+            term = self.ont[identifier]
+            result = term.other
+        return result

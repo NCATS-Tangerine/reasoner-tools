@@ -76,9 +76,7 @@ def get_core (curie=None):
     return result
 
 @app.route('/id_list/<curie>')
-
 def id_list(curie):
-
   """ Get a list of all available id's for a given ontology, e.g. 'MONDO' or 'HPO'.
    ---
    parameters:
@@ -511,6 +509,29 @@ def property_value (curie, property_key):
 
    return jsonify({"property_value" : ont.property_value(curie, property_key)})
 
+
+@app.route('/all_properties/<curie>')
+def all_properties (curie):
+   """ Get ALL properties for a CURIE
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004634"
+       description: "Use a CURIE to return a list of all properties for the given CURIE"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /all_properties/{{ curie }}/
+   responses:
+     200:
+        description: ...
+   """
+   ont = get_core (curie) 
+   return jsonify({"all_properties" : ont.all_properties(curie)})
    
 
 if __name__ == "__main__":
