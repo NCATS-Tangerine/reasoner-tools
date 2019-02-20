@@ -1,6 +1,6 @@
 import json
 import pronto
-import networkx #KEEP networkx VERSION 2.0 ... the naming conventions are bizarre and could change!
+import networkx #BEWARE ON UPGRADES TO NETWORKX: the naming conventions are bizarre and could change! see: https://pypi.org/project/obonet/
 import obonet
 import re
 import logging
@@ -55,6 +55,15 @@ class GenericOntology(Service):
                     break
         print (f"{identifier} is_a {term} => {is_a}")
         return is_a
+
+    def new_is_a(self, identifier):
+        """ Get external references. """
+        result = []
+        for term in self.ont:
+            if 'is_a' in term.other:
+                if identifier in term.other['is_a']:
+                    result.append(term.id)
+        return result
     
     def xrefs(self, identifier):
         """ Get external references. """
