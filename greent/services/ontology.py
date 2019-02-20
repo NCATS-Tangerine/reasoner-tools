@@ -25,44 +25,45 @@ class GenericOntology(Service):
         """Return the exitlabel for an identifier"""
         return self.ont[identifier].name if identifier in self.ont else None
  
-    def is_a(self,identifier, term):
-        """Determine whether a term has a particular ancestor"""
-        print (f"is {identifier} a {term}?")
-        is_a = False
-        is_a_rel = Relationship('is_a')
-        if identifier in self.ont:
-            #parents = self.ont[identifier].parents
-            the_term = self.ont[identifier]
-            parents = the_term.relations[is_a_rel] if is_a_rel in the_term.relations else []
-            print (f"{identifier} parents {parents}")
-            for ancestor in parents:
-                ancestor_id = ancestor.id
-                if ' ' in ancestor.id:
-                    ancestor_id = ancestor.id.split(' ')[0]
-                print (f"   ancestor: {ancestor_id}")
-                is_a = ancestor_id == term
-                if is_a:
-                    break
-                if 'xref' in ancestor.other:
-                    for xancestor in ancestor.other['xref']:
-                        print (f"      ancestor-xref: {xancestor} ?=~ {term}")
-                        is_a = xancestor.startswith (term)
-                        if is_a:
-                            break
-                if not is_a:
-                    is_a = self.is_a (ancestor_id, term)
-                if is_a:
-                    break
-        print (f"{identifier} is_a {term} => {is_a}")
-        return is_a
+    # def is_a(self,identifier, term):
+    #     """Determine whether a term has a particular ancestor"""
+    #     print (f"is {identifier} a {term}?")
+    #     is_a = False
+    #     is_a_rel = Relationship('is_a')
+    #     if identifier in self.ont:
+    #         #parents = self.ont[identifier].parents
+    #         the_term = self.ont[identifier]
+    #         parents = the_term.relations[is_a_rel] if is_a_rel in the_term.relations else []
+    #         print (f"{identifier} parents {parents}")
+    #         for ancestor in parents:
+    #             ancestor_id = ancestor.id
+    #             if ' ' in ancestor.id:
+    #                 ancestor_id = ancestor.id.split(' ')[0]
+    #             print (f"   ancestor: {ancestor_id}")
+    #             is_a = ancestor_id == term
+    #             if is_a:
+    #                 break
+    #             if 'xref' in ancestor.other:
+    #                 for xancestor in ancestor.other['xref']:
+    #                     print (f"      ancestor-xref: {xancestor} ?=~ {term}")
+    #                     is_a = xancestor.startswith (term)
+    #                     if is_a:
+    #                         break
+    #             if not is_a:
+    #                 is_a = self.is_a (ancestor_id, term)
+    #             if is_a:
+    #                 break
+    #     print (f"{identifier} is_a {term} => {is_a}")
+    #     return is_a
 
-    def new_is_a(self, identifier):
+    def is_a(self, identifier):
         """ Get external references. """
         result = []
         for term in self.ont:
             if 'is_a' in term.other:
                 if identifier in term.other['is_a']:
                     result.append(term.id)
+
         return result
     
     def xrefs(self, identifier):
