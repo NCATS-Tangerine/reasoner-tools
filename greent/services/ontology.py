@@ -4,6 +4,7 @@ import networkx #BEWARE ON UPGRADES TO NETWORKX: the naming conventions are biza
 import obonet
 import re
 import logging
+from orderedset import OrderedSet
 from greent.util import LoggingUtil
 from greent.service import Service
 from pronto.relationship import Relationship
@@ -56,16 +57,27 @@ class GenericOntology(Service):
         print (f"{identifier} is_a {term} => {is_a}")
         return is_a
 
-    def strict_is_a(self, identifier):
-        """ Get external references. """
+    def single_level_is_a(self, identifier):
+        """ Get single-level 'is_a' descendants. """
         result = []
         for term in self.ont:
             if 'is_a' in term.other:
                 if identifier in term.other['is_a']:
                     result.append(term.id)
-
         return result
     
+    def descendants (self, identifier):
+        """ This is also known as a recursive-'is_a' function, returning all levels below the input"""
+        result_list = self.single_level_is_a(identifier)
+        for ID in result_list:
+            next_set = OrderedSet(self.single_level_is_a(ID))
+            if next_set:
+                result_set = OrderedSet(result_list)
+                new_ID_set = next_set.difference(result_set)
+                for new_ID in new_ID_set:
+                    result_list.append(new_ID)
+        return result_list
+
     def xrefs(self, identifier):
         """ Get external references. """
         result = []

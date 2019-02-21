@@ -25,6 +25,7 @@ mistune==0.8.4
 more-itertools==6.0.0
 networkx==2.2
 obonet==0.2.3
+orderedset==2.0.1
 pluggy==0.8.1
 ply==3.11
 pronto==0.12.1

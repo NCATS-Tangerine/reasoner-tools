@@ -98,8 +98,8 @@ def id_list(curie):
   ont = get_core (curie)
   return jsonify(ont.id_list(curie))
 
-@app.route('/strict_is_a/<curie>')
-def strict_is_a (curie):
+@app.route('/single_level_is_a/<curie>')
+def single_level_is_a (curie):
    """ Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term.
    ---
    parameters:
@@ -113,13 +113,36 @@ def strict_is_a (curie):
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /strict_is_a/{{ curie }}/
+           template: /single_level_is_a/{{ curie }}/
    responses:
      200:
        description: ...
    """
    ont = get_core (curie)
-   return jsonify ({'is_a' : ont.strict_is_a(curie)})
+   return jsonify ({'single_level_is_a' : ont.single_level_is_a(curie)})
+
+@app.route('/descendants/<curie>')
+def descendants (curie):
+   """ Use a CURIE to return a cascading/recursive list of 'is_a' descendants of the input term.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "GO:0005575"
+       description: "Use a CURIE to return a cascading/recursive list of 'is_a' descendants of the input term."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /descendants/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify ({'descendants' : ont.descendants(curie)})
 
 @app.route('/is_a/<curie>/<ancestors>/')
 def is_a (curie, ancestors):
@@ -154,6 +177,8 @@ def is_a (curie, ancestors):
      200:
        description: ...
    """
+   ### in the above, ancestors/type was formerly 'array' which caused problems for the web UI.
+   ### as 'string' the web UI is now working... if it fails for direct calls just change it back.
    assert curie, "An identifier must be supplied."
    assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
    ont = get_core (curie)
