@@ -98,47 +98,47 @@ def id_list(curie):
   ont = get_core (curie)
   return jsonify(ont.id_list(curie))
 
-# @app.route('/is_a/<curie>/<ancestors>/')
-# def is_a (curie, ancestors):
-#    """ Determine ancestry.
-#    ---
-#    parameters:
-#      - name: curie
-#        in: path
-#        type: string
-#        required: true
-#        default: GO:2001317
-#        description: "An identifier from an ontology. eg, GO:2001317"
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /is_a/{{ input }}/{{ input2 }}
-#      - name: ancestors
-#        in: path
-#        type: array
-#        required: true
-#        default: "MONDO:0004631"
-#        items:
-#          type: string
-#        description: "A comma separated list of identifiers. eg, GO:1901362"
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /is_a/{{ input }}/{{ input2 }}
-#    responses:
-#      200:
-#        description: ...
-#    """
-#    assert curie, "An identifier must be supplied."
-#    assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
-#    ont = get_core (curie)
-#    return jsonify ({
-#        "is_a"      : ont.is_a(curie, ancestors),
-#        "id"        : curie,
-#        "ancestors" : ancestors
-#    })
+@app.route('/is_a/<curie>/<ancestors>/')
+def is_a (curie, ancestors):
+   """ Determine ancestry.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: GO:2001317
+       description: "An identifier from an ontology. eg, GO:2001317"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /is_a/{{ input }}/{{ input2 }}
+     - name: ancestors
+       in: path
+       type: string
+       required: true
+       default: "MONDO:0004631"
+       items:
+         type: string
+       description: "A comma separated list of identifiers. eg, GO:1901362"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /is_a/{{ input }}/{{ input2 }}
+   responses:
+     200:
+       description: ...
+   """
+   assert curie, "An identifier must be supplied."
+   assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
+   ont = get_core (curie)
+   return jsonify ({
+       "is_a"      : ont.is_a(curie, ancestors),
+       "id"        : curie,
+       "ancestors" : ancestors
+   })
      
 @app.route('/label/<curie>/')
 def label (curie):
@@ -333,9 +333,9 @@ def exactMatch (curie):
    ont = get_core (curie)
    return jsonify ({'exact matches' : ont.exactMatch(curie)})
 
-@app.route('/is_a/<curie>')
-def is_a (curie):
-   """ Use a CURIE to return a list of the direct 'is_a' descendants of the input term.
+@app.route('/strict_is_a/<curie>')
+def strict_is_a (curie):
+   """ Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term.
    ---
    parameters:
      - name: curie
@@ -343,18 +343,18 @@ def is_a (curie):
        type: string
        required: true
        default: "GO:0005575"
-       description: "Use a CURIE to return a list of disjoint 'is_a' descendants of the input term."
+       description: "Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /is_a/{{ curie }}/
+           template: /strict_is_a/{{ curie }}/
    responses:
      200:
        description: ...
    """
    ont = get_core (curie)
-   return jsonify ({'is_a' : ont.is_a(curie)})
+   return jsonify ({'is_a' : ont.strict_is_a(curie)})
 
 @app.route('/closeMatch/<curie>')
 def closeMatch (curie):
