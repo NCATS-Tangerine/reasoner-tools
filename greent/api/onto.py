@@ -98,6 +98,29 @@ def id_list(curie):
   ont = get_core (curie)
   return jsonify(ont.id_list(curie))
 
+@app.route('/strict_is_a/<curie>')
+def strict_is_a (curie):
+   """ Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term.
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: "GO:0005575"
+       description: "Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /strict_is_a/{{ curie }}/
+   responses:
+     200:
+       description: ...
+   """
+   ont = get_core (curie)
+   return jsonify ({'is_a' : ont.strict_is_a(curie)})
+
 @app.route('/is_a/<curie>/<ancestors>/')
 def is_a (curie, ancestors):
    """ Determine ancestry.
@@ -333,29 +356,6 @@ def exactMatch (curie):
    ont = get_core (curie)
    return jsonify ({'exact matches' : ont.exactMatch(curie)})
 
-@app.route('/strict_is_a/<curie>')
-def strict_is_a (curie):
-   """ Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term.
-   ---
-   parameters:
-     - name: curie
-       in: path
-       type: string
-       required: true
-       default: "GO:0005575"
-       description: "Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term."
-       x-valueType:
-         - http://schema.org/string
-       x-requestTemplate:
-         - valueType: http://schema.org/string
-           template: /strict_is_a/{{ curie }}/
-   responses:
-     200:
-       description: ...
-   """
-   ont = get_core (curie)
-   return jsonify ({'is_a' : ont.strict_is_a(curie)})
-
 @app.route('/closeMatch/<curie>')
 def closeMatch (curie):
    """ Use a CURIE to return a list of closely matching IDs.
@@ -379,9 +379,9 @@ def closeMatch (curie):
    ont = get_core (curie)
    return jsonify ({'close matches' : ont.closeMatch(curie)})
 
-@app.route('/descendants/<curie>')
-def descendants (curie):
-   """ Use a CURIE to return a list of ontological descendants (children).
+@app.route('/subterms/<curie>')
+def subterms (curie):
+   """ Use a CURIE to return a list of ontological subterms.
    ---
    parameters:
      - name: curie
@@ -389,22 +389,22 @@ def descendants (curie):
        type: string
        required: true
        default: "MONDO:0004634"
-       description: "Use a CURIE to find that term's descendants (children)."
+       description: "Use a CURIE to find that term's subterms."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /descendants/{{ curie }}/
+           template: /subterms/{{ curie }}/
    responses:
      200:
        description: ...
    """
    ont = get_core (curie)
-   return jsonify({ "descendants" : ont.descendants(curie) }  )
+   return jsonify({ "subterms" : ont.subterms(curie) }  )
 
-@app.route('/ancestors/<curie>')
-def ancestors (curie):
-   """ Use a CURIE to return a list of ontological ancestors.
+@app.route('/superterms/<curie>')
+def superterms (curie):
+   """ Use a CURIE to return a list of ontological superterms.
    ---
    parameters:
      - name: curie
@@ -412,18 +412,18 @@ def ancestors (curie):
        type: string
        required: true
        default: "MONDO:0004634"
-       description: "Use a CURIE to find that term's ancestors."
+       description: "Use a CURIE to find that term's superterms."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /ancestors/{{ curie }}/
+           template: /superterms/{{ curie }}/
    responses:
      200:
         description: ...
    """
    ont = get_core (curie)
-   return jsonify({ "ancestors" : ont.ancestors(curie) }  )
+   return jsonify({ "superterms" : ont.superterms(curie) }  )
 
 @app.route('/siblings/<curie>')
 def siblings (curie):

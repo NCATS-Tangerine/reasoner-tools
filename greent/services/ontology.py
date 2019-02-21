@@ -177,19 +177,15 @@ class GenericOntology(Service):
         all_closeMatches = normal_closeMatches + umls_closeMatches
         return all_closeMatches
 
-    def descendants(self, identifier):
-        # networkx.ancestors returns SUBTERMS (DESCENDANTS)
-        # networkx.ancestors(<file>.obo, CURIE) ---> this says
-        # that CURIE is the ancestor and DESCENDANTS will be returned...
-        descendants = networkx.ancestors(self.obo_ont, identifier)
-        return list(descendants)
+    def subterms(self, identifier):
+        # networkx.ancestors returns SUBTERMS
+        subterms = networkx.ancestors(self.obo_ont, identifier)
+        return list(subterms)
 
-    def ancestors(self, identifier):
-        # networkx.descendants returns SUPERTERMS (ANCESTORS)
-        # networkx.descendants(<file>.obo, CURIE) --> this says
-        # that CURIE is the descendant and ANCESTORS will be returned
-        ancestors = networkx.descendants(self.obo_ont, identifier)
-        return list(ancestors)
+    def superterms(self, identifier):
+        # networkx.descendants returns SUPERTERMS
+        superterms = networkx.descendants(self.obo_ont, identifier)
+        return list(superterms)
 
     def parents(self,identifier):
         # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
