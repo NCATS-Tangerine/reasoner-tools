@@ -60,10 +60,22 @@ class GenericOntology(Service):
     def single_level_is_a(self, identifier):
         """ Get single-level 'is_a' descendants. """
         result = []
-        for term in self.ont:
-            if 'is_a' in term.other:
-                if identifier in term.other['is_a']:
-                    result.append(term.id)
+        if 'MONDO' in identifier:
+            for term in self.ont:
+                if 'is_a' in term.other:
+                    for x in term.other['is_a']:
+                        if identifier in x:
+                            print()
+                            print('the terms id is:', term.id)
+                            print('the term "is_a":', x)
+                            print()
+                            result.append(term.id)
+        #elif 'GO' in identifier:
+        else:
+            for term in self.ont:
+                if 'is_a' in term.other:
+                    if identifier in term.other['is_a']:
+                        result.append(term.id)
         return result
     
     def descendants (self, identifier):
