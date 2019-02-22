@@ -69,13 +69,14 @@ class GenericOntology(Service):
     def descendants (self, identifier):
         """ This is also known as a recursive-'is_a' function, returning all levels below the input"""
         result_list = self.single_level_is_a(identifier)
-        for ID in result_list:
-            next_set = OrderedSet(self.single_level_is_a(ID))
-            if next_set:
-                result_set = OrderedSet(result_list)
-                new_ID_set = next_set.difference(result_set)
-                for new_ID in new_ID_set:
-                    result_list.append(new_ID)
+        if result_list:
+            for ID in result_list:
+                next_set = OrderedSet(self.single_level_is_a(ID))
+                if next_set:
+                    result_set = OrderedSet(result_list)
+                    new_ID_set = next_set.difference(result_set)
+                    for new_ID in new_ID_set:
+                        result_list.append(new_ID)
         return result_list
 
     def xrefs(self, identifier):
