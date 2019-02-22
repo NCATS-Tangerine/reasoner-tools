@@ -107,7 +107,7 @@ def single_level_is_a (curie):
        in: path
        type: string
        required: true
-       default: "GO:0005575"
+       default: "GO:0005576"
        description: "Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term."
        x-valueType:
          - http://schema.org/string
