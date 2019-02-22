@@ -66,20 +66,6 @@ class GenericOntology(Service):
                     for x in term.other['is_a']:
                         if identifier in x:
                             result.append(term.id)
-        #the method below works for these ontologies: go
-        # if 'GO' in identifier:
-        #     for term in self.ont:
-        #         if 'is_a' in term.other:
-        #             if identifier in term.other['is_a']:
-        #                 result.append(term.id)
-        #     result = list(set(result))
-        
-        # # Now, for CHEBI...
-        # if 'CHEBI' in identifier:
-        #     for term in self.ont:
-        #         if 'is_a' in term.other:
-        #             if identifier in term.other['is_a']:
-        #                 result.append(term.id)
         else:
             for term in self.ont:
                 if 'is_a' in term.other:
