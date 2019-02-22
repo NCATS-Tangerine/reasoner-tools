@@ -65,10 +65,6 @@ class GenericOntology(Service):
                 if 'is_a' in term.other:
                     for x in term.other['is_a']:
                         if identifier in x:
-                            print()
-                            print('the terms id is:', term.id)
-                            print('the term "is_a":', x)
-                            print()
                             result.append(term.id)
         #elif 'GO' in identifier:
         else:
