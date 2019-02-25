@@ -36,6 +36,8 @@ $python3 -m venv YOUR_ENV_NAME
 $source YOUR_ENV_NAME/bin/activate
 $cd reasoner-tools
 $pip install -r greent/requirements.txt
+
+- TO RUN VIA PYTHON:
 $PYTHONPATH=$PWD python3 builder/api/naming.py
 -navigate to localhost:5000/apidocs
 make functionality changes in greent/services/bionames.py
