@@ -46,12 +46,10 @@ class Core:
     """ Core ontology services. """
     def __init__(self):
         self.onts = {}
-
         # self.context = service_context = ServiceContext (
         #     config=app.config['SWAGGER']['greent_conf'])
         self.context = service_context = ServiceContext (
-            config=os.environ.get('greent.conf')
-        )
+            config=os.environ.get('greent.conf'))
         data_dir = app.config['onto']['data']
         data_pattern = os.path.join (data_dir, "*.obo")
         ontology_files = glob.glob (data_pattern)
