@@ -12,7 +12,7 @@ from greent.servicecontext import ServiceContext
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 
 template = {
   "swagger": "2.0",
@@ -46,13 +46,16 @@ class Core:
     """ Core ontology services. """
     def __init__(self):
         self.onts = {}
+
+        # self.context = service_context = ServiceContext (
+        #     config=app.config['SWAGGER']['greent_conf'])
         self.context = service_context = ServiceContext (
-            config=app.config['SWAGGER']['greent_conf'])
+            config=os.environ.get('greent.conf')
+        )
         data_dir = app.config['onto']['data']
         data_pattern = os.path.join (data_dir, "*.obo")
         ontology_files = glob.glob (data_pattern)
         for f in ontology_files:
-            
             print (f"loading {f}")
             file_name = os.path.basename (f)
             name = file_name.replace (".obo", "")

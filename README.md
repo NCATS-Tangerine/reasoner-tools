@@ -4,6 +4,19 @@
 ### Tools Available:
 
 ## Onto API
+### To edit/execute Onto API locally:
+
+```
+$git clone git@github.com:NCATS-Translator/reasoner-tools
+- make a virtual env and activate it, recommended as follows:
+$python3 -m venv YOUR_ENV_NAME
+$source YOUR_ENV_NAME/bin/activate
+$cd reasoner-tools
+$pip install -r greent/requirements.txt
+$export greent_conf=greent/greent.conf
+$PYTHONPATH=$PWD python3 greent/api/onto.py
+-navigate to localhost:5000/apidocs
+```
 
 ## BioNames API
 
