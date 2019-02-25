@@ -19,7 +19,6 @@ class GenericOntology(Service):
         """ Load an obo file. """
         super(GenericOntology, self).__init__("go", context)
         self.ont = pronto.Ontology (obo)
-        #self.pronto_ont = pronto.Ontology (obo)
         self.obo_ont = obonet.read_obo(obo)
         
     def label(self,identifier):
@@ -32,7 +31,6 @@ class GenericOntology(Service):
         is_a = False
         is_a_rel = Relationship('is_a')
         if identifier in self.ont:
-            #parents = self.ont[identifier].parents
             the_term = self.ont[identifier]
             parents = the_term.relations[is_a_rel] if is_a_rel in the_term.relations else []
             print (f"{identifier} parents {parents}")
@@ -67,6 +65,7 @@ class GenericOntology(Service):
                         if identifier in x:
                             result.append(term.id)
         else:
+            print('hi')
             for term in self.ont:
                 if 'is_a' in term.other:
                     if identifier in term.other['is_a']:
@@ -166,12 +165,10 @@ class GenericOntology(Service):
         return id_list
 
     def exactMatch(self, identifier):
-        
         result = []
         if identifier in self.ont:
             term = self.ont[identifier]
             result = term.other['property_value']  if 'property_value' in term.other else []
-        
         raw_exactMatches = [x.replace('exactMatch ', '') for x in result if 'exactMatch' in x]
         url_stripped_exactMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_exactMatches]
         formatted_exactMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_exactMatches]     
@@ -182,12 +179,10 @@ class GenericOntology(Service):
         return all_exactMatches
 
     def closeMatch(self, identifier):
-        
         result = []
         if identifier in self.ont:
             term = self.ont[identifier]
             result = term.other['property_value']  if 'property_value' in term.other else []
-
         raw_closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
         url_stripped_closeMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_closeMatches]
         formatted_closeMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_closeMatches]     
@@ -198,38 +193,31 @@ class GenericOntology(Service):
         return all_closeMatches
 
     def subterms(self, identifier):
-        # networkx.ancestors returns SUBTERMS
+        # networkx.ancestors returns SUBTERMS, check docs
         subterms = networkx.ancestors(self.obo_ont, identifier)
         return list(subterms)
 
     def superterms(self, identifier):
-        # networkx.descendants returns SUPERTERMS
+        # networkx.descendants returns SUPERTERMS, check docs
         superterms = networkx.descendants(self.obo_ont, identifier)
         return list(superterms)
 
     def parents(self,identifier):
-        # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
         predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
         parents = [key for key, value in predecessor_lineage.items() if identifier in value]
         return parents
 
     def children(self, identifier):
-        # BEWARE: networkx is powerful and multi-faceted but the naming convention is CONFUSING
         print('ontology')
         successors = networkx.DiGraph.predecessors(self.obo_ont, identifier)
         children = list(successors)
         return children
 
     def siblings(self, identifier):
-        # predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
-        # parents = [key for key, value in predecessor_lineage.items() if identifier in value]
-        # siblings = [list(networkx.DiGraph.predecessors(self.obo_ont, identifier)) for x in parents]
-        # print(siblings)
         predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
         parents = [key for key, value in predecessor_lineage.items() if identifier in value]
         sibling_lists = [networkx.DiGraph.predecessors(self.obo_ont, x) for x in parents]
         siblings = [list(x) for x in sibling_lists]
-        # the following lines turns the list of lists into a single list
         siblings = [x for y in siblings for x in y]
         return siblings
 
