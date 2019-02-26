@@ -65,7 +65,6 @@ class GenericOntology(Service):
                         if identifier in x:
                             result.append(term.id)
         else:
-            print('hi')
             for term in self.ont:
                 if 'is_a' in term.other:
                     if identifier in term.other['is_a']:
@@ -74,15 +73,16 @@ class GenericOntology(Service):
 
     def descendants (self, identifier):
         """ This is also known as a recursive-'is_a' function, returning all levels below the input"""
+        startTime = datetime.now()
+        result_list = []
         result_list = self.single_level_is_a(identifier)
         if result_list:
             for ID in result_list:
-                next_set = OrderedSet(self.single_level_is_a(ID))
-                if next_set:
+                next_ID_set = OrderedSet(self.single_level_is_a(ID))
+                if next_ID_set:
                     result_set = OrderedSet(result_list)
                     new_ID_set = next_set.difference(result_set)
-                    for new_ID in new_ID_set:
-                        result_list.append(new_ID)
+                    result_list.extend(new_ID_set)
         return result_list
 
     def xrefs(self, identifier):
