@@ -69,10 +69,11 @@ def id_list(curie):
 
   sparql.setQuery("""
       SELECT DISTINCT ?subject ?predicate ?object
-      FROM <http://reasoner.renci.org/ontology>
-      WHERE { ?subject ?predicate ?object
-        .FILTER regex(str(?subject), "http://purl.obolibrary.org/obo/MONDO_") }
-      LIMIT 10
+      FROM     <http://reasoner.renci.org/ontology>
+      WHERE {    ?subject ?predicate ?object .
+      FILTER STRSTARTS(str(?subject), "http://purl.obolibrary.org/obo/MONDO_")
+      }
+      LIMIT 10000
       """)
 
 
