@@ -1,17 +1,9 @@
 import argparse
-#import json
+import json
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
-
-#import os
-#import glob
-#import re
-#import requests
-#import shutil
-#import yaml
-#from lru import LRU
-#from greent.services.ontology import GenericOntology
-#from greent.servicecontext import ServiceContext
+from SPARQLWrapper import SPARQLWrapper, JSON
+from datetime import datetime
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -60,14 +52,57 @@ def id_list(curie):
      200:
        description: ...
    """
+
+  starttime = datetime.now()
+
+  uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
+  mondo_filter = 'http://purl.obolibrary.org/obo/MONDO_'
+  sparql = SPARQLWrapper(uberongraph_request_url)
+  
+  # sparql.setQuery("""
+  #     SELECT DISTINCT ?subject ?predicate ?object
+  #     FROM <http://reasoner.renci.org/ontology>
+  #     WHERE { ?subject ?predicate ?object
+  #       .FILTER regex(str(?subject), "http://purl.obolibrary.org/obo/%{0}%_") }
+  #     LIMIT 10
+  #     """.format(curie))
+
+  sparql.setQuery("""
+      SELECT DISTINCT ?subject ?predicate ?object
+      FROM <http://reasoner.renci.org/ontology>
+      WHERE { ?subject ?predicate ?object
+        .FILTER regex(str(?subject), "http://purl.obolibrary.org/obo/MONDO_") }
+      LIMIT 10
+      """)
+
+
+  sparql.setReturnFormat(JSON)
+
+  results = sparql.query().convert()
+  
+  endtime = datetime.now()
+
+
   print()
-  print(curie)
+  print(json.dumps(results, sort_keys=True, indent = 4))
+  print()
+  print(type(results))
+  print()
+
+  print('total time:', endtime - starttime)
   print()
   return curie
 
 
 
-
+sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+sparql.setQuery("""
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT ?label
+    WHERE { <http://dbpedia.org/resource/Asturias> rdfs:label ?label }
+""")
+sparql.setReturnFormat(JSON)
+results = sparql.query().convert()
 
 
 
