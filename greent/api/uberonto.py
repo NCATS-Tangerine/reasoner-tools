@@ -47,26 +47,15 @@ def id_list(curie):
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /label/{{ input }}/
+           template: /id_list/{{ input }}/
    responses:
      200:
        description: ...
    """
 
   starttime = datetime.now()
-
   uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
-  mondo_filter = 'http://purl.obolibrary.org/obo/MONDO_'
   sparql = SPARQLWrapper(uberongraph_request_url)
-  
-  # sparql.setQuery("""
-  #     SELECT DISTINCT ?subject ?predicate ?object
-  #     FROM <http://reasoner.renci.org/ontology>
-  #     WHERE { ?subject ?predicate ?object
-  #       .FILTER regex(str(?subject), "http://purl.obolibrary.org/obo/%{0}%_") }
-  #     LIMIT 10
-  #     """.format(curie))
-
   sparql.setQuery("""
       SELECT DISTINCT ?subject ?predicate ?object
       FROM     <http://reasoner.renci.org/ontology>
@@ -75,37 +64,67 @@ def id_list(curie):
       }
       LIMIT 10000
       """)
-
-
   sparql.setReturnFormat(JSON)
-
   results = sparql.query().convert()
-  
   endtime = datetime.now()
 
-
   print()
-  print(json.dumps(results, sort_keys=True, indent = 4))
+  #print(json.dumps(results, sort_keys=True, indent = 4))
   print()
   print(type(results))
   print()
-
   print('total time:', endtime - starttime)
   print()
-  return curie
+  return jsonify(results)
 
 
+@app.route('/descendants/<curie>')
+def descendants(curie):
+  """ Get all cascading 'is_a' descendants of an input CURIE term
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: CHEBI_23367
+       description: "Get all cascading 'is_a' descendants of an input CURIE term"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /descendants/{{ input }}/
+   responses:
+     200:
+       description: ...
+   """
 
-sparql = SPARQLWrapper("http://dbpedia.org/sparql")
-sparql.setQuery("""
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    SELECT ?label
-    WHERE { <http://dbpedia.org/resource/Asturias> rdfs:label ?label }
-""")
-sparql.setReturnFormat(JSON)
-results = sparql.query().convert()
+  starttime = datetime.now()
+  uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
+  sparql = SPARQLWrapper(uberongraph_request_url)
+  sparql.setQuery("""
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?term
+      FROM     <http://reasoner.renci.org/ontology/closure>
+      WHERE {    
+        ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/CHEBI_23367>
+      }
+      LIMIT 10
+      """)
+  sparql.setReturnFormat(JSON)
+  results = sparql.query().convert()
+  endtime = datetime.now()
 
+  print()
+  for term in results['results']['bindings']:
+    print(json.dumps(term['term']['value'], sort_keys=True, indent = 4))
+    print()
+  print(type(results))
 
+  print()
+  print('total time:', endtime - starttime)
+  print()
+  return jsonify(results)
 
 
 
