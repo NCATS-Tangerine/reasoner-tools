@@ -3,7 +3,6 @@ import json
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from SPARQLWrapper import SPARQLWrapper, JSON
-from datetime import datetime
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -77,7 +76,6 @@ def id_list(curie):
   print()
   return jsonify(results)
 
-
 @app.route('/descendants/<curie>')
 def descendants(curie):
   """ Get all cascading 'is_a' descendants of an input CURIE term
@@ -98,35 +96,32 @@ def descendants(curie):
      200:
        description: ...
    """
-
-  starttime = datetime.now()
+  formatted_input = curie.replace(':','_')
   uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
   sparql = SPARQLWrapper(uberongraph_request_url)
-  sparql.setQuery("""
+  query_text = """
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       SELECT DISTINCT ?term
       FROM     <http://reasoner.renci.org/ontology/closure>
       WHERE {    
-        ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/CHEBI_23367>
+        ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/PLACEHOLDER>
       }
-      LIMIT 10
-      """)
+      """
+  formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
+  sparql.setQuery(formatted_query_text)
   sparql.setReturnFormat(JSON)
   results = sparql.query().convert()
-  endtime = datetime.now()
-
-  print()
+  output = []
   for term in results['results']['bindings']:
-    print(json.dumps(term['term']['value'], sort_keys=True, indent = 4))
-    print()
-  print(type(results))
-
-  print()
-  print('total time:', endtime - starttime)
-  print()
-  return jsonify(results)
-
-
+    sub_term = term['term']['value']
+    # print(json.dumps(thing, sort_keys=True, indent = 4))
+    output.append(sub_term)
+  formatted_output = []
+  for term in output:
+    formatted_output.append(term.replace('http://purl.obolibrary.org/obo/','') \
+    .replace('_',':').replace('http://linkedlifedata.com/resource/umls/id/','') \
+    .replace('http://www.ebi.ac.uk/efo/',''))
+  return jsonify(formatted_output)
 
 # @app.route('/single_level_is_a/<curie>')
 # def single_level_is_a (curie):
