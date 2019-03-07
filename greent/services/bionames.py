@@ -67,7 +67,7 @@ class BioNames(Service):
         return chemical_ids_from_drug_names (q)
     
     def _find(self, q, concept):
-        return self._search_onto(q, concept=concept) + self._search_owlsim(q, concept)
+        return self._search_onto(q, concept=concept) #+ self._search_owlsim(q, concept) #OWLSIM acting up lately march 7 2019
  
     def _search_owlsim(self, q, concept):
         result = []
