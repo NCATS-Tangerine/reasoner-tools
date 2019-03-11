@@ -66,20 +66,44 @@ class BioNames(Service):
         return chemical_ids_from_drug_names (q)
     
     def _find(self, q, concept):
-        return self._search_onto(q, concept=concept) #+ self._search_owlsim(q, concept) #OWLSIM acting up lately march 7 2019
+        all_find_results_filtered = []
+        all_find_results = self._search_onto(q, concept=concept) + self._search_monarch(q, concept)
+        for x in all_find_results:
+            if x not in all_find_results_filtered:
+                all_find_results_filtered.append(x)
+
+        return all_find_results_filtered
  
-    def _search_owlsim(self, q, concept):
+    # def _search_owlsim(self, q, concept):
+    #     result = []
+    #     try:
+    #         owlsim_query = f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}"
+    #         logger.debug (f"owlsim query: {owlsim_query}")
+    #         response = requests.get (owlsim_query).json ()
+    #         logger.debug (f"owlsim response: {response}")
+    #         if response and "docs" in response:
+    #             result = [ { "id" : d["id"], "label" : ", ".join (d["label"]), "type": concept } for d in response["docs"] ]
+    #         logger.debug (f"owlsim result: {result}")
+    #     except:
+    #         traceback.print_exc ()
+    #     return result
+
+    def _search_monarch(self, q, concept):
         result = []
         try:
-            owlsim_query = f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}"
-            logger.debug (f"owlsim query: {owlsim_query}")
-            response = requests.get (owlsim_query).json ()
-            logger.debug (f"owlsim response: {response}")
-            if response and "docs" in response:
-                result = [ { "id" : d["id"], "label" : ", ".join (d["label"]), "type": concept } for d in response["docs"] ]
-            logger.debug (f"owlsim result: {result}")
+            monarch_query = f"http://api.monarchinitiative.org/api/search/entity/autocomplete/{q}&category={concept}"
+            #logger.debug (f"monarch query: {monarch_query}")
+            response = requests.get (monarch_query).json ()
+            if response:
+                for x in response['docs']:
+                    for key, value in x.items():
+                        if key == 'category':
+                            if value[0] == concept:            
+                                new_dict = {'id' : x['id'], 'label' : x['label'][0], 'type' : x['category'][0]}
+                                result.append(new_dict)
         except:
             traceback.print_exc ()
+        print(result)
         return result
     
     def _search_onto(self, q, concept=None):
@@ -103,15 +127,15 @@ class BioNames(Service):
                 mesh_ID_formatted = ID_split[0]+':'+ID_split[1]
                 url = "http://id.nlm.nih.gov/mesh/sparql"
                 mesh_response = MeshKS(ServiceContext.create_context(), url).get_label_by_id(mesh_ID_formatted)
-                print (mesh_response[0]['label'])
+                #print (mesh_response[0]['label'])
                 mesh_result = result + [{ "id" : ID, "label" : mesh_response[0]['label']} ]
-                print(mesh_result)
+                #print(mesh_result)
             except:
                 traceback.print_exc ()
         else:
             try:
                 onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) } ]
-                print (onto_result)
+                #print (onto_result)
             except:
                 traceback.print_exc ()
         all_results = onto_result + mesh_result
