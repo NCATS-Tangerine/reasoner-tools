@@ -41,7 +41,6 @@ class BioNames(Service):
             "biological process" : "biological_process_or_activity",
             "Molecular Activity" : "biological_process_or_activity",
             "genetic_condition" : "disease"
-
         }
         
     def lookup_router(self, q, concept=None):
