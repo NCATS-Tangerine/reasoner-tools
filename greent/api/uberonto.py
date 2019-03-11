@@ -120,22 +120,22 @@ def descendants(curie):
     .replace('http://www.ebi.ac.uk/efo/',''))
   return jsonify(formatted_output)
 
-@app.route('/parents/<curie>')
-def parents(curie):
-  """ Return all incoming (once-removed superterms via SubClassOf from Ontology Graph).
+@app.route('/children/<curie>')
+def children(curie):
+  """ Return all outgoing (once-removed subterms) via SubClassOf from the Ontology Graph
    ---
    parameters:
      - name: curie
        in: path
        type: string
        required: true
-       default: GO:0005575
-       description: "Return all incoming (once-removed superterms via SubClassOf from Ontology Graph)."
+       default: GO:0005576
+       description: "Return all outgoing (once-removed subterms) via SubClassOf from the Ontology Graph"
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
          - valueType: http://schema.org/string
-           template: /parents/{{ input }}/
+           template: /children/{{ input }}/
    responses:
      200:
        description: ...
