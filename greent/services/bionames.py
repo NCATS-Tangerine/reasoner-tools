@@ -103,7 +103,6 @@ class BioNames(Service):
                                 result.append(new_dict)
         except:
             traceback.print_exc ()
-        print(result)
         return result
     
     def _search_onto(self, q, concept=None):
