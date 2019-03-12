@@ -69,24 +69,12 @@ class BioNames(Service):
         all_find_results_filtered = []
         all_find_results = self._search_onto(q, concept=concept) + self._search_monarch(q, concept)
         for x in all_find_results:
-            if x not in all_find_results_filtered:
-                all_find_results_filtered.append(x)
-
+            label = x['label'].lower()
+            if q.lower() in label:
+                if x['id'] not in str(all_find_results_filtered):
+                    all_find_results_filtered.append(x)
+        # print(all_find_results_filtered)
         return all_find_results_filtered
- 
-    # def _search_owlsim(self, q, concept):
-    #     result = []
-    #     try:
-    #         owlsim_query = f"https://owlsim.monarchinitiative.org/api/search/entity/autocomplete/{q}?rows=20&start=0&category={concept}"
-    #         logger.debug (f"owlsim query: {owlsim_query}")
-    #         response = requests.get (owlsim_query).json ()
-    #         logger.debug (f"owlsim response: {response}")
-    #         if response and "docs" in response:
-    #             result = [ { "id" : d["id"], "label" : ", ".join (d["label"]), "type": concept } for d in response["docs"] ]
-    #         logger.debug (f"owlsim result: {result}")
-    #     except:
-    #         traceback.print_exc ()
-    #     return result
 
     def _search_monarch(self, q, concept):
         result = []
@@ -113,6 +101,7 @@ class BioNames(Service):
                 result = [r for r in result if r['type'] == concept]
         except:
             traceback.print_exc ()
+        print(result)
         return result
 
     def ID_to_label_lookup(self, ID):
@@ -126,15 +115,14 @@ class BioNames(Service):
                 mesh_ID_formatted = ID_split[0]+':'+ID_split[1]
                 url = "http://id.nlm.nih.gov/mesh/sparql"
                 mesh_response = MeshKS(ServiceContext.create_context(), url).get_label_by_id(mesh_ID_formatted)
-                #print (mesh_response[0]['label'])
                 mesh_result = result + [{ "id" : ID, "label" : mesh_response[0]['label']} ]
-                #print(mesh_result)
             except:
                 traceback.print_exc ()
         else:
             try:
-                onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) } ]
-                #print (onto_result)
+                onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) }]
+                print (onto_result)
+                print()
             except:
                 traceback.print_exc ()
         all_results = onto_result + mesh_result
