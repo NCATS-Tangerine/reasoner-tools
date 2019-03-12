@@ -78,39 +78,34 @@ def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
     else:
         pubchem_IDs = [x['CID'] for x in pubchem_query['PropertyTable']['Properties']]
         pubchem_IDs_annotated = ["PUBCHEM:" + str(x) for x in pubchem_IDs]
-        #print('pubchem:', pubchem_IDs_annotated)
         return pubchem_IDs_annotated
 
 def onto_drug_name_to_chemical_identifier(drug_name_as_string):
     query_text = f"https://onto.renci.org/search/{drug_name_as_string}/?regex=false"
     onto_response = requests.get(query_text).json()
     onto_IDs_annotated = []
-    for key, value in onto_response['values'][0].items():
-        if key == 'id':
-            onto_IDs_annotated.append(value)
+    new_dict = {}
+    for substance in onto_response['values']:
+        del substance['type']
+        onto_IDs_annotated.append(substance)
+    print(onto_IDs_annotated)
+    print()
+
+
     return onto_IDs_annotated
 
 def chemical_ids_from_drug_names( drug_name_as_string ):
     """Look up drugs by name.  We will pull results from multiple sources in this case,
     and return them all."""
     logger=logging.getLogger('application')
-    logger.debug('Looking up drug name: {}'.format(drug_name_as_string))
-    #CTD_ids
     ctd_ids = ctd_drug_name_string_to_chemical_identifier(drug_name_as_string)
-    logger.debug(' CTD says: {}'.format(ctd_ids))
-    # pharos_ids 
-    #pharos_ids = pharos_drug_name_to_chemical_identifier (drug_name_as_string)
-    #logger.debug(' pharos says: {}'.format(pharos_ids))
-    # pubchem_ids = 
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
-    logger.debug(' pubchem says: {}'.format(pubchem_ids))
-    #Onto IDs
     onto_ids = onto_drug_name_to_chemical_identifier(drug_name_as_string)
-    logger.debug(' onto says: {}'.format(onto_ids))
-    # #all_ids:
-    chemical_ids_from_drug_names = ctd_ids + pubchem_ids + onto_ids #+ pharos_ids 
-    logger.debug( chemical_ids_from_drug_names )
-    return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
+    chemical_ids_from_drug_names = ctd_ids + pubchem_ids + onto_ids
+    
+    return
+    #return onto_ids
+    #return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
 
 def lookup_identifier( name, name_type, greent ):
     if name_type == node_types.DRUG:
