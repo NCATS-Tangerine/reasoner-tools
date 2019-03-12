@@ -101,7 +101,7 @@ class BioNames(Service):
                 result = [r for r in result if r['type'] == concept]
         except:
             traceback.print_exc ()
-        print(result)
+        #print(result)
         return result
 
     def ID_to_label_lookup(self, ID):
@@ -121,8 +121,8 @@ class BioNames(Service):
         else:
             try:
                 onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) }]
-                print (onto_result)
-                print()
+                #print (onto_result)
+                #print()
             except:
                 traceback.print_exc ()
         all_results = onto_result + mesh_result
