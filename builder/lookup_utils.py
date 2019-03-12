@@ -36,12 +36,11 @@ def onto_drug_name_to_chemical_identifier(drug_name_as_string):
 
 def ctd_drug_name_string_to_chemical_identifier(drug_name_as_string):  
     CTD_query = requests.get(f"http://ctdapi.renci.org/CTD_chemicals_ChemicalName/{drug_name_as_string}/").json()
-    matches_from_CTD_query = [ x['ChemicalID'] for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
+    matches_from_CTD_query = [ { "id" : x['ChemicalID'], "label" : x['ChemicalName'].lower() } for x in CTD_query if x['ChemicalName'].upper() == drug_name_as_string.upper()]
     if not matches_from_CTD_query:
         CTD_synonym_query = requests.get (f"http://ctdapi.renci.org/CTD_chemicals_Synonyms/{drug_name_as_string}/").json()
         synonym_matches_from_CTD_query = [x['ChemicalID'] for x in CTD_synonym_query]
         matches_from_CTD_query = matches_from_CTD_query + synonym_matches_from_CTD_query
-    print('CTD:', matches_from_CTD_query)
     return matches_from_CTD_query
 
 def chemical_ids_from_drug_names( drug_name_as_string ):
@@ -51,7 +50,7 @@ def chemical_ids_from_drug_names( drug_name_as_string ):
     ctd_ids = ctd_drug_name_string_to_chemical_identifier(drug_name_as_string)
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
     onto_ids = onto_drug_name_to_chemical_identifier(drug_name_as_string)
-    chemical_ids_from_drug_names =  onto_ids + pubchem_ids #+ ctd_ids
+    chemical_ids_from_drug_names =  onto_ids + pubchem_ids + ctd_ids
     return chemical_ids_from_drug_names
 
 def lookup_identifier( name, name_type, greent ):
