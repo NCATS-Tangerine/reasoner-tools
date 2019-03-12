@@ -109,3 +109,8 @@ venv.bak/
 
 # text files for internal testing purposes
 *.obo
+children.txt
+descendants.txt
+
+# a script for checking a potential subset against its purported set
+subset_check.py
