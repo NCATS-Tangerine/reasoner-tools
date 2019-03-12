@@ -78,7 +78,8 @@ def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
     else:
         pubchem_IDs = [x['CID'] for x in pubchem_query['PropertyTable']['Properties']]
         pubchem_IDs_annotated = ["PUBCHEM:" + str(x) for x in pubchem_IDs]
-        return pubchem_IDs_annotated
+        pubchem_IDs_formatted = [ { "id" : i, "label" : drug_name_as_string } for i in pubchem_IDs_annotated ] if pubchem_IDs_annotated else []
+        return pubchem_IDs_formatted
 
 def onto_drug_name_to_chemical_identifier(drug_name_as_string):
     query_text = f"https://onto.renci.org/search/{drug_name_as_string}/?regex=false"
@@ -88,10 +89,6 @@ def onto_drug_name_to_chemical_identifier(drug_name_as_string):
     for substance in onto_response['values']:
         del substance['type']
         onto_IDs_annotated.append(substance)
-    print(onto_IDs_annotated)
-    print()
-
-
     return onto_IDs_annotated
 
 def chemical_ids_from_drug_names( drug_name_as_string ):
@@ -101,9 +98,9 @@ def chemical_ids_from_drug_names( drug_name_as_string ):
     ctd_ids = ctd_drug_name_string_to_chemical_identifier(drug_name_as_string)
     pubchem_ids = pubchem_drug_name_to_chemical_identifier (drug_name_as_string)
     onto_ids = onto_drug_name_to_chemical_identifier(drug_name_as_string)
-    chemical_ids_from_drug_names = ctd_ids + pubchem_ids + onto_ids
-    
-    return
+    chemical_ids_from_drug_names =  onto_ids + pubchem_ids #+ ctd_ids
+    return chemical_ids_from_drug_names
+    #return
     #return onto_ids
     #return [ { "id" : i, "label" : drug_name_as_string } for i in chemical_ids_from_drug_names ] if chemical_ids_from_drug_names else []
 
