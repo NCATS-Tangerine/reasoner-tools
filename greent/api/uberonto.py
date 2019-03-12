@@ -166,52 +166,6 @@ def children(curie):
     .replace('http://www.ebi.ac.uk/efo/',''))
   return jsonify(formatted_output)
 
-# @app.route('/siblings/<curie>')
-# def siblings(curie):
-#   """ Return all SubClassOf children for associated parents of an input curie..
-#    ---
-#    parameters:
-#      - name: curie
-#        in: path
-#        type: string
-#        required: true
-#        default: GO:0005575
-#        description: "Return all SubClassOf children for associated parents of an input curie.."
-#        x-valueType:
-#          - http://schema.org/string
-#        x-requestTemplate:
-#          - valueType: http://schema.org/string
-#            template: /siblings/{{ input }}/
-#    responses:
-#      200:
-#        description: ...
-#    """
-#   formatted_input = curie.replace(':','_')
-#   uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
-#   sparql = SPARQLWrapper(uberongraph_request_url)
-#   query_text = """
-#       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-#       SELECT DISTINCT ?term
-#       FROM     <http://reasoner.renci.org/ontology>
-#       WHERE {    
-#         ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/PLACEHOLDER>
-#       }
-#       """
-#   formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
-#   sparql.setQuery(formatted_query_text)
-#   sparql.setReturnFormat(JSON)
-#   results = sparql.query().convert()
-#   output = []
-#   for term in results['results']['bindings']:
-#     sub_term = term['term']['value']
-#     output.append(sub_term)
-#   formatted_output = []
-#   for term in output:
-#     formatted_output.append(term.replace('http://purl.obolibrary.org/obo/','') \
-#     .replace('_',':').replace('http://linkedlifedata.com/resource/umls/id/','') \
-#     .replace('http://www.ebi.ac.uk/efo/',''))
-#   return jsonify(formatted_output)
-
 @app.route('/label/<curie>')
 def label(curie):
   """ Get the label of a curie ID from the owl ontologies.
