@@ -52,7 +52,7 @@ def lookup (q, concept):
        type: string
        required: true
        default: asthma
-       description: "A text string of interest. This may be a fragment if 'include_similar' is set to true."
+       description: "A text string of interest. If 'include_similar' is set to true, fragments may be used. 'include_similar' also makes the search NOT case sensitive. "
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
