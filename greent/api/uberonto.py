@@ -202,9 +202,10 @@ def label(curie):
   sparql.setReturnFormat(JSON)
   results = sparql.query().convert()
   output = {}
-  label = results['results']['bindings'][0]['label']['value']
-  output['id'] = curie
-  output['label'] = label
+  if results['results']['bindings']:
+      label = results['results']['bindings'][0]['label']['value']
+      output['id'] = curie
+      output['label'] = label
   return jsonify(output)
 
 if __name__ == "__main__":
