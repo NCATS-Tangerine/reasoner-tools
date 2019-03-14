@@ -73,7 +73,6 @@ class BioNames(Service):
             if q.lower() in label:
                 if x['id'] not in str(all_find_results_filtered):
                     all_find_results_filtered.append(x)
-        # print(all_find_results_filtered)
         return all_find_results_filtered
 
     def _search_monarch(self, q, concept):
@@ -101,7 +100,6 @@ class BioNames(Service):
                 result = [r for r in result if r['type'] == concept]
         except:
             traceback.print_exc ()
-        #print(result)
         return result
 
     def ID_to_label_lookup(self, ID):
@@ -121,8 +119,6 @@ class BioNames(Service):
         else:
             try:
                 onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) }]
-                #print (onto_result)
-                #print()
             except:
                 traceback.print_exc ()
         all_results = onto_result + mesh_result
