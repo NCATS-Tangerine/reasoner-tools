@@ -1,10 +1,7 @@
 import argparse
 import glob
-import json
 import os
 import re
-import requests
-import yaml
 import shutil
 from lru import LRU
 from greent.services.ontology import GenericOntology
@@ -39,7 +36,7 @@ app.config['SWAGGER'] = {
 }
 
 swagger = Swagger(app, template=template)
-cache = LRU(100) #LRU(10) was used successfully until large, concurrent requests caused trouble...
+cache = LRU(100)
 
 class Core:
     
@@ -178,8 +175,6 @@ def is_a (curie, ancestors):
      200:
        description: ...
    """
-   ### in the above, ancestors/type was formerly 'array' which caused problems for the web UI.
-   ### as 'string' the web UI is now working... if it fails for direct calls just change it back.
    assert curie, "An identifier must be supplied."
    assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
    ont = get_core (curie)
