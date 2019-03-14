@@ -4,33 +4,13 @@ from greent.ontologies.hpo2 import HPO2
 from greent.ontologies.mondo2 import Mondo2
 from greent.services.onto import Onto
 from greent.util import LoggingUtil
-# from greent.services.biolink import Biolink
-# from greent.services.caster import Caster
-# from greent.services.chembio import ChemBioKS
-# from greent.services.chemotext import Chemotext
-# from greent.services.ctd import CTD
-# from greent.services.hetio import HetIO
-# from greent.services.hgnc import HGNC
-# from greent.services.mychem import MyChem
-# from greent.services.omnicorp import OmniCorp
-# from greent.services.omnicorp_postgres import OmniCorp
-# from greent.services.oxo import OXO
-# from greent.services.pharos import Pharos
-# from greent.services.quickgo import QuickGo
-# from greent.services.tkba import TranslatorKnowledgeBeaconAggregator
-# from greent.services.typecheck import TypeCheck
-# from greent.services.uberongraph import UberonGraphKS
-# from greent.services.unichem import UniChem
-# from greent.services.uniprot import UniProt
-# rom greent.service import ServiceContext
-
 
 logger = LoggingUtil.init_logging(__name__)
 
 class GreenT:
-
     ''' The Green Translator API - a single Python interface aggregating access mechanisms for 
     all Green Translator services. '''
+    
     #Getting rosetta in here is solely so that typecheck has access to the synonmizer - seems like
     # a crappy way to do this.   What's the right way?
     def __init__(self, context): #removed 'rosetta' from inputs b/c typecheck unutilized below
