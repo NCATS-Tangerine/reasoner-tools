@@ -3,10 +3,6 @@ import glob
 import json
 import os
 import re
-import requests
-import yaml
-import shutil
-# import flask
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from lru import LRU
@@ -86,15 +82,10 @@ def lookup (q, concept):
    assert q, "A string must be entered as a query."
    assert concept, "A string must be entered as a query."
    include_similar = request.args.get('include_similar')
-
-   # the below separation of keys ensures that a search for q = 'diabetes' returns
-   # a result distinct and different if concept = 'drug' OR concept = 'disease'
-   # any unique, two-term search will yield distinct results and cache them
    q_key = f"{q}"
    concept_key = f"{concept}"
    include_similar_key = f"{include_similar}"
    full_key = q_key + concept_key + include_similar_key
-  
    if full_key in cache:
       result = cache[full_key]
    else:  
@@ -131,7 +122,6 @@ def ID_to_label (ID):
    else:
      result = core.ID_to_label_lookup(ID=ID_key)
      cache[ID_key] = result
-
    return jsonify(result)
 
 if __name__ == "__main__":
