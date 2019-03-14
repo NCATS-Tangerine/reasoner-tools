@@ -1,6 +1,5 @@
-import json
 import pronto
-import networkx #BEWARE ON UPGRADES TO NETWORKX: the naming conventions are bizarre and could change! see: https://pypi.org/project/obonet/
+import networkx
 import obonet
 import re
 import logging
@@ -27,24 +26,20 @@ class GenericOntology(Service):
  
     def is_a(self,identifier, term):
         """Determine whether a term has a particular ancestor"""
-        print (f"is {identifier} a {term}?")
         is_a = False
         is_a_rel = Relationship('is_a')
         if identifier in self.ont:
             the_term = self.ont[identifier]
             parents = the_term.relations[is_a_rel] if is_a_rel in the_term.relations else []
-            print (f"{identifier} parents {parents}")
             for ancestor in parents:
                 ancestor_id = ancestor.id
                 if ' ' in ancestor.id:
                     ancestor_id = ancestor.id.split(' ')[0]
-                print (f"   ancestor: {ancestor_id}")
                 is_a = ancestor_id == term
                 if is_a:
                     break
                 if 'xref' in ancestor.other:
                     for xancestor in ancestor.other['xref']:
-                        print (f"      ancestor-xref: {xancestor} ?=~ {term}")
                         is_a = xancestor.startswith (term)
                         if is_a:
                             break
@@ -52,7 +47,6 @@ class GenericOntology(Service):
                     is_a = self.is_a (ancestor_id, term)
                 if is_a:
                     break
-        print (f"{identifier} is_a {term} => {is_a}")
         return is_a
 
     def single_level_is_a(self, identifier):
@@ -73,7 +67,6 @@ class GenericOntology(Service):
 
     def descendants (self, identifier):
         """ This is also known as a recursive-'is_a' function, returning all levels below the input"""
-        startTime = datetime.now()
         result_list = []
         result_list = self.single_level_is_a(identifier)
         if result_list:
@@ -104,7 +97,6 @@ class GenericOntology(Service):
     
     def search (self, text, is_regex=False, ignore_case=True):
         """ Search for the text, treating it as a regular expression if indicated. """
-        print (f"text: {text} is_regex: {is_regex}, ignore_case: {ignore_case}")
         pat = None
         if is_regex:
             pat = re.compile(text, re.IGNORECASE) if ignore_case else re.compile(text)
@@ -145,7 +137,6 @@ class GenericOntology(Service):
                             xref_pair = [ xref_pair[0], ' '.join (xref_pair[1:]) ]
                         else:
                             xref_pair = [xref, '']
-                            print (f"xref_pair: {xref_pair}")
                         xrefs.append ({
                             'id'   : xref_pair[0],
                             'desc' : xref_pair[1]
