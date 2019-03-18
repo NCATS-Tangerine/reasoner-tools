@@ -4,12 +4,12 @@ from fastapi import FastAPI
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 uberonto_oas3 = FastAPI(
-    title="UberOnto API, OpenAPI 3.0",
-    description="A RESTful interface for UberonGraph",
-    version="0.1",
-    openapi_url="/uberonto_oas3/v1/openapi.json",
-    docs_url="/uberonto_oas3/v1/docs",
-    redoc_url="/uberonto_oas3/v1/redocs"
+    title="UberOnto API, a Simplified API Interface for Uberongraph",
+    description="UberOnto API is a simple interface to the SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query",
+    version="1.0",
+    openapi_url="/uberonto_oas3/openapi.json",
+    docs_url="/uberonto_oas3/docs",
+    redoc_url="/uberonto_oas3/redocs"
     )
 
 @uberonto_oas3.get("/id_list/{ontology_name}")
@@ -37,13 +37,78 @@ def id_list(ontology_name: str):
         output.append(reformatted_id)
     return output
 
-#@uberonto_oas3.get('/descendants/{curie}')
+@uberonto_oas3.get('/descendants/{curie}')
+def descendants(curie: str):
+    formatted_input = curie.replace(':','_')
+    uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
+    sparql = SPARQLWrapper(uberongraph_request_url)
+    query_text = """
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT ?term
+        FROM     <http://reasoner.renci.org/ontology/closure>
+        WHERE {    
+            ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/PLACEHOLDER>
+        }
+        """
+    formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
+    sparql.setQuery(formatted_query_text)
+    sparql.setReturnFormat(JSON)
+    results = sparql.query().convert()
+    output = []
+    for term in results['results']['bindings']:
+        sub_term = term['term']['value']
+        output.append(sub_term)
+    formatted_output = []
+    for term in output:
+        formatted_output.append(term.replace('http://purl.obolibrary.org/obo/','') \
+        .replace('_',':').replace('http://linkedlifedata.com/resource/umls/id/','') \
+        .replace('http://www.ebi.ac.uk/efo/',''))
+    return formatted_output
 
+@uberonto_oas3.get('/children/{curie}')
+def children(curie: str):
+    formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
+    sparql.setQuery(formatted_query_text)
+    sparql.setReturnFormat(JSON)
+    results = sparql.query().convert()
+    output = []
+    for term in results['results']['bindings']:
+        sub_term = term['term']['value']
+        output.append(sub_term)
+    formatted_output = []
+    for term in output:
+        formatted_output.append(term.replace('http://purl.obolibrary.org/obo/','') \
+        .replace('_',':').replace('http://linkedlifedata.com/resource/umls/id/','') \
+        .replace('http://www.ebi.ac.uk/efo/',''))
+    return formatted_output
 
-
+@uberonto_oas3.get('/label/{curie}')
+def label(curie: str):
+    formatted_input = curie.replace(':','_')
+    uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
+    sparql = SPARQLWrapper(uberongraph_request_url)
+    query_text = """
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT *
+        FROM     <http://reasoner.renci.org/ontology>
+        WHERE {    
+            <http://purl.obolibrary.org/obo/PLACEHOLDER> rdfs:label ?label
+        }
+        """
+    formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
+    sparql.setQuery(formatted_query_text)
+    sparql.setReturnFormat(JSON)
+    results = sparql.query().convert()
+    output = {}
+    if results['results']['bindings']:
+        label = results['results']['bindings'][0]['label']['value']
+        output['id'] = curie
+        output['label'] = label
+    return output
 
 
 ### below are templates for each of the many RESTful interactive types
+
 # @roivant_API.get("/get_test/{id}")
 # def get_item(id: int, q: str = None):
 #     return {"id": id, "q": q}
