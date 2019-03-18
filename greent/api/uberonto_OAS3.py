@@ -12,10 +12,9 @@ uberonto_oas3 = FastAPI(
     redoc_url="/uberonto_oas3/v1/redocs"
     )
 
-@uberonto_oas3.get("/id_list/{curie}")
-def id_list(curie: str):
-
-    formatted_input = curie.replace(':','_')
+@uberonto_oas3.get("/id_list/{ontology_name}")
+def id_list(ontology_name: str):
+    formatted_input = ontology_name
     uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
     sparql = SPARQLWrapper(uberongraph_request_url)
     query_text = """
@@ -38,8 +37,7 @@ def id_list(curie: str):
         output.append(reformatted_id)
     return output
 
-
-
+#@uberonto_oas3.get('/descendants/{curie}')
 
 
 
