@@ -9,8 +9,8 @@ app = Flask(__name__, instance_relative_config=True)
 template = {
   "swagger": "2.0",
   "info": {
-    "title": "Uberongraph API Interface",
-    "description": "Generic facts about ontologies.",
+    "title": "Simplified API Interface for Uberongraph",
+    "description": "UberOnto API is a simple interface to the SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query",
     "contact": {
       "responsibleOrganization": "renci.org",
       "responsibleDeveloper": "colinkcurtis@gmail.com",
@@ -18,7 +18,7 @@ template = {
       "url": "www.renci.org",
     },
     "termsOfService": "http://renci.org/terms",
-    "version": "0.0.1"
+    "version": "1.0"
   },
 
   "schemes": [
