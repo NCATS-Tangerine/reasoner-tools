@@ -1,12 +1,14 @@
 # usage: $uvicorn uberonto_OAS3:uberonto_oas3 --reload
 import json
+import uvicorn
 from fastapi import FastAPI
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 uberonto_oas3 = FastAPI(
-    title="UberOnto API, a Simplified API Interface for Uberongraph",
+    title="UberOnto API, an Uberongraph Interface",
     description="UberOnto API is a simple interface to the SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query",
     version="1.0",
+    contact="colinkcurtis@gmail.com",
     openapi_url="/uberonto_oas3/openapi.json",
     docs_url="/uberonto_oas3/docs",
     redoc_url="/uberonto_oas3/redocs"
@@ -105,6 +107,9 @@ def label(curie: str):
         output['id'] = curie
         output['label'] = label
     return output
+
+if __name__ == "__main__":
+    uvicorn.run(uberonto_oas3, host="0.0.0.0", port=8000)
 
 
 ### below are templates for each of the many RESTful interactive types
