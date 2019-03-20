@@ -6,8 +6,13 @@ from greent.servicecontext import ServiceContext
 
 @pytest.fixture(scope='module')
 
-def THING():
+# the below requires a local version of the API to be active
+def local_test_object():
+  pass
+
+#this test
+def remote_test_object():
   pass
 
 # test 1: 
-def test_ID_to_label(THING)
+def test_ID_to_label_local(THING)
