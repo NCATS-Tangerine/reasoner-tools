@@ -85,7 +85,7 @@ class BioNames(Service):
                 for x in response['docs']:
                     for key, value in x.items():
                         if key == 'category':
-                            if value[0] == concept:            
+                            if len(value) > 1 and value[0] == concept:            
                                 new_dict = {'id' : x['id'], 'label' : x['label'][0], 'type' : x['category'][0]}
                                 result.append(new_dict)
         except:
