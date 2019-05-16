@@ -78,16 +78,13 @@ class BioNames(Service):
     def _search_monarch(self, q, concept):
         result = []
         try:
-            monarch_query = f"http://api.monarchinitiative.org/api/search/entity/autocomplete/{q}&category={concept}"
-            #logger.debug (f"monarch query: {monarch_query}")
+            monarch_query = f"https://api.monarchinitiative.org/api/search/entity/autocomplete/{q}?category={concept}"
             response = requests.get (monarch_query).json ()
             if response:
                 for x in response['docs']:
-                    for key, value in x.items():
-                        if key == 'category':
-                            if len(value) > 1 and value[0] == concept:            
-                                new_dict = {'id' : x['id'], 'label' : x['label'][0], 'type' : x['category'][0]}
-                                result.append(new_dict)
+                    if 'category' in x :
+                        if concept in x['category']:
+                            result.append({'id' : x['id'], 'label' : x['label'][0], 'type' : x['category'][0]})
         except:
             traceback.print_exc ()
         return result
