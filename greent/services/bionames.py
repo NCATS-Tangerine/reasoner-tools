@@ -39,6 +39,7 @@ class BioNames(Service):
             "phenotype trait" : "phenotypic_feature",
             "anatomical entity" : "anatomical_entity",
             "biological process" : "biological_process_or_activity",
+            "biological_process" : "biological_process_or_activity",
             "Molecular Activity" : "biological_process_or_activity",
             "genetic_condition" : "disease"
         }
