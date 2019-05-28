@@ -10,8 +10,9 @@ class HGNC(Service):
         super(HGNC,self).__init__(name, context)
         self.name = name
     def get_label(self, identifier):
+        source, accessor = identifier.split(':')
         obj = requests.get(
-            url = f"{self.url}/fetch/hgnc_id/{identifier}",
+            url = f"{self.url}/fetch/hgnc_id/{accessor}",
             headers = {
                 "Accept" : "application/json"
             }).json ()

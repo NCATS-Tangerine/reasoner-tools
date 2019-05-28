@@ -7,6 +7,7 @@ from greent.services.mesh import MeshKS
 from greent.servicecontext import ServiceContext
 from greent.util import LoggingUtil
 from builder.lookup_utils import chemical_ids_from_drug_names
+from greent.services.hgnc import HGNC
 
 logger = LoggingUtil.init_logging(__name__, level=logging.DEBUG)
 
@@ -104,6 +105,7 @@ class BioNames(Service):
         result = []
         onto_result = []
         mesh_result = []
+        hgnc_result = []
         if ID.startswith('MESH'):
             try:
                 ID_split = ID.split(':')
@@ -114,10 +116,19 @@ class BioNames(Service):
                 mesh_result = result + [{ "id" : ID, "label" : mesh_response[0]['label']} ]
             except:
                 traceback.print_exc ()
+        elif ID.lower().startswith('hgnc'):
+            try:
+                hgnc_service = HGNC('hgnc',ServiceContext.create_context())
+                result = {'id': ID}
+                result.update(hgnc_service.get_label(ID))
+                hgnc_result.append(result)
+                logger.debug(hgnc_result)
+            except:
+                traceback.print_exc ()
         else:
             try:
                 onto_result = result + [ { "id" : ID, "label" : self.context.core.onto.get_label (ID) }]
             except:
                 traceback.print_exc ()
-        all_results = onto_result + mesh_result
+        all_results = onto_result + mesh_result + hgnc_result
         return all_results
