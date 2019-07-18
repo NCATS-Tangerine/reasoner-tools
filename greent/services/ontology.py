@@ -74,7 +74,7 @@ class GenericOntology(Service):
                 next_ID_set = OrderedSet(self.single_level_is_a(ID))
                 if next_ID_set:
                     result_set = OrderedSet(result_list)
-                    new_ID_set = next_set.difference(result_set)
+                    new_ID_set = next_ID_set.difference(result_set)
                     result_list.extend(new_ID_set)
         return result_list
 
