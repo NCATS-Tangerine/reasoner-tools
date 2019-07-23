@@ -514,6 +514,8 @@ def descendants(curie):
         ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/PLACEHOLDER>
       }
       """
+  print(f"loading descendants")
+
   formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
   sparql.setQuery(formatted_query_text)
   sparql.setReturnFormat(JSON)
