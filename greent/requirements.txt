@@ -20,6 +20,7 @@ more-itertools==6.0.0
 networkx==2.2
 obonet==0.2.5
 orderedset==2.0.1
+pandas
 pluggy==0.9.0
 pronto==0.12.2
 py==1.8.0
