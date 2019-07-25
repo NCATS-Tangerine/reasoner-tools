@@ -47,8 +47,7 @@ class Core:
         self.onts = {}
         # self.context = service_context = ServiceContext (
         #     config=app.config['SWAGGER']['greent_conf'])
-        self.context = service_context = ServiceContext (
-            config=os.environ.get('greent.conf'))
+        self.context = service_context = ServiceContext (config=os.environ.get('greent.conf'))
 
         # the glob.glob method was not working for gunicorn loading of app
         # thus, the ontology_files are now hard-coded
@@ -659,13 +658,14 @@ if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')
    parser.add_argument('-p', '--port',  type=int, help='Port to run service on.', default=5000)
    parser.add_argument('-d', '--debug', help="Debug.", default=False)
-   parser.add_argument('-t', '--data',  help="Ontology data source.", default=".")
+   #parser.add_argument('-t', '--data',  help="Ontology data source.", default="c:/Users/powen/PycharmProjects/Reasoner/reasoner-tools/")
+   parser.add_argument('-t', '--data',  help="Ontology data source.", default="/projects/stars/reasoner/var/ontologies/")
    parser.add_argument('-c', '--conf',  help='GreenT config file to use.', default="greent.conf")
    args = parser.parse_args ()
    app.config['SWAGGER']['greent_conf'] = args.greent_conf = args.conf
    app.config['onto'] = {
        'config' : args.conf,
        'data'   : args.data,
-       'debug'  : args.debug
+       'debug'  : args.debug,
    }
    app.run(host='0.0.0.0', port=args.port, debug=True, threaded=True)
