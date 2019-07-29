@@ -4,7 +4,6 @@ WORKDIR /code/reasoner-tools
 
 # scaffold: until we sort out connection to base container.
 RUN git pull
-RUN git checkout Phil_onto_update
 RUN pip install -r greent/requirements.txt
 
 RUN useradd -m -s /bin/bash rosetta
