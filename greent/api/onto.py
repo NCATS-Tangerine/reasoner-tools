@@ -1,8 +1,6 @@
 import argparse
 import glob
 import os
-import re
-import shutil
 from lru import LRU
 from greent.services.ontology import GenericOntology
 from greent.servicecontext import ServiceContext
@@ -16,7 +14,7 @@ template = {
   "swagger": "2.0",
   "info": {
     "title": "Generic Ontology API",
-    "description": "Generic facts about ontologies. This interface utilizes flat file .obo files as well as leveraging the Uberongraph RDB (a SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query)",
+    "description": "Generic facts about ontologies (Flask). This interface utilizes flat file .obo files as well as leveraging the Uberongraph RDB (a SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query)",
     "contact": {
       "responsibleOrganization": "renci.org",
       "responsibleDeveloper": "scox@renci.org",
