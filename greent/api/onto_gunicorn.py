@@ -57,24 +57,24 @@ class Core:
         # thus, the ontology_files are now hard-coded
         # as we want to move towards the direct use of UberonGraph-->UberOnto in
         # the future, I do not see this as a horrible hack
-        # ontology_files = ['chebi.obo', 'cl.obo','go.obo','hp.obo','mondo.obo', 'ro.obo', 'uberon.obo']
-        # for f in ontology_files:
-        #     print (f"loading {f}")
-        #     f = '../../'+f #the glob.glob method was not working for gunicorn loading of app
-        #     file_name = os.path.basename (f)
-        #     name = file_name.replace (".obo", "")
-        #     self.onts[name] = GenericOntology(self.context, f)
-        #     cache[f] = self.onts[name]
-
-        data_dir = app.config['onto']['data']
-        data_pattern = os.path.join (data_dir, "*.obo")
-        ontology_files = glob.glob (data_pattern)
+        ontology_files = ['chebi.obo', 'cl.obo','go.obo','hp.obo','mondo.obo', 'ro.obo', 'uberon.obo']
         for f in ontology_files:
             print (f"loading {f}")
+            f = '/projects/stars/reasoner/var/ontologies/'+f #the glob.glob method was not working for gunicorn loading of app
             file_name = os.path.basename (f)
             name = file_name.replace (".obo", "")
             self.onts[name] = GenericOntology(self.context, f)
             cache[f] = self.onts[name]
+
+        # data_dir = app.config['onto']['data']
+        # data_pattern = os.path.join (data_dir, "*.obo")
+        # ontology_files = glob.glob (data_pattern)
+        # for f in ontology_files:
+        #     print (f"loading {f}")
+        #     file_name = os.path.basename (f)
+        #     name = file_name.replace (".obo", "")
+        #     self.onts[name] = GenericOntology(self.context, f)
+        #     cache[f] = self.onts[name]
 
     def ont (self, curie):
         return self.onts[curie.lower()] if curie and curie.lower() in self.onts else None
