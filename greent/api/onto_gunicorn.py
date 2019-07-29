@@ -35,6 +35,12 @@ app.config['SWAGGER'] = {
    'title': 'Onto API'
 }
 
+app.config['onto'] = {
+    'config': "greent.conf",
+    'data': "/projects/stars/reasoner/var/ontologies/",
+    'debug': False,
+}
+
 swagger = Swagger(app, template=template)
 cache = LRU(100)
 
