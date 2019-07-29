@@ -37,7 +37,7 @@ app.config['SWAGGER'] = {
 
 app.config['onto'] = {
     'config': "greent.conf",
-    'data': "/projects/stars/reasoner/var/ontologies/",
+    'data': "/data/",
     'debug': False,
 }
 
@@ -60,7 +60,7 @@ class Core:
         ontology_files = ['chebi.obo', 'cl.obo','go.obo','hp.obo','mondo.obo', 'ro.obo', 'uberon.obo']
         for f in ontology_files:
             print (f"loading {f}")
-            f = '/projects/stars/reasoner/var/ontologies/'+f #the glob.glob method was not working for gunicorn loading of app
+            f = '/data/'+f #the glob.glob method was not working for gunicorn loading of app
             file_name = os.path.basename (f)
             name = file_name.replace (".obo", "")
             self.onts[name] = GenericOntology(self.context, f)
