@@ -174,11 +174,36 @@ def is_a (curie, ancestors):
    """
    assert curie, "An identifier must be supplied."
    assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
-   ont = get_core (curie)
+   ancestors = list(map(lambda x: x.strip(' '), ancestors.split(',')))
+   formatted_input = curie.replace(':','_')
+   uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
+   sparql = SPARQLWrapper(uberongraph_request_url)
+   query_text = f"""
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT ?term
+        FROM     <http://reasoner.renci.org/ontology/closure>
+        WHERE {{    
+          <http://purl.obolibrary.org/obo/{curie.replace(':','_')}> rdfs:subClassOf ?term
+        }}
+      """  
+   print(query_text)    
+   sparql.setQuery(query_text)
+   sparql.setReturnFormat(JSON)
+   results = sparql.query().convert()
+   output = []
+   is_a = False
+   super_terms = []
+   for term in results['results']['bindings']:
+     super_terms.append(term['term']['value'].split('/')[-1].replace('_',':'))
+   for ancestor in ancestors:
+     if ancestor in super_terms:
+       is_a = True
+       if ancestor not in output:
+         output.append(ancestor)
    return jsonify ({
-       "is_a"      : ont.is_a(curie, ancestors),
+       "is_a"      : is_a,
        "id"        : curie,
-       "ancestors" : ancestors
+       "ancestors" : output
    })
 
 @app.route('/search/<pattern>')
