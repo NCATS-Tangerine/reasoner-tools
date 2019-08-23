@@ -139,7 +139,7 @@ def single_level_is_a (curie):
    ont = get_core (curie)
    return jsonify ({'single_level_is_a' : ont.single_level_is_a(curie)})
 
-@app.route('/is_a/<curie>/<ancestors>/')
+@app.route('/is_a/<curie>/<ancestors>')
 def is_a (curie, ancestors):
    """ Determine ancestry.
    ---
@@ -181,7 +181,7 @@ def is_a (curie, ancestors):
        "ancestors" : ancestors
    })
 
-@app.route('/search/<pattern>/')
+@app.route('/search/<pattern>')
 def search (pattern):
    """ Search for ids in an ontology based on a pattern, optionally a regular expression.
    ---
@@ -286,7 +286,7 @@ def lookup (curie):
        "refs" : [ ref for name, ont in core.onts.items() for ref in ont.lookup (curie) ]
    })
      
-@app.route('/synonyms/<curie>/')
+@app.route('/synonyms/<curie>')
 def synonyms (curie):
    """ Get synonym terms for the given curie.
    ---
@@ -458,7 +458,7 @@ def parents (curie):
    ont = get_core (curie) 
    return jsonify({"parents" : ont.parents(curie)})
 
-@app.route('/property_value/<curie>/<path:property_key>/')
+@app.route('/property_value/<curie>/<path:property_key>')
 def property_value (curie, property_key):
    """ Use a CURIE and a PROPERTY_KEY to retrieve the relevant PROPERTY_VALUE.
    ---
@@ -662,8 +662,8 @@ if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')
    parser.add_argument('-p', '--port',  type=int, help='Port to run service on.', default=5000)
    parser.add_argument('-d', '--debug', help="Debug.", default=False)
-   #parser.add_argument('-t', '--data',  help="Ontology data source.", default="c:/Users/powen/PycharmProjects/Reasoner/reasoner-tools/")
-   parser.add_argument('-t', '--data',  help="Ontology data source.", default="/projects/stars/reasoner/var/ontologies/")
+   parser.add_argument('-t', '--data',  help="Ontology data source.", default="c:/Users/powen/PycharmProjects/Reasoner/reasoner-tools/")
+  #  parser.add_argument('-t', '--data',  help="Ontology data source.", default="/projects/stars/reasoner/var/ontologies/")
    parser.add_argument('-c', '--conf',  help='GreenT config file to use.', default="greent.conf")
    args = parser.parse_args ()
    app.config['SWAGGER']['greent_conf'] = args.greent_conf = args.conf
