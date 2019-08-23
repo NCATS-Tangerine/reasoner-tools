@@ -52,7 +52,9 @@ class Core:
         # self.context = service_context = ServiceContext (
         #     config=app.config['SWAGGER']['greent_conf'])
         self.context = service_context = ServiceContext (config=os.environ.get('greent.conf'))
-
+        # initial steps to migrate fully to sparql, adding a service that would be used by all,
+        # gradually avoid talking to files at all and user uberongraph as the source of truth 
+        self.onts['*'] =GenericOntology(self.context, '')           
         # the glob.glob method was not working for gunicorn loading of app
         # thus, the ontology_files are now hard-coded
         # as we want to move towards the direct use of UberonGraph-->UberOnto in
@@ -544,31 +546,8 @@ def descendants(curie):
      200:
        description: ...
    """
-  formatted_input = curie.replace(':','_')
-  uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
-  sparql = SPARQLWrapper(uberongraph_request_url)
-  query_text = """
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      SELECT DISTINCT ?term
-      FROM     <http://reasoner.renci.org/ontology/closure>
-      WHERE {    
-        ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/PLACEHOLDER>
-      }
-      """
-  formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
-  sparql.setQuery(formatted_query_text)
-  sparql.setReturnFormat(JSON)
-  results = sparql.query().convert()
-  output = []
-  for term in results['results']['bindings']:
-    sub_term = term['term']['value']
-    output.append(sub_term)
-  formatted_output = []
-  for term in output:
-    formatted_output.append(term.replace('http://purl.obolibrary.org/obo/','') \
-    .replace('_',':').replace('http://linkedlifedata.com/resource/umls/id/','') \
-    .replace('http://www.ebi.ac.uk/efo/',''))
-  return jsonify(formatted_output)
+  ont = get_core('*')
+  return jsonify(ont.descendants(curie))
 
 @app.route('/children/<curie>')
 def children(curie):
@@ -590,31 +569,8 @@ def children(curie):
      200:
        description: ...
    """
-  formatted_input = curie.replace(':','_')
-  uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
-  sparql = SPARQLWrapper(uberongraph_request_url)
-  query_text = """
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      SELECT DISTINCT ?term
-      FROM     <http://reasoner.renci.org/ontology>
-      WHERE {    
-        ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/PLACEHOLDER>
-      }
-      """
-  formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
-  sparql.setQuery(formatted_query_text)
-  sparql.setReturnFormat(JSON)
-  results = sparql.query().convert()
-  output = []
-  for term in results['results']['bindings']:
-    sub_term = term['term']['value']
-    output.append(sub_term)
-  formatted_output = []
-  for term in output:
-    formatted_output.append(term.replace('http://purl.obolibrary.org/obo/','') \
-    .replace('_',':').replace('http://linkedlifedata.com/resource/umls/id/','') \
-    .replace('http://www.ebi.ac.uk/efo/',''))
-  return jsonify(formatted_output)
+  ont = get_core('*')
+  return jsonify(ont.descendants(curie))
 
 @app.route('/label/<curie>')
 def label(curie):
@@ -636,26 +592,8 @@ def label(curie):
      200:
        description: ...
    """
-  formatted_input = curie.replace(':','_')
-  uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
-  sparql = SPARQLWrapper(uberongraph_request_url)
-  query_text = """
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      SELECT DISTINCT *
-      FROM     <http://reasoner.renci.org/ontology>
-      WHERE {    
-        <http://purl.obolibrary.org/obo/PLACEHOLDER> rdfs:label ?label
-      }
-      """
-  formatted_query_text = query_text.replace('PLACEHOLDER', formatted_input)
-  sparql.setQuery(formatted_query_text)
-  sparql.setReturnFormat(JSON)
-  results = sparql.query().convert()
-  output = {}
-  if results['results']['bindings']:
-      label = results['results']['bindings'][0]['label']['value']
-      output['id'] = curie
-      output['label'] = label
+  ont = get_core('*')
+  output = {'id':curie, 'label': ont.label(curie)}
   return jsonify(output)
 
 if __name__ == "__main__":

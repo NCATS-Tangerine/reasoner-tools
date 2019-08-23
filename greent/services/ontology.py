@@ -9,84 +9,122 @@ from greent.service import Service
 from pronto.relationship import Relationship
 from greent.servicecontext import ServiceContext
 from flask import jsonify
+from SPARQLWrapper import SPARQLWrapper, JSON
+from functools import reduce
+
 logger = LoggingUtil.init_logging(__name__, level=logging.DEBUG)
 
 class GenericOntology(Service):
     """ Sure, don't just dig around in obo files they say. But when the SPARQL is dry, we will drink straight from the obo if need be. """
     
+    def run_sparql_query(self, query):
+        logger.debug('Got sparql query')
+        logger.debug(query)
+        self.sparql_wrapper.setQuery(query)
+        self.sparql_wrapper.setReturnFormat(JSON)
+        results = self.sparql_wrapper.query().convert()
+
+        keys = results['head']['vars']
+        response = []
+        for result in results['results']['bindings']:
+            row = []
+            for v in result:
+                row.append(result[v]['value'].split('/')[-1].replace('_',':'))
+            response.append(row)
+        return keys, response
+
+
     def __init__(self, context, obo):
         """ Load an obo file. """
         super(GenericOntology, self).__init__("go", context)
-        self.ont = pronto.Ontology (obo)
-        self.obo_ont = obonet.read_obo(obo)
+        uberon_url = context.config.get_service ('uberongraph').get("url", None)
+        self.sparql_wrapper = SPARQLWrapper(uberon_url)
+        # self.ont = pronto.Ontology (obo)
+        # self.obo_ont = obonet.read_obo(obo)
         
     def label(self,identifier):
         """Return the exitlabel for an identifier"""
-        return self.ont[identifier].name if identifier in self.ont else None
+        identifier_formatted = identifier.replace(':','_')
+        query_text = f"""
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT DISTINCT ?labels
+            FROM     <http://reasoner.renci.org/ontology>
+            WHERE {{    
+                <http://purl.obolibrary.org/obo/{identifier_formatted}> rdfs:label ?labels.               
+            }}
+        """
+        headers, results = self.run_sparql_query(query_text)
+        return results[0][0] if len(results) > 0 else ''
  
     def is_a(self,identifier, term):
         """Determine whether a term has a particular ancestor"""
-        is_a = False
-        is_a_rel = Relationship('is_a')
-        if identifier in self.ont:
-            the_term = self.ont[identifier]
-            parents = the_term.relations[is_a_rel] if is_a_rel in the_term.relations else []
-            for ancestor in parents:
-                ancestor_id = ancestor.id
-                if ' ' in ancestor.id:
-                    ancestor_id = ancestor.id.split(' ')[0]
-                is_a = ancestor_id == term
-                if is_a:
-                    break
-                if 'xref' in ancestor.other:
-                    for xancestor in ancestor.other['xref']:
-                        is_a = xancestor.startswith (term)
-                        if is_a:
-                            break
-                if not is_a:
-                    is_a = self.is_a (ancestor_id, term)
-                if is_a:
-                    break
+        child_class = identifier.replace(':','_')        
+        query_text = """
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT DISTINCT ?ancestors
+            FROM     <http://reasoner.renci.org/ontology/closure>
+            WHERE {    
+                <http://purl.obolibrary.org/obo/PLACEHOLDER> rdfs:subClassOf ?ancestors.               
+            }
+            """        
+        formatted_query_text = query_text.replace('PLACEHOLDER', child_class)
+        headers, results = self.run_sparql_query(formatted_query_text)
+        is_a = False 
+        for x in results:
+            for index, i in enumerate(headers):
+                if x[index] == term:
+                    is_a = True
+            if is_a:
+                break
         return is_a
 
     def single_level_is_a(self, identifier):
         """ Get single-level 'is_a' descendants. """
         result = []
-        if 'MONDO' in identifier:
-            for term in self.ont:
-                if 'is_a' in term.other:
-                    for x in term.other['is_a']:
-                        if identifier in x:
-                            result.append(term.id)
-        else:
-            for term in self.ont:
-                if 'is_a' in term.other:
-                    if identifier in term.other['is_a']:
-                        result.append(term.id)
-        return result
+        child_class = identifier.replace(':','_')
+        uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
+        sparql = SPARQLWrapper(uberongraph_request_url)
+        query_text = """
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT DISTINCT ?ancestors
+            FROM     <http://reasoner.renci.org/ontology>
+            WHERE {    
+                <http://purl.obolibrary.org/obo/PLACEHOLDER> rdfs:subClassOf ?ancestors
+            }
+            """        
+        formatted_query_text = query_text.replace('PLACEHOLDER', child_class)
+        headers, results = self.run_sparql_query(formatted_query_text)        
+        response_curies = list(reduce(lambda x, y: x + y, results, []))
+        return response_curies
 
     def descendants (self, identifier):
         """ This is also known as a recursive-'is_a' function, returning all levels below the input"""
-        result_list = []
-        result_list = self.single_level_is_a(identifier)
-        if result_list:
-            for ID in result_list:
-                next_ID_set = OrderedSet(self.single_level_is_a(ID))
-                if next_ID_set:
-                    result_set = OrderedSet(result_list)
-                    new_ID_set = next_ID_set.difference(result_set)
-                    result_list.extend(new_ID_set)
+        identifier_formatted = identifier.replace(':','_')
+        query_text = f"""
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT DISTINCT ?term
+            FROM     <http://reasoner.renci.org/ontology/closure>
+            WHERE {{    
+                ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/{identifier_formatted}>
+            }}
+            """
+        headers, results = self.run_sparql_query(query_text)
+        result_list = reduce(lambda x, y : x + y, results, [])
         return result_list
 
     def xrefs(self, identifier):
         """ Get external references. """
-        result = []
-        if identifier in self.ont:
-            term = self.ont[identifier]
-            result = term.other['xref']  if 'xref' in term.other else []
-        result = [ x.split(' ') if ' ' in x else [x, ''] for x in result ]
-        result = [ { 'id' : x[0], 'desc' : ' '.join(x[1:]) } for x in result if len(x) > 1 and ':' in x[0] ]
-        return result
+        identifier = identifier.replace(':','_')
+        query_text = f"""prefix xref: <http://www.geneontology.org/formats/oboInOwl#hasDbXref>
+        SELECT DISTINCT ?xrefs
+            FROM     <http://reasoner.renci.org/ontology>
+            WHERE {{    
+                <http://purl.obolibrary.org/obo/{identifier}> xref: ?xrefs
+            }}
+        """
+        headers, results = self.run_sparql_query(query_text)
+        results = list(map(lambda x : {'id': x } , reduce(lambda x, y : x + y, results, [])))
+        return results
     
     def synonyms(self, identifier, curie_pattern=None):
         """ Get synonyms. """
@@ -185,8 +223,7 @@ class GenericOntology(Service):
 
     def subterms(self, identifier):
         # networkx.ancestors returns SUBTERMS, check docs
-        subterms = networkx.ancestors(self.obo_ont, identifier)
-        return list(subterms)
+        return self.descendants(identifier)
 
     def superterms(self, identifier):
         # networkx.descendants returns SUPERTERMS, check docs
