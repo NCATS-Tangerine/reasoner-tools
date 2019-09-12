@@ -25,7 +25,7 @@ def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
         return pubchem_IDs_formatted
 
 def onto_drug_name_to_chemical_identifier(drug_name_as_string):
-    query_text = f"https://onto.renci.org/search/{drug_name_as_string}/?regex=false"
+    query_text = f"https://onto.renci.org/search/{drug_name_as_string}?regex=false"
     onto_response = requests.get(query_text).json()
     onto_IDs_annotated = []
     new_dict = {}
