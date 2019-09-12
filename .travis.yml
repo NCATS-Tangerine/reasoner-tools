@@ -16,11 +16,11 @@ install:
 env:
   global:
     - greent_conf=greent/greent.conf
-    - $PYTHONPATH=$PWD
+    - PYTHONPATH=$PWD
 
 # command to run tests
-#script:
-#  - onto test
+script:
+  - pytest -p no:warnings  greent/test/test_ontology.py
 
 #after_success:
 #  - coveralls
