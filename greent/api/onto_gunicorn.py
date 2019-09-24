@@ -7,7 +7,7 @@ from greent.servicecontext import ServiceContext
 from flask import Flask, jsonify, g, Response, request
 from flasgger import Swagger
 from SPARQLWrapper import SPARQLWrapper, JSON
-
+from greent.util import Curie_Resolver
 app = Flask(__name__, instance_relative_config=True)
 
 template = {
@@ -48,51 +48,20 @@ class Core:
     
     """ Core ontology services. """
     def __init__(self):
-        self.onts = {}
-        # self.context = service_context = ServiceContext (
-        #     config=app.config['SWAGGER']['greent_conf'])
         self.context = service_context = ServiceContext (config=os.environ.get('greent.conf'))
-        # initial steps to migrate fully to sparql, adding a service that would be used by all,
-        # gradually avoid talking to files at all and user uberongraph as the source of truth 
-        self.onts['*'] =GenericOntology(self.context, '')           
-        # the glob.glob method was not working for gunicorn loading of app
-        # thus, the ontology_files are now hard-coded
-        # as we want to move towards the direct use of UberonGraph-->UberOnto in
-        # the future, I do not see this as a horrible hack
-        ontology_files = ['chebi.obo', 'cl.obo','go.obo','hp.obo','mondo.obo', 'ro.obo', 'uberon.obo']
-        for f in ontology_files:
-            print (f"loading {f}")
-            f = '/data/'+f #the glob.glob method was not working for gunicorn loading of app
-            file_name = os.path.basename (f)
-            name = file_name.replace (".obo", "")
-            self.onts[name] = GenericOntology(self.context, f)
-            cache[f] = self.onts[name]
+        self.generic_ont = GenericOntology(self.context, '') 
 
-        # data_dir = app.config['onto']['data']
-        # data_pattern = os.path.join (data_dir, "*.obo")
-        # ontology_files = glob.glob (data_pattern)
-        # for f in ontology_files:
-        #     print (f"loading {f}")
-        #     file_name = os.path.basename (f)
-        #     name = file_name.replace (".obo", "")
-        #     self.onts[name] = GenericOntology(self.context, f)
-        #     cache[f] = self.onts[name]
-
-    def ont (self, curie):
-        return self.onts[curie.lower()] if curie and curie.lower() in self.onts else None
+    def ont (self):
+        return self.generic_ont
     
 core = None
 
-def get_core (curie=None):
+def get_ontology_service ():
     global core
     if not core:
         print (f"initializing core")
         core = Core ()
-    result = core
-    if curie:
-        if ":" in curie:
-            curie = curie.split(":")[0]
-        result = core.ont (curie)
+    result = core.ont()
     return result
 
 @app.route('/id_list/<curie>')
@@ -115,7 +84,7 @@ def id_list(curie):
      200:
        description: ...
    """
-  ont = get_core (curie)
+  ont = get_ontology_service ()
   return jsonify(ont.id_list(curie))
 
 @app.route('/single_level_is_a/<curie>')
@@ -138,7 +107,7 @@ def single_level_is_a (curie):
      200:
        description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    return jsonify ({'single_level_is_a' : ont.single_level_is_a(curie)})
 
 @app.route('/is_a/<curie>/<ancestors>')
@@ -176,9 +145,10 @@ def is_a (curie, ancestors):
    """
    assert curie, "An identifier must be supplied."
    assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
-   ont = get_core (curie)
+   ont = get_ontology_service ()
+   is_a, ancestors = ont.is_a(curie, ancestors)
    return jsonify ({
-       "is_a"      : ont.is_a(curie, ancestors),
+       "is_a"      : is_a,
        "id"        : curie,
        "ancestors" : ancestors
    })
@@ -216,7 +186,7 @@ def search (pattern):
    """
    params = request.args
    regex = 'regex' in params and params['regex'] == 'true'
-   core = get_core ()
+   ont = get_ontology_service ()
    
    obo_map = {
        'chebi'   : 'chemical_substance',
@@ -230,12 +200,9 @@ def search (pattern):
        'ro'      : 'related_to'
    }
    vals = []
-   for name, ont in core.onts.items():
-       new = ont.search(pattern, regex)
-       for n in new:
-           n['type'] = obo_map[name] if name in obo_map else 'unknown'
-       vals.extend(new)
-   return jsonify ({ "values" : vals })
+   values = ont.search(pattern, regex)      
+  
+   return jsonify ({ "values" : values })
      
 @app.route('/xrefs/<curie>')
 def xrefs (curie):
@@ -257,7 +224,7 @@ def xrefs (curie):
      200:
        description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    return jsonify ({
        "xrefs"     : [ x.split(' ')[0] if ' ' in x else x for x in ont.xrefs (curie) ]
    } if ont else {})
@@ -283,9 +250,9 @@ def lookup (curie):
      200:
        description: ...
    """
-   core = get_core ()
+   ont = get_ontology_service ()
    return jsonify ({
-       "refs" : [ ref for name, ont in core.onts.items() for ref in ont.lookup (curie) ]
+       "refs" :  ont.lookup (curie)
    })
      
 @app.route('/synonyms/<curie>')
@@ -309,16 +276,16 @@ def synonyms (curie):
        description: ...
    """
    result = []
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    if ont:
        syns = ont.synonyms (curie)
        if syns:
            for syn in syns:
                result.append ({
-                   "desc" : syn.desc,
-                   "scope" : syn.scope,
-                   "syn_type" : syn.syn_type.name if syn.syn_type else None,
-                   "xref"     : syn.xref
+                   "desc" : syn.get('desc', ''),
+                   "scope" : syn.get('scope', ''),
+                   "syn_type" : syn.get('type', None),
+                   "xref"     : syn.get('xref', '')
                })
    return jsonify (result)
 
@@ -342,7 +309,7 @@ def exactMatch (curie):
      200:
        description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    return jsonify ({'exact matches' : ont.exactMatch(curie)})
 
 @app.route('/closeMatch/<curie>')
@@ -365,7 +332,7 @@ def closeMatch (curie):
      200:
        description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    return jsonify ({'close matches' : ont.closeMatch(curie)})
 
 @app.route('/subterms/<curie>')
@@ -388,7 +355,7 @@ def subterms (curie):
      200:
        description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service()
    return jsonify({ "subterms" : ont.subterms(curie) }  )
 
 @app.route('/superterms/<curie>')
@@ -411,7 +378,7 @@ def superterms (curie):
      200:
         description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    return jsonify({ "superterms" : ont.superterms(curie) }  )
 
 @app.route('/siblings/<curie>')
@@ -434,7 +401,7 @@ def siblings (curie):
      200:
         description: ...
    """
-   ont = get_core (curie)
+   ont = get_ontology_service ()
    return jsonify({"siblings" : ont.siblings(curie)})
 
 @app.route('/parents/<curie>')
@@ -457,7 +424,7 @@ def parents (curie):
      200:
         description: ...
    """
-   ont = get_core (curie) 
+   ont = get_ontology_service () 
    return jsonify({"parents" : ont.parents(curie)})
 
 @app.route('/property_value/<curie>/<path:property_key>')
@@ -494,7 +461,7 @@ def property_value (curie, property_key):
         description: ...
    """
 
-   ont = get_core (curie)
+   ont = get_ontology_service()
 
    return jsonify({"property_value" : ont.property_value(curie, property_key)})
 
@@ -519,7 +486,7 @@ def all_properties (curie):
      200:
         description: ...
    """
-   ont = get_core (curie) 
+   ont = get_ontology_service() 
    return jsonify({"all_properties" : ont.all_properties(curie)})
    
 ##################
@@ -546,8 +513,31 @@ def descendants(curie):
      200:
        description: ...
    """
-  ont = get_core('*')
+  ont = get_ontology_service()
   return jsonify(ont.descendants(curie))
+
+@app.route('/ancestors/<curie>')
+def ancestors(curie):
+  """ Get all cascading 'is_a' anscestors of an input CURIE term
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: CHEBI:10001
+       description: "Get all cascading 'is_a' ancestors of an input CURIE term"
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /ancestors/{{ input }}/
+   responses:
+     200:
+       description: ...
+   """
+  ont = get_ontology_service()
+  return jsonify(ont.ancestors(curie))
 
 @app.route('/children/<curie>')
 def children(curie):
@@ -569,8 +559,8 @@ def children(curie):
      200:
        description: ...
    """
-  ont = get_core('*')
-  return jsonify(ont.descendants(curie))
+  ont = get_ontology_service()
+  return jsonify(ont.children(curie))
 
 @app.route('/label/<curie>')
 def label(curie):
@@ -592,9 +582,48 @@ def label(curie):
      200:
        description: ...
    """
-  ont = get_core('*')
+  ont = get_ontology_service()
   output = {'id':curie, 'label': ont.label(curie)}
   return jsonify(output)
+
+@app.route('/uri/<curie>')
+def uri_from_curie(curie):
+   """ Exapnds a curie to uri
+   ---
+   parameters:
+     - name: curie
+       in: path
+       type: string
+       required: true
+       default: MONDO:0004979
+       description: "Get the label of a curie ID from the owl ontologies."
+       x-valueType:
+         - http://schema.org/string
+       x-requestTemplate:
+         - valueType: http://schema.org/string
+           template: /label/{{ input }}/
+   responses:
+     200:
+       description: ...
+   """
+   assert ':' in curie, "Curie is not properly formatted"
+   return jsonify({
+     'uri': Curie_Resolver.curie_to_uri(curie)
+   })
+
+@app.route('/curie_uri_map')
+
+def get_curie_uri_map():
+   """ Gets the curie map used to convert curies to uri(s).
+   ---
+   responses:
+     200:
+       description: ...
+    """
+   return jsonify(
+     Curie_Resolver.get_curie_to_uri_map()
+    )
+
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Rosetta Server')

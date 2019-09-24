@@ -46,9 +46,9 @@ class TripleStore(object):
         response = self.execute_query (query_text, post)
         result = None
         if flat:
-            result = list(map(lambda b : [ b[val].value for val in outputs ], response.bindings ))
+            result = list(map(lambda b : [ b[val].value for val in outputs if val in b], response.bindings ))
         else:
-            result = list(map(lambda b : { val : b[val].value for val in outputs }, response.bindings ))
+            result = list(map(lambda b : { val : b[val].value for val in outputs if val in b}, response.bindings ))
         logger.debug ("query result: %s", result)
         return result
 

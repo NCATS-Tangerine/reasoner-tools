@@ -4,11 +4,12 @@ import obonet
 import re
 import logging
 from orderedset import OrderedSet
-from greent.util import LoggingUtil
+from greent.util import LoggingUtil, Curie_Resolver
 from greent.service import Service
 from pronto.relationship import Relationship
 from greent.servicecontext import ServiceContext
 from flask import jsonify
+from greent.triplestore import TripleStore
 from SPARQLWrapper import SPARQLWrapper, JSON
 from functools import reduce
 
@@ -16,257 +17,518 @@ logger = LoggingUtil.init_logging(__name__, level=logging.DEBUG)
 
 class GenericOntology(Service):
     """ Sure, don't just dig around in obo files they say. But when the SPARQL is dry, we will drink straight from the obo if need be. """
-    
-    def run_sparql_query(self, query):
-        logger.debug('Got sparql query')
-        logger.debug(query)
-        self.sparql_wrapper.setQuery(query)
-        self.sparql_wrapper.setReturnFormat(JSON)
-        results = self.sparql_wrapper.query().convert()
-
-        keys = results['head']['vars']
-        response = []
-        for result in results['results']['bindings']:
-            row = []
-            for v in result:
-                row.append(result[v]['value'].split('/')[-1].replace('_',':'))
-            response.append(row)
-        return keys, response
-
 
     def __init__(self, context, obo):
         """ Load an obo file. """
         super(GenericOntology, self).__init__("go", context)
-        uberon_url = context.config.get_service ('uberongraph').get("url", None)
-        self.sparql_wrapper = SPARQLWrapper(uberon_url)
-        # self.ont = pronto.Ontology (obo)
-        # self.obo_ont = obonet.read_obo(obo)
-        
+        self.url = context.config.get_service ('uberongraph').get("url", None)
+        self.triplestore = TripleStore(self.url)
+        self.sparql_wrapper = SPARQLWrapper(self.url)
+        curie_prefix_map = Curie_Resolver.get_curie_to_uri_map()
+        self.resolve_uri = Curie_Resolver.uri_to_curie
+        self.ontology_prefixes = list(map(lambda x : f'PREFIX {x}: <{curie_prefix_map[x]}>', curie_prefix_map))
+
+
+    def add_sparql_prefixes(self, query_template):
+        return  '\n'.join(self.ontology_prefixes) + '\n' + query_template
+
+    def run_sparql_query_raw(self, query):
+        query = self.add_sparql_prefixes(query)
+        self.sparql_wrapper.setQuery(query)
+        self.sparql_wrapper.setReturnFormat(JSON)
+        results = self.sparql_wrapper.query().convert()
+        return results
+
+    def query_sparql(self, query_template, inputs, outputs):
+        # prepend prefixes here to avoid every one doing the same thing
+        q = self.add_sparql_prefixes(query_template)
+        logger.error(q)
+        return self.triplestore.query_template(
+            template_text = q,
+            inputs = inputs,
+            outputs = outputs
+        )
+
+
     def label(self,identifier):
-        """Return the exitlabel for an identifier"""
-        identifier_formatted = identifier.replace(':','_')
+        """Return the exitlabel for an identifier"""       
         query_text = f"""
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             SELECT DISTINCT ?labels
             FROM     <http://reasoner.renci.org/ontology>
             WHERE {{    
-                <http://purl.obolibrary.org/obo/{identifier_formatted}> rdfs:label ?labels.               
+               $identifier rdfs:label ?labels.               
             }}
         """
-        headers, results = self.run_sparql_query(query_text)
-        return results[0][0] if len(results) > 0 else ''
+        results = self.query_sparql(
+            query_text,
+            inputs = {
+                'identifier': identifier
+            },
+            outputs = ['labels']
+        )
+        return results[0]["labels"]
+        
  
-    def is_a(self,identifier, term):
+    def is_a(self,identifier, ancestors):
         """Determine whether a term has a particular ancestor"""
-        child_class = identifier.replace(':','_')        
-        query_text = """
+        query_template =lambda ancestor: f"""
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            SELECT DISTINCT ?ancestors
-            FROM     <http://reasoner.renci.org/ontology/closure>
-            WHERE {    
-                <http://purl.obolibrary.org/obo/PLACEHOLDER> rdfs:subClassOf ?ancestors.               
-            }
-            """        
-        formatted_query_text = query_text.replace('PLACEHOLDER', child_class)
-        headers, results = self.run_sparql_query(formatted_query_text)
-        is_a = False 
-        for x in results:
-            for index, i in enumerate(headers):
-                if x[index] == term:
-                    is_a = True
-            if is_a:
-                break
-        return is_a
+            ASK
+            FROM <http://reasoner.renci.org/ontology/closure>
+            FROM <http://reasoner.renci.org/ontology>
+            WHERE {{    
+                {identifier} rdfs:subClassOf {ancestor}.               
+            }}
+            """
+        result = []
+        for ancestor in ancestors.split(','):
+            ancestor = ancestor.strip(' ')
+            response = self.run_sparql_query_raw(
+                query_template(ancestor)
+            )            
+            if response['boolean']:
+                result.append(ancestor)        
+        is_a = len(result) > 0
+        return is_a , result
+        
 
     def single_level_is_a(self, identifier):
         """ Get single-level 'is_a' descendants. """
-        result = []
-        child_class = identifier.replace(':','_')
-        uberongraph_request_url = 'https://stars-app.renci.org/uberongraph/sparql'
-        sparql = SPARQLWrapper(uberongraph_request_url)
         query_text = """
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            SELECT DISTINCT ?ancestors
+            PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+            SELECT DISTINCT ?descendant ?descendant_id
             FROM     <http://reasoner.renci.org/ontology>
             WHERE {    
-                <http://purl.obolibrary.org/obo/PLACEHOLDER> rdfs:subClassOf ?ancestors
+              ?descendant rdfs:subClassOf  $identifier
+              OPTIONAL {                
+                ?descendant ID: ?descendant_id
+              }
             }
-            """        
-        formatted_query_text = query_text.replace('PLACEHOLDER', child_class)
-        headers, results = self.run_sparql_query(formatted_query_text)        
-        response_curies = list(reduce(lambda x, y: x + y, results, []))
+            """     
+        results = self.query_sparql(
+            query_text,
+            inputs = {
+                'identifier': identifier
+            },
+            outputs = [
+                'descendant',
+                'descendant_id'
+            ]
+        )      
+        response_curies = reduce(lambda x, y: x + [y['descendant_id'] if 'descendant_id' in y else self.resolve_uri(y['descendant'])], results, [])
         return response_curies
 
+
     def descendants (self, identifier):
-        """ This is also known as a recursive-'is_a' function, returning all levels below the input"""
-        identifier_formatted = identifier.replace(':','_')
+        """ This is also known as a recursive-'is_a' function, returning all levels below the input"""        
         query_text = f"""
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            SELECT DISTINCT ?term
-            FROM     <http://reasoner.renci.org/ontology/closure>
+            PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+            SELECT DISTINCT ?descendant ?descendant_id
+            FROM <http://reasoner.renci.org/ontology/closure>
+            FROM <http://reasoner.renci.org/ontology>
             WHERE {{    
-                ?term rdfs:subClassOf <http://purl.obolibrary.org/obo/{identifier_formatted}>
+                ?descendant rdfs:subClassOf $identifier.
+                OPTIONAL {{ ?descendant ID: ?descendant_id. }}
             }}
             """
-        headers, results = self.run_sparql_query(query_text)
-        result_list = reduce(lambda x, y : x + y, results, [])
+        results = self.query_sparql(
+            query_template = query_text,
+            inputs = {
+                'identifier': identifier
+            },
+            outputs = [
+                'descendant',
+                'descendant_id'
+            ]
+        )
+        
+        result_list = reduce(lambda x, y : x + [y['descendant_id'] if 'descendant_id' in y else self.resolve_uri(y['descendant'])], results, [])
         return result_list
+    
+
+    def ancestors(self, identifier):
+         """ This is also known as a recursive-'is_a' function, returning all levels below the input"""        
+         query_text = f"""
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+            SELECT DISTINCT ?ancestor ?ancestor_id
+            FROM <http://reasoner.renci.org/ontology/closure>
+            FROM <http://reasoner.renci.org/ontology>
+            WHERE {{    
+                $identifier  rdfs:subClassOf ?ancestor.
+                OPTIONAL {{
+                    ?ancestor ID: ?ancestor_id.
+                }}
+            }}
+            """
+         results = self.query_sparql(
+            query_template = query_text,
+            inputs = {
+                'identifier': identifier
+            },
+            outputs = [
+                'ancestor',
+                'ancestor_id'
+            ]
+         )
+         result_list = reduce(lambda x, y : x + [y['ancestor_id'] if 'ancestor_id' in y else self.resolve_uri(y['ancestor'])], results, [])
+         return result_list
+
 
     def xrefs(self, identifier):
         """ Get external references. """
-        identifier = identifier.replace(':','_')
         query_text = f"""prefix xref: <http://www.geneontology.org/formats/oboInOwl#hasDbXref>
         SELECT DISTINCT ?xrefs
             FROM     <http://reasoner.renci.org/ontology>
             WHERE {{    
-                <http://purl.obolibrary.org/obo/{identifier}> xref: ?xrefs
+                $identifier xref: ?xrefs
             }}
         """
-        headers, results = self.run_sparql_query(query_text)
-        results = list(map(lambda x : {'id': x } , reduce(lambda x, y : x + y, results, [])))
+        results = self.query_sparql(
+            query_template = query_text,
+            inputs = {
+                'identifier': identifier
+            },
+            outputs = [
+                'xrefs'
+            ]
+        )
+        results = reduce(lambda x, y : x + [{'id': y['xrefs']}], results, [])
         return results
     
+
     def synonyms(self, identifier, curie_pattern=None):
         """ Get synonyms. """
-        return \
-            [ x for x in self.ont[identifier].synonyms if curie_pattern and x.startswith(curie_pattern) ] + \
-            [ syn for syn in self.ont[identifier].synonyms ] \
-            if identifier in self.ont else []
-    
+        query_template = lambda predicate: f"""
+        PREFIX RELATED_SYNONYM: <http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym>
+        PREFIX EXACT_SYNONYM: <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym>
+        PREFIX XREF: <http://www.geneontology.org/formats/oboInOwl#hasDbXref>
+        PREFIX DEFENITION: <http://purl.obolibrary.org/obo/IAO_0000115>
+        SELECT DISTINCT ?desc ?xref ?defn
+        WHERE {{
+            $identifier {predicate} ?desc.
+            OPTIONAL {{
+                ?desc XREF: ?xref.
+                ?desc DEFENITION: ?defn.
+             }}
+        }}
+        """
+        exact = self.query_sparql(
+            query_template = query_template("EXACT_SYNONYM:"),
+            inputs = { 
+                'identifier': identifier
+            }, outputs = [
+                'desc',
+                'xref',
+                'defn'
+            ]
+        )
+        for row in exact:
+            row['scope'] = 'EXACT'
+        related =  self.query_sparql(
+            query_template = query_template("RELATED_SYNONYM:"),
+            inputs = { 
+                'identifier': identifier
+            }, outputs = [
+                'desc',
+                'xref',
+                'defn'
+            ]
+        )
+        for row in related:
+            row['scope'] = 'RELATED'
+        return exact + related
+
     def search (self, text, is_regex=False, ignore_case=True):
         """ Search for the text, treating it as a regular expression if indicated. """
-        pat = None
-        if is_regex:
-            pat = re.compile(text, re.IGNORECASE) if ignore_case else re.compile(text)
-        result = {}
-        for term in self.ont:
-            if is_regex:
-                if pat.match (term.name):
-                    logger.debug (f"  matched {text} pattern in term name: {term.name}")
-                    result[term.id] = term
-                else:
-                    for syn in term.synonyms:
-                        if pat.match (syn.desc):
-                            logger.debug (f"  matched {text} pattern in synonym: {syn.desc}")
-                            result[term.id] = term
-            else:
-                if text.lower() == term.name.lower():
-                    logger.debug (f"  text {text} == term name {term.name}")
-                    result[term.id] = term
-                else:
-                    for syn in term.synonyms:
-                        if text.lower() == syn.desc.lower():
-                            logger.debug (f"  text {text.lower()} == synonym: {syn.desc.lower()}")
-                            result[term.id] = term
-        result = [  { "id" : term.id, "label" : term.name } for key, term in result.items () ]
-        return result
+        search_string = text
+        if is_regex and ignore_case: 
+            filtr = f'regex(?label, "$search_string" ,"i")'
+        elif is_regex and not ignore_case:
+            filtr = f'regex(?label, "$search_string")'
+        elif not is_regex and ignore_case:
+            search_string = search_string.lower()
+            filtr = f'(lcase(str(?label))= "$search_string")'
+        else:
+            filtr = f'(?label = "$search_string")'    
+        print(filtr)
+        query_text = f"""
+        PREFIX DEFINED_BY: <http://www.w3.org/2000/01/rdf-schema#isDefinedBy>
+        SELECT DISTINCT ?id ?label ?defined_by
+        WHERE {{
+            ?id rdfs:label ?label.
+            # ?term  <http://www.geneontology.org/formats/oboInOwl#id> ?id.
+            ?id DEFINED_BY: ?defined_by 
+            FILTER {filtr}.
+        }}
+        """
+        response = self.query_sparql(
+            query_template = query_text,
+            inputs = {
+                'search_string': search_string
+            }, outputs = [
+                'id',
+                'label',
+                'defined_by'
+            ]
+        )
+       
+        return response
     
+
     def lookup(self, identifier):
         """ Given an identifier, find ids in the ontology for which it is an xref. """
         assert identifier and ':' in identifier, "Must provide a valid identifier."
-        result = []
-        for term in self.ont:
-            xrefs = []
-            if 'xref' in term.other:
-                for xref in term.other['xref']:
-                    if xref.startswith (identifier):
-                        if ' ' in xref:
-                            xref_pair = xref.split(' ')
-                            xref_pair = [ xref_pair[0], ' '.join (xref_pair[1:]) ]
-                        else:
-                            xref_pair = [xref, '']
-                        xrefs.append ({
-                            'id'   : xref_pair[0],
-                            'desc' : xref_pair[1]
-                        })
-            if len(xrefs) > 0:
-                result.append ({
-                    "id"    : term.id,
-                    "xrefs" : xrefs
-                })                
-        return result
+        query_template = """
+        PREFIX XREF: <http://www.geneontology.org/formats/oboInOwl#hasDbXref>
+        PREFIX LABEL: <http://www.w3.org/2000/01/rdf-schema#label>
+        PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+                SELECT DISTINCT  ?xrefs ?term_id ?term_label
+                    FROM     <http://reasoner.renci.org/ontology>
+                    WHERE {
+                    ?term XREF: ?o;
+                            XREF: ?xrefs;
+                            ID: ?term_id;
+                            LABEL: ?term_label.
+                    FILTER(?o = '$identifier' && !isBlank(?term)).               
+                    } 
+        """
+        result = self.query_sparql(
+            query_template = query_template,
+            inputs= {
+                'identifier': identifier
+            }, outputs = [
+                'xrefs',
+                'term_id',
+                'term_label'
+            ]
+        )
+        response = []
+        buffer = {}
+        for row in result:
+            if row['term_id'] not in buffer:
+                buffer[row['term_id']] = {
+                    'label': row['term_label'],
+                    'xrefs': []
+                }
+            xref = row['xrefs']
+            buffer[row['term_id']]['xrefs'] += [row['xrefs']]  if row['xrefs'] not in buffer[row['term_id']]['xrefs'] else [] 
+        for term_id in buffer:
+            response.append({
+                'id': term_id,
+                'label': buffer[term_id]['label'],
+                'xrefs': buffer[term_id]['xrefs']
+
+            })           
+        return response
+
 
     def id_list(self, identifier):
-        id_list = []
-        id_list = [term.id for term in self.ont if term.id.startswith(identifier)]
-        if not id_list:
-            id_list = None
-        return id_list
+        query = f"""
+                PREFIX TYPE: <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>
+                PREFIX CLASS: <http://www.w3.org/2002/07/owl#Class>
+                PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+                SELECT DISTINCT ?term ?term_id
+                FROM <http://reasoner.renci.org/ontology>
+                        WHERE {{
+                        ?term TYPE: CLASS:.
+                        FILTER (contains(lcase(str(?term)), lcase("$identifier")))
+                        OPTIONAL {{
+                            ?term ID: ?term_id #try to get the id from sparql else parse ?? 
+                        }}
+                        }} 
+                """
+        result = self.query_sparql(
+            query_template = query,
+            inputs = {
+                'identifier': identifier
+            }, outputs =[
+                'term',
+                'term_id'
+            ]
+        ) 
+        return reduce(lambda x, y: x + [y['term_id'] if 'term_id' in y else self.resolve_uri(y['term'])], result, [])
+       
+
 
     def exactMatch(self, identifier):
-        result = []
-        if identifier in self.ont:
-            term = self.ont[identifier]
-            result = term.other['property_value']  if 'property_value' in term.other else []
-        raw_exactMatches = [x.replace('exactMatch ', '') for x in result if 'exactMatch' in x]
-        url_stripped_exactMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_exactMatches]
-        formatted_exactMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_exactMatches]     
-        # the umls URIs have a peculiar format, we handle that as follows:
-        umls_exactMatches = [re.sub(r"(?:(resource:)|(id:))","", str(x)) for x in formatted_exactMatches if "resource" in x]
-        normal_exactMatches = [x for x in formatted_exactMatches if "resource" not in x]
-        all_exactMatches = normal_exactMatches + umls_exactMatches
-        return all_exactMatches
+        #if ontolgies are missing we should be looking here        
+        query_string = lambda predicate: f"""
+            PREFIX EXACT_MATCH: <http://www.w3.org/2004/02/skos/core#exactMatch>
+            PREFIX EQUIVALENT_CLASS: <http://www.w3.org/2002/07/owl#equivalentClass>
+            PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+            SELECT DISTINCT ?match ?match_id
+            FROM <http://reasoner.renci.org/ontology>
+                    WHERE {{
+                     $identifier {predicate} ?match.      
+                     OPTIONAL {{
+                         ?match ID: ?match_id.
+                     }} 
+                     FILTER (!isBlank(?match)) #This sometimes returns blank nodes         
+                    }} 
+            """
+        result = reduce(lambda x, y: x + [y['match_id'] if 'match_id' in y else self.resolve_uri(y['match'])], self.query_sparql(
+            query_template = query_string('EXACT_MATCH:'),
+            inputs = {
+                'identifier': identifier
+            }, outputs = [
+                'match',
+                'match_id'
+            ]
+        ), [])
+        result += reduce(lambda x, y: x + [y['match_id'] if 'match_id' in y else self.resolve_uri(y['match'])], self.query_sparql(
+            query_template = query_string('EQUIVALENT_CLASS:'),
+            inputs = {
+                'identifier': identifier
+            }, outputs = [
+                'match',
+                'match_id'
+            ]
+        ), [])
+        return result
+
 
     def closeMatch(self, identifier):
-        result = []
-        if identifier in self.ont:
-            term = self.ont[identifier]
-            result = term.other['property_value']  if 'property_value' in term.other else []
-        raw_closeMatches = [x.replace('closeMatch ', '') for x in result if 'closeMatch' in x]
-        url_stripped_closeMatches = [re.sub(r"(https?:\/\/)(\s)*(www\.)?(\s)*((\w|\s)+\.)*([\w\-\s]+\/)", "", str(x)) for x in raw_closeMatches]
-        formatted_closeMatches = [re.sub(r"(\/)",":", str(x)) for x in url_stripped_closeMatches]     
-        # the umls URIs have a peculiar format, we handle that as follows:
-        umls_closeMatches = [re.sub(r"(?:(resource:)|(id:))","", str(x)) for x in formatted_closeMatches if "resource" in x]
-        normal_closeMatches = [x for x in formatted_closeMatches if "resource" not in x]
-        all_closeMatches = normal_closeMatches + umls_closeMatches
-        return all_closeMatches
+        query_template = """
+            PREFIX CLOSE_MATCH: <http://www.w3.org/2004/02/skos/core#closeMatch>
+            PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+            SELECT DISTINCT ?match ?match_id
+            FROM <http://reasoner.renci.org/ontology>
+                    WHERE {
+                     $identifier CLOSE_MATCH: ?match.      
+                     OPTIONAL {
+                         ?match ID: ?match_id.
+                     } 
+                     FILTER (!isBlank(?match)) #This sometimes returns blank nodes         
+                    } 
+        """
+        results = reduce( lambda x, y: x  + [y['match_id'] if 'match_id' in y else self.resolve_uri(y['match'])], self.query_sparql(
+            query_template = query_template,
+            inputs = {
+                'identifier': identifier
+            }, outputs = [
+                'match',
+                'match_id'
+            ]
+        ), [])
+        return results
 
+   
     def subterms(self, identifier):
-        # networkx.ancestors returns SUBTERMS, check docs
         return self.descendants(identifier)
 
+
     def superterms(self, identifier):
-        # networkx.descendants returns SUPERTERMS, check docs
-        superterms = networkx.descendants(self.obo_ont, identifier)
-        return list(superterms)
+        return self.ancestors(identifier)
+
 
     def parents(self,identifier):
-        predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
-        parents = [key for key, value in predecessor_lineage.items() if identifier in value]
-        return parents
+        """First generation ancestors"""
+        query_template = f"""PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
+            SELECT DISTINCT ?parent ?parent_id
+            FROM     <http://reasoner.renci.org/ontology>
+            WHERE {{    
+             $identifier  rdfs:subClassOf  ?parent.
+             OPTIONAL {{
+                 ?parent ID: ?parent_id
+             }} 
+            FILTER(!isBlank(?parent))
+            }}"""
+        result = reduce(lambda x, y: x + [y['parent_id'] if 'parent_id' in y else self.resolve_uri(y['parent'])],
+        self.query_sparql(
+            query_template = query_template,
+            inputs = {
+                'identifier': identifier
+            }, outputs = [
+                'parent',
+                'parent_id'
+            ]
+        ), [])
+        return result
+
 
     def children(self, identifier):
-        print('ontology')
-        successors = networkx.DiGraph.predecessors(self.obo_ont, identifier)
-        children = list(successors)
-        return children
+        """first generation descedants"""
+        result = self.single_level_is_a(identifier)
+        return result
+
 
     def siblings(self, identifier):
-        predecessor_lineage = networkx.predecessor(self.obo_ont, identifier)
-        parents = [key for key, value in predecessor_lineage.items() if identifier in value]
-        sibling_lists = [networkx.DiGraph.predecessors(self.obo_ont, x) for x in parents]
-        siblings = [list(x) for x in sibling_lists]
-        siblings = [x for y in siblings for x in y]
-        return siblings
+        """
+        Common parents 
+        """
+        parents = self.parents(identifier)
+        sibilings = []
+        for parent in parents:
+            sibilings += list(filter(lambda x: x != identifier and x not in sibilings, self.children(parent if 'http' not in parent else f'<{parent}>')))
+        return sibilings
+
 
     def property_value(self, identifier, property_key):
         """ Get properties """
-        result = []
-        if identifier in self.ont:
-            term = self.ont[identifier]
-            result = term.other['property_value']  if 'property_value' in term.other else []
-        if ':' in property_key:
-            property_key = property_key.split(':')[1]
-        property_value = [x for x in result if property_key in x]
-        result = property_value[0].split(" ")
-        result = result[1]
-        result = result[1:]
-        result = result[:len(result)-1]
-        return result
+        query_template = """
+        SELECT ?property_value 
+        WHERE {
+            $identifier <$property_key> ?property_value.
+        }
+        """
+        result = self.query_sparql(
+            query_template  = query_template,
+            inputs = {
+                'identifier': identifier,
+                'property_key': property_key
+            },
+            outputs = [
+                'property_value'
+            ]
+        )
+        response =  reduce(lambda x, y: x + [y['property_value']], result, [])
+        if len(response) == 1:
+            return response[0]
+        else: return response
+
 
     def all_properties(self, identifier):
         """ Get ALL properties for a CURIE """
-        if identifier in self.ont:
-            term = self.ont[identifier]
-            result = term.other
-        return result
+        query_template = """
+        SELECT ?property_key ?property_value ?property_label
+        FROM <http://reasoner.renci.org/ontology>
+        WHERE
+         {
+            $identifier ?property_key ?property_value.
+            OPTIONAL {
+                ?property_key rdfs:label ?property_label.
+                }
+            FILTER (!isBlank(?property_value))
+        }
+        """
+        results = self.query_sparql(
+            query_template = query_template,
+            inputs = {
+                'identifier': identifier
+            }, outputs = {
+                'property_value',
+                'property_key',
+                'property_label'
+            }
+        )
+        # group it by property label for those which have label 
+        grouped = {
+            'property_value' : []
+        }
+        for row in results: 
+            label = row['property_label'] if 'property_label' in row else None
+            if label == None:
+                grouped['property_value'].append(row)
+                continue
+            if label not in grouped:
+                grouped[label] = []
+            grouped[label].append({
+                'property_key': row['property_key'],
+                'property_value': row['property_value']
+            })            
+        return grouped
