@@ -74,7 +74,7 @@ def id_list(curie):
        type: string
        required: true
        default: MONDO
-       description: "The name of an ontology for which you want all id's returned, e.g. MONDO"
+       description: "The name of an ontology for which you want all id's returned, e.g. MONDO."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -120,7 +120,7 @@ def is_a (curie, ancestors):
        type: string
        required: true
        default: GO:2001317
-       description: "An identifier from an ontology. eg, GO:2001317"
+       description: "An identifier from an ontology. eg, GO:2001317."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -351,6 +351,7 @@ def subterms (curie):
        x-requestTemplate:
          - valueType: http://schema.org/string
            template: /subterms/{{ curie }}/
+   deprecated: true
    responses:
      200:
        description: ...
@@ -374,6 +375,7 @@ def superterms (curie):
        x-requestTemplate:
          - valueType: http://schema.org/string
            template: /superterms/{{ curie }}/
+   deprecated: true
    responses:
      200:
         description: ...
@@ -414,7 +416,7 @@ def parents (curie):
        type: string
        required: true
        default: "MONDO:0004634"
-       description: "Use a CURIE to return a list of ontological parents (1st gen. ancestors)"
+       description: "Use a CURIE to return a list of ontological parents (1st gen. ancestors)."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -468,7 +470,7 @@ def property_value (curie, property_key):
 
 @app.route('/all_properties/<curie>')
 def all_properties (curie):
-   """ Get ALL properties for a CURIE
+   """ Get ALL properties for a CURIE.
    ---
    parameters:
      - name: curie
@@ -476,7 +478,7 @@ def all_properties (curie):
        type: string
        required: true
        default: "MONDO:0004634"
-       description: "Use a CURIE to return a list of all properties for the given CURIE"
+       description: "Use a CURIE to return a list of all properties for the given CURIE."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -495,7 +497,7 @@ def all_properties (curie):
 
 @app.route('/descendants/<curie>')
 def descendants(curie):
-  """ Get all cascading 'is_a' descendants of an input CURIE term
+  """ Get all cascading 'is_a' descendants of an input CURIE term.
    ---
    parameters:
      - name: curie
@@ -503,7 +505,7 @@ def descendants(curie):
        type: string
        required: true
        default: CHEBI:23367
-       description: "Get all cascading 'is_a' descendants of an input CURIE term"
+       description: "Get all cascading 'is_a' descendants of an input CURIE term."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -518,7 +520,7 @@ def descendants(curie):
 
 @app.route('/ancestors/<curie>')
 def ancestors(curie):
-  """ Get all cascading 'is_a' anscestors of an input CURIE term
+  """ Get all cascading 'is_a' anscestors of an input CURIE term.
    ---
    parameters:
      - name: curie
@@ -526,7 +528,7 @@ def ancestors(curie):
        type: string
        required: true
        default: CHEBI:10001
-       description: "Get all cascading 'is_a' ancestors of an input CURIE term"
+       description: "Get all cascading 'is_a' ancestors of an input CURIE term."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -541,7 +543,7 @@ def ancestors(curie):
 
 @app.route('/children/<curie>')
 def children(curie):
-  """ Return all outgoing (once-removed subterms) via SubClassOf from the Ontology Graph
+  """ Return all outgoing (once-removed subterms) via SubClassOf from the Ontology Graph.
    ---
    parameters:
      - name: curie
@@ -549,7 +551,7 @@ def children(curie):
        type: string
        required: true
        default: GO:0005576
-       description: "Return all outgoing (once-removed subterms) via SubClassOf from the Ontology Graph"
+       description: "Return all outgoing (once-removed subterms) via SubClassOf from the Ontology Graph."
        x-valueType:
          - http://schema.org/string
        x-requestTemplate:
@@ -588,7 +590,7 @@ def label(curie):
 
 @app.route('/uri/<curie>')
 def uri_from_curie(curie):
-   """ Exapnds a curie to uri
+   """ Exapnds a curie to uri.
    ---
    parameters:
      - name: curie
@@ -612,7 +614,6 @@ def uri_from_curie(curie):
    })
 
 @app.route('/curie_uri_map')
-
 def get_curie_uri_map():
    """ Gets the curie map used to convert curies to uri(s).
    ---
