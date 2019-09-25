@@ -11,6 +11,7 @@ from collections import namedtuple
 #from bravado.client import SwaggerClient
 #from bravado.requests_client import RequestsClient
 import copy
+import re
 
 #loggers = {}
 class LoggingUtil(object):
@@ -122,3 +123,46 @@ class Resource:
                     Resource.deepupdate(target_elements[name], src_elements[name],overwrite_keys)
                 else:
                     target.append( src_elements[name] )
+
+class Curie_Resolver:
+    @staticmethod 
+    def get_curie_to_uri_map():
+        return {
+            'NCIT' : 'http://purl.obolibrary.org/obo/NCIT_',
+            'COHD' : 'http://purl.obolibrary.org/obo/COHD_',
+            'DOID' : 'http://purl.obolibrary.org/obo/DOID_',
+            'ORPHANET': 'http://www.orpha.net/ORDO/Orphanet_',
+            'GARD': 'http://purl.obolibrary.org/obo/GARD_',
+            'ICD9': 'http://purl.obolibrary.org/obo/ICD9_',
+            'SCTID': 'http://purl.obolibrary.org/obo/SCTID_',
+            'MESH': 'http://purl.obolibrary.org/obo/MESH_',
+            'UMLS': 'http://linkedlifedata.com/resource/umls/id/',
+            'MONDO': 'http://purl.obolibrary.org/obo/MONDO_',
+            'BFO': 'http://purl.obolibrary.org/obo/BFO_',
+            'EFO': 'http://www.ebi.ac.uk/efo/EFO_',
+            'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_',
+            'GO': 'http://purl.obolibrary.org/obo/GO_',
+            'CL': 'http://purl.obolibrary.org/obo/CL_',
+            'UBERON': 'http://purl.obolibrary.org/obo/UBERON_',
+            'HGNC': 'http://identifiers.org/hgnc/',
+            'SNOMEDCT': 'http://identifiers.org/snomedct/',
+            'CARO': 'http://purl.obolibrary.org/obo/CARO_'
+        }
+
+    @staticmethod
+    def uri_to_curie(uri):
+        """
+        Try to find if we can get url in the list else return original uri unchanged
+        """
+        map = Curie_Resolver.get_curie_to_uri_map()
+        for curie in map:
+            uri_part = map[curie]
+            if uri.startswith(uri_part):
+                uri = uri.replace(uri_part, f'{curie}:')
+                break
+        return uri
+
+    @staticmethod
+    def curie_to_uri(curie):        
+        curie_prefix = curie.split(':')[0]
+        return curie.replace(f'{curie_prefix}:', Curie_Resolver.get_curie_to_uri_map().get(curie_prefix,'Unkown Prefix'))
