@@ -87,28 +87,6 @@ def id_list(curie):
   ont = get_ontology_service ()
   return jsonify(ont.id_list(curie))
 
-@app.route('/single_level_is_a/<curie>')
-def single_level_is_a (curie):
-   """ Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term.
-   ---
-   parameters:
-     - name: curie
-       in: path
-       type: string
-       required: true
-       default: "GO:0005576"
-       description: "Use a CURIE to return a list of the direct, single-hop, 'is_a' descendants of the input term."
-       x-valueType:
-         - http://schema.org/string
-       x-requestTemplate:
-         - valueType: http://schema.org/string
-           template: /single_level_is_a/{{ curie }}/
-   responses:
-     200:
-       description: ...
-   """
-   ont = get_ontology_service ()
-   return jsonify ({'single_level_is_a' : ont.single_level_is_a(curie)})
 
 @app.route('/is_a/<curie>/<ancestors>')
 def is_a (curie, ancestors):
@@ -155,7 +133,8 @@ def is_a (curie, ancestors):
 
 @app.route('/search/<pattern>')
 def search (pattern):
-   """ Search for ids in an ontology based on a pattern, optionally a regular expression.
+   """ Search for terms in an ontology based on a pattern, optionally a regular expression. Look up is done on the synonyms, labels and definitions. Ids
+   containing term in those properties are returned along with those properties.
    ---
    parameters:
      - name: pattern
@@ -291,7 +270,7 @@ def synonyms (curie):
 
 @app.route('/exactMatch/<curie>')
 def exactMatch (curie):
-   """ Use a CURIE to return a list of exactly matching IDs.
+   """ Use a CURIE to return a list of exactly matching IDs and or equivalent ontological classes.
    ---
    parameters:
      - name: curie
@@ -385,7 +364,7 @@ def superterms (curie):
 
 @app.route('/siblings/<curie>')
 def siblings (curie):
-   """ Use a CURIE to return a list of ontological siblings.
+   """ Use a CURIE to return a list of ontological siblings. Same as calling /children/{parent} for every parent gotten from /parents/<curie>.
    ---
    parameters:
      - name: curie
@@ -470,7 +449,7 @@ def property_value (curie, property_key):
 
 @app.route('/all_properties/<curie>')
 def all_properties (curie):
-   """ Get ALL properties for a CURIE.
+   """ Get ALL ontological properties for a CURIE.
    ---
    parameters:
      - name: curie
