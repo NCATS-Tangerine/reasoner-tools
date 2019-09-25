@@ -265,9 +265,9 @@ class GenericOntology(Service):
             filtr = f"""
                 (
                     lcase(str(?label))= "$search_string" ||
-                    lcase(str(?definition))= "$search_string") ||
-                    lcase(str(?relate_synonym))= "$search_string") ||
-                    lcase(str(?exact_synonym))= "$search_string") 
+                    lcase(str(?definition))= "$search_string" ||
+                    lcase(str(?relate_synonym))= "$search_string" ||
+                    lcase(str(?exact_synonym))= "$search_string" 
                     """
         else:
             filtr = f"""
@@ -368,7 +368,7 @@ class GenericOntology(Service):
 
 
     def id_list(self, identifier):
-        identifier_uri = Curie_Resolver.get_curie_to_uri_map().get(identifier, None)
+        identifier_uri = Curie_Resolver.get_curie_to_uri_map().get(identifier.upper(), None)
         if identifier_uri == None:
             return []
         query = f"""
