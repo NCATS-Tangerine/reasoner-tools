@@ -128,7 +128,6 @@ class GenericOntology(Service):
             PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
             SELECT DISTINCT ?descendant ?descendant_id
             FROM <http://reasoner.renci.org/ontology/closure>
-            FROM <http://reasoner.renci.org/ontology>
             WHERE {{    
                 ?descendant rdfs:subClassOf $identifier.
                 OPTIONAL {{ ?descendant ID: ?descendant_id. }}
@@ -156,7 +155,6 @@ class GenericOntology(Service):
             PREFIX ID: <http://www.geneontology.org/formats/oboInOwl#id>
             SELECT DISTINCT ?ancestor ?ancestor_id
             FROM <http://reasoner.renci.org/ontology/closure>
-            FROM <http://reasoner.renci.org/ontology>
             WHERE {{    
                 $identifier  rdfs:subClassOf ?ancestor.
                 OPTIONAL {{
@@ -246,22 +244,63 @@ class GenericOntology(Service):
         """ Search for the text, treating it as a regular expression if indicated. """
         search_string = text
         if is_regex and ignore_case: 
-            filtr = f'regex(?label, "$search_string" ,"i")'
+            filtr = f"""
+                (
+                   regex(str(?definition), "$search_string","i") || 
+                   regex(str(?label), "$search_string","i") ||
+                   regex(str(?related_synonym), "$search_string","i") ||
+                   regex(str(?exact_synonym), "$search_string","i")
+                )"""
         elif is_regex and not ignore_case:
-            filtr = f'regex(?label, "$search_string")'
+            filtr = f"""
+                (
+                   regex(str(?definition), "$search_string") || 
+                   regex(str(?label), "$search_string") ||
+                   regex(str(?related_synonym), "$search_string") ||
+                   regex(str(?exact_synonym), "$search_string")
+                )
+            """
         elif not is_regex and ignore_case:
             search_string = search_string.lower()
-            filtr = f'(lcase(str(?label))= "$search_string")'
+            filtr = f"""
+                (
+                    lcase(str(?label))= "$search_string" ||
+                    lcase(str(?definition))= "$search_string") ||
+                    lcase(str(?relate_synonym))= "$search_string") ||
+                    lcase(str(?exact_synonym))= "$search_string") 
+                    """
         else:
-            filtr = f'(?label = "$search_string")'    
-        print(filtr)
+            filtr = f"""
+                (
+                    str(?label) = "$search_string" ||
+                    str(?definition) = "$search_string" ||
+                    str(?exact_synonym) = "$search_string" ||
+                    str(?related_synonym) = "$search_string" 
+                )"""
+
+
         query_text = f"""
         PREFIX DEFINED_BY: <http://www.w3.org/2000/01/rdf-schema#isDefinedBy>
-        SELECT DISTINCT ?id ?label ?defined_by
+        PREFIX DEFINITION: <http://purl.obolibrary.org/obo/IAO_0000115>
+        PREFIX RELATED_SYNONYM: <http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym>
+        PREFIX EXACT_SYNONYM: <http://www.geneontology.org/formats/oboInOwl#hasExactSynonym>        
+        SELECT DISTINCT ?id ?label ?definition ?defined_by        
         WHERE {{
-            ?id rdfs:label ?label.
-            # ?term  <http://www.geneontology.org/formats/oboInOwl#id> ?id.
-            ?id DEFINED_BY: ?defined_by 
+            OPTIONAL{{
+                ?id EXACT_SYNONYM: ?exact_synonym.                
+            }}
+            OPTIONAL {{
+                ?id RELATED_SYNONYM: ?related_synonym.
+            }}          
+            OPTIONAL {{
+                ?id rdfs:label ?label.
+            }}
+            OPTIONAL {{
+                ?id DEFINITION: ?definition.
+            }}
+            OPTIONAL {{
+                ?id DEFINED_BY: ?defined_by.
+            }}
             FILTER {filtr}.
         }}
         """
@@ -272,10 +311,12 @@ class GenericOntology(Service):
             }, outputs = [
                 'id',
                 'label',
-                'defined_by'
+                'defined_by',
+                'definition'
             ]
         )
-       
+        for row in response:
+            row['id'] = Curie_Resolver.uri_to_curie(row['id'])
         return response
     
 
@@ -327,6 +368,9 @@ class GenericOntology(Service):
 
 
     def id_list(self, identifier):
+        identifier_uri = Curie_Resolver.get_curie_to_uri_map().get(identifier, None)
+        if identifier_uri == None:
+            return []
         query = f"""
                 PREFIX TYPE: <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>
                 PREFIX CLASS: <http://www.w3.org/2002/07/owl#Class>
@@ -335,7 +379,7 @@ class GenericOntology(Service):
                 FROM <http://reasoner.renci.org/ontology>
                         WHERE {{
                         ?term TYPE: CLASS:.
-                        FILTER (contains(lcase(str(?term)), lcase("$identifier")))
+                        FILTER (strstarts(lcase(str(?term)), lcase("$identifier")))
                         OPTIONAL {{
                             ?term ID: ?term_id #try to get the id from sparql else parse ?? 
                         }}
@@ -344,7 +388,7 @@ class GenericOntology(Service):
         result = self.query_sparql(
             query_template = query,
             inputs = {
-                'identifier': identifier
+                'identifier': identifier_uri
             }, outputs =[
                 'term',
                 'term_id'
@@ -379,7 +423,7 @@ class GenericOntology(Service):
                 'match_id'
             ]
         ), [])
-        result += reduce(lambda x, y: x + [y['match_id'] if 'match_id' in y else self.resolve_uri(y['match'])], self.query_sparql(
+        result += list(filter( lambda x : x not in result, reduce(lambda x, y: x + [y['match_id'] if 'match_id' in y else self.resolve_uri(y['match'])], self.query_sparql(
             query_template = query_string('EQUIVALENT_CLASS:'),
             inputs = {
                 'identifier': identifier
@@ -387,7 +431,7 @@ class GenericOntology(Service):
                 'match',
                 'match_id'
             ]
-        ), [])
+        ), [])))
         return result
 
 
@@ -517,18 +561,17 @@ class GenericOntology(Service):
             }
         )
         # group it by property label for those which have label 
-        grouped = {
-            'property_value' : []
-        }
+        grouped = {}
         for row in results: 
             label = row['property_label'] if 'property_label' in row else None
-            if label == None:
-                grouped['property_value'].append(row)
-                continue
-            if label not in grouped:
-                grouped[label] = []
-            grouped[label].append({
-                'property_key': row['property_key'],
-                'property_value': row['property_value']
-            })            
-        return grouped
+            key = row['property_key']
+            if key not in grouped:
+                grouped[key] = {
+                    'property_label' : label,
+                    'property_values': []
+                }
+            if row['property_value'] not in grouped[key]['property_values']:
+                grouped[key]['property_values'].append(row['property_value'])
+            for key in grouped:
+                grouped[key].update({'property_key': key})            
+        return list(map(lambda x : grouped[x], grouped))
