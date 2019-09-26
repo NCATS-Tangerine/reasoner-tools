@@ -268,6 +268,7 @@ class GenericOntology(Service):
                     lcase(str(?definition))= "$search_string" ||
                     lcase(str(?relate_synonym))= "$search_string" ||
                     lcase(str(?exact_synonym))= "$search_string" 
+                )
                     """
         else:
             filtr = f"""
