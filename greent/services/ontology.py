@@ -21,7 +21,7 @@ class GenericOntology(Service):
         self.obo_ont = obonet.read_obo(obo)
         
     def label(self,identifier):
-        """Return the exitlabel for an identifier"""
+        """Return the label for an identifier"""
         return self.ont[identifier].name if identifier in self.ont else None
  
     def is_a(self,identifier, term):

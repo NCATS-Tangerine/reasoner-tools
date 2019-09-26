@@ -27,3 +27,6 @@ class Service:
             logger = LoggingUtil.init_logging(__name__)
             logger.warn(f"Unable to get config for service: {self.name}")
         return result
+
+    def __str__():
+        return f"Service name={self.name}\n, url={self.url}"
