@@ -146,7 +146,8 @@ class Curie_Resolver:
             'UBERON': 'http://purl.obolibrary.org/obo/UBERON_',
             'HGNC': 'http://identifiers.org/hgnc/',
             'SNOMEDCT': 'http://identifiers.org/snomedct/',
-            'CARO': 'http://purl.obolibrary.org/obo/CARO_'
+            'CARO': 'http://purl.obolibrary.org/obo/CARO_',
+            'HP': 'http://purl.obolibrary.org/obo/HP_',
         }
 
     @staticmethod
