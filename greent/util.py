@@ -128,26 +128,28 @@ class Curie_Resolver:
     @staticmethod 
     def get_curie_to_uri_map():
         return {
-            'NCIT' : 'http://purl.obolibrary.org/obo/NCIT_',
+            'BFO': 'http://purl.obolibrary.org/obo/BFO_',
+            'CARO': 'http://purl.obolibrary.org/obo/CARO_',
+            'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_',
+            'CL': 'http://purl.obolibrary.org/obo/CL_',
             'COHD' : 'http://purl.obolibrary.org/obo/COHD_',
             'DOID' : 'http://purl.obolibrary.org/obo/DOID_',
-            'ORPHANET': 'http://www.orpha.net/ORDO/Orphanet_',
-            'GARD': 'http://purl.obolibrary.org/obo/GARD_',
-            'ICD9': 'http://purl.obolibrary.org/obo/ICD9_',
-            'SCTID': 'http://purl.obolibrary.org/obo/SCTID_',
-            'MESH': 'http://purl.obolibrary.org/obo/MESH_',
-            'UMLS': 'http://linkedlifedata.com/resource/umls/id/',
-            'MONDO': 'http://purl.obolibrary.org/obo/MONDO_',
-            'BFO': 'http://purl.obolibrary.org/obo/BFO_',
             'EFO': 'http://www.ebi.ac.uk/efo/EFO_',
-            'CHEBI' : 'http://purl.obolibrary.org/obo/CHEBI_',
+            'GARD': 'http://purl.obolibrary.org/obo/GARD_',
             'GO': 'http://purl.obolibrary.org/obo/GO_',
-            'CL': 'http://purl.obolibrary.org/obo/CL_',
-            'UBERON': 'http://purl.obolibrary.org/obo/UBERON_',
             'HGNC': 'http://identifiers.org/hgnc/',
-            'SNOMEDCT': 'http://identifiers.org/snomedct/',
-            'CARO': 'http://purl.obolibrary.org/obo/CARO_',
             'HP': 'http://purl.obolibrary.org/obo/HP_',
+            'ICD9': 'http://purl.obolibrary.org/obo/ICD9_',
+            'ICD10': 'http://purl.obolibrary.org/obo/ICD10_',
+            'MESH': 'http://purl.obolibrary.org/obo/MESH_',
+            'MONDO': 'http://purl.obolibrary.org/obo/MONDO_',
+            'NCIT' : 'http://purl.obolibrary.org/obo/NCIT_',
+            'ONCOTREE': 'http://purl.obolibrary.org/obo/ONCOTREE_',
+            'ORPHANET': 'http://www.orpha.net/ORDO/Orphanet_',
+            'SCTID': 'http://purl.obolibrary.org/obo/SCTID_',
+            'SNOMEDCT': 'http://identifiers.org/snomedct/',
+            'UBERON': 'http://purl.obolibrary.org/obo/UBERON_',
+            'UMLS': 'http://linkedlifedata.com/resource/umls/id/'
         }
 
     @staticmethod
