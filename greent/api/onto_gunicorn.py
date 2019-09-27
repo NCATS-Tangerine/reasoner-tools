@@ -63,6 +63,15 @@ def get_ontology_service ():
         core = Core ()
     result = core.ont()
     return result
+  
+def curie_normalize(curie):    
+    assert ':' in curie, "Curie format invalid"
+    curie_parts = curie.split(':')
+    print(curie_parts[0])
+    assert curie_parts[0].upper() in Curie_Resolver.get_curie_to_uri_map(), "Curie not supported" # since this is going to raise an exception in our sparql either way
+    return ':'.join([curie_parts[0].upper()] + curie_parts[1:])
+
+
 
 @app.route('/id_list/<curie>')
 def id_list(curie):
@@ -165,20 +174,7 @@ def search (pattern):
    """
    params = request.args
    regex = 'regex' in params and params['regex'] == 'true'
-   ont = get_ontology_service ()
-   
-   obo_map = {
-       'chebi'   : 'chemical_substance',
-       'pubchem' : 'chemical_substance',
-       'mondo'   : 'disease',
-       'hp'      : 'phenotypic_feature',
-       'go'      : 'biological_process_or_activity',
-       'uberon'  : 'anatomical_entity',
-       'cl'      : 'cell',
-       'doid'    : 'disease',
-       'ro'      : 'related_to'
-   }
-   vals = []
+   ont = get_ontology_service ()  
    values = ont.search(pattern, regex)      
   
    return jsonify ({ "values" : values })
@@ -205,7 +201,7 @@ def xrefs (curie):
    """
    ont = get_ontology_service ()
    return jsonify ({
-       "xrefs"     : [ x.split(' ')[0] if ' ' in x else x for x in ont.xrefs (curie) ]
+       "xrefs"     : [ x.split(' ')[0] if ' ' in x else x for x in ont.xrefs (curie_normalize(curie)) ]
    } if ont else {})
 
 
@@ -257,7 +253,7 @@ def synonyms (curie):
    result = []
    ont = get_ontology_service ()
    if ont:
-       syns = ont.synonyms (curie)
+       syns = ont.synonyms (curie_normalize(curie))
        if syns:
            for syn in syns:
                result.append ({
@@ -289,7 +285,7 @@ def exactMatch (curie):
        description: ...
    """
    ont = get_ontology_service ()
-   return jsonify ({'exact matches' : ont.exactMatch(curie)})
+   return jsonify ({'exact matches' : ont.exactMatch(curie_normalize(curie))})
 
 @app.route('/closeMatch/<curie>')
 def closeMatch (curie):
@@ -312,7 +308,7 @@ def closeMatch (curie):
        description: ...
    """
    ont = get_ontology_service ()
-   return jsonify ({'close matches' : ont.closeMatch(curie)})
+   return jsonify ({'close matches' : ont.closeMatch(curie_normalize(curie))})
 
 @app.route('/subterms/<curie>')
 def subterms (curie):
@@ -336,7 +332,7 @@ def subterms (curie):
        description: ...
    """
    ont = get_ontology_service()
-   return jsonify({ "subterms" : ont.subterms(curie) }  )
+   return jsonify({ "subterms" : ont.subterms(curie_normalize(curie)) }  )
 
 @app.route('/superterms/<curie>')
 def superterms (curie):
@@ -360,7 +356,7 @@ def superterms (curie):
         description: ...
    """
    ont = get_ontology_service ()
-   return jsonify({ "superterms" : ont.superterms(curie) }  )
+   return jsonify({ "superterms" : ont.superterms(curie_normalize(curie)) }  )
 
 @app.route('/siblings/<curie>')
 def siblings (curie):
@@ -383,7 +379,7 @@ def siblings (curie):
         description: ...
    """
    ont = get_ontology_service ()
-   return jsonify({"siblings" : ont.siblings(curie)})
+   return jsonify({"siblings" : ont.siblings(curie_normalize(curie))})
 
 @app.route('/parents/<curie>')
 def parents (curie):
@@ -406,7 +402,7 @@ def parents (curie):
         description: ...
    """
    ont = get_ontology_service () 
-   return jsonify({"parents" : ont.parents(curie)})
+   return jsonify({"parents" : ont.parents(curie_normalize(curie))})
 
 @app.route('/property_value/<curie>/<path:property_key>')
 def property_value (curie, property_key):
@@ -444,7 +440,7 @@ def property_value (curie, property_key):
 
    ont = get_ontology_service()
 
-   return jsonify({"property_value" : ont.property_value(curie, property_key)})
+   return jsonify({"property_value" : ont.property_value(curie_normalize(curie), property_key)})
 
 
 @app.route('/all_properties/<curie>')
@@ -468,7 +464,7 @@ def all_properties (curie):
         description: ...
    """
    ont = get_ontology_service() 
-   return jsonify({"all_properties" : ont.all_properties(curie)})
+   return jsonify({"all_properties" : ont.all_properties(curie_normalize(curie))})
    
 ##################
 # start of sparkle based access to the Uberongraph RDB
@@ -495,7 +491,7 @@ def descendants(curie):
        description: ...
    """
   ont = get_ontology_service()
-  return jsonify(ont.descendants(curie))
+  return jsonify(ont.descendants(curie_normalize(curie)))
 
 @app.route('/ancestors/<curie>')
 def ancestors(curie):
@@ -518,7 +514,7 @@ def ancestors(curie):
        description: ...
    """
   ont = get_ontology_service()
-  return jsonify(ont.ancestors(curie))
+  return jsonify(ont.ancestors(curie_normalize(curie)))
 
 @app.route('/children/<curie>')
 def children(curie):
@@ -541,7 +537,7 @@ def children(curie):
        description: ...
    """
   ont = get_ontology_service()
-  return jsonify(ont.children(curie))
+  return jsonify(ont.children(curie_normalize(curie)))
 
 @app.route('/label/<curie>')
 def label(curie):
@@ -564,7 +560,7 @@ def label(curie):
        description: ...
    """
   ont = get_ontology_service()
-  output = {'id':curie, 'label': ont.label(curie)}
+  output = {'id':curie, 'label': ont.label(curie_normalize(curie))}
   return jsonify(output)
 
 @app.route('/uri/<curie>')
@@ -589,7 +585,7 @@ def uri_from_curie(curie):
    """
    assert ':' in curie, "Curie is not properly formatted"
    return jsonify({
-     'uri': Curie_Resolver.curie_to_uri(curie)
+     'uri': Curie_Resolver.curie_to_uri(curie_normalize(curie))
    })
 
 @app.route('/curie_uri_map')

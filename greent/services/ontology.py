@@ -194,7 +194,7 @@ class GenericOntology(Service):
                 'xrefs'
             ]
         )
-        results = reduce(lambda x, y : x + [{'id': y['xrefs']}], results, [])
+        results = reduce(lambda x, y : x + [y['xrefs']], results, [])
         return results
     
 
@@ -268,6 +268,7 @@ class GenericOntology(Service):
                     lcase(str(?definition))= "$search_string" ||
                     lcase(str(?relate_synonym))= "$search_string" ||
                     lcase(str(?exact_synonym))= "$search_string" 
+                )
                     """
         else:
             filtr = f"""
