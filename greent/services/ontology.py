@@ -194,7 +194,7 @@ class GenericOntology(Service):
                 'xrefs'
             ]
         )
-        results = reduce(lambda x, y : x + [{'id': y['xrefs']}], results, [])
+        results = reduce(lambda x, y : x + [y['xrefs']], results, [])
         return results
     
 
