@@ -266,7 +266,7 @@ class GenericOntology(Service):
                 (
                     lcase(str(?label))= "$search_string" ||
                     lcase(str(?definition))= "$search_string" ||
-                    lcase(str(?relate_synonym))= "$search_string" ||
+                    lcase(str(?related_synonym))= "$search_string" ||
                     lcase(str(?exact_synonym))= "$search_string" 
                 )
                     """
