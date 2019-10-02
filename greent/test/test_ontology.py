@@ -39,7 +39,7 @@ def go_ontology():
         r = requests.get(url, stream=True)
         with open(ontology_file, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
-                if chunk: # filter out keep-alive new chunks
+                if chunk:
                     f.write(chunk)
 
     return GenericOntology(ServiceContext.create_context(),
@@ -59,7 +59,7 @@ def hp_ontology():
         r = requests.get(url, stream=True)
         with open(ontology_file, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
-                if chunk: # filter out keep-alive new chunks
+                if chunk:
                     f.write(chunk)
 
     return GenericOntology(ServiceContext.create_context(),
@@ -623,7 +623,6 @@ def test_siblings(ontology):
         assert s in result
 
 
-# NOTE: Being worked. Top is current return, bottom is what used to be returned.
 # test 47
 def test_go_siblings(go_ontology):
     """Validates pass case of retrieving siblings for a curie"""
@@ -640,21 +639,6 @@ def test_go_siblings(go_ontology):
         'GO:0072658',
         'GO:0090286',
         'GO:1990153'
-        #"GO:0001411",
-        #"GO:0007016",
-        #"GO:0031520",
-        #"GO:0032065",
-        #"GO:0035838",
-        #"GO:0035839",
-        #"GO:0042989",
-        #"GO:0043332",
-        #"GO:0045053",
-        #"GO:0051285",
-        #"GO:0072595",
-        #"GO:0072658",
-        #"GO:0090286",
-        #"GO:0099017",
-        #"GO:1990153",
     ]
 
     for s in siblings:
@@ -688,15 +672,13 @@ def test_hp_siblings(hp_ontology):
 
 
 
-# FAILS: For MONDO, with exactMatch, nothing is returned.  Should return all property values.
 # test 49
 def test_property_value(ontology):
     """Validates pass case of retrieving properties for a given curie and key"""
-    # Until a fix is ready . . .
-    #result = ontology.property_value("MONDO:0000212","exactMatch")
-    #print(f"result={result}")
-    #assert result  == "http://identifiers.org/mesh/C562999"
-    assert True
+    result = ontology.property_value("MONDO:0000212","http://www.w3.org/2004/02/skos/core#exactMatch")
+    print(f"result={result}")
+    assert "http://identifiers.org/mesh/C562999" in result
+
 
 
 # test 50
@@ -718,60 +700,103 @@ def test_hp_property_value(hp_ontology):
 # test 52
 def test_all_properties(ontology):
     """Validates pass case of retrieving all_properties for a curie"""
+    xref = [
+        "HP:0002099",
+        "UMLS:C0004096",
+        "COHD:317009",
+        "DOID:2841",
+        "EFO:0000270",
+        "GARD:0010246",
+        "ICD10:J45",
+        "ICD10:J45.90",
+        "ICD10:J45.909",
+        "ICD9:493",
+        "ICD9:493.81",
+        "ICD9:493.9",
+        "KEGG:05310",
+        "MESH:D001249",
+        "NCIT:C28397",
+        "SCTID:31387002"
+    ]
+    narrow_syn = [
+        "chronic obstructive asthma with acute exacerbation",
+        "exercise induced asthma",
+        "exercise-induced asthma"
+    ]
+    exact_syn = [
+        "bronchial hyperreactivity",
+        "chronic obstructive asthma",
+        "chronic obstructive asthma with status asthmaticus"
+    ]
+    superclasses = [
+        "http://linkedlifedata.com/resource/umls/id/C0006261",
+        "http://purl.obolibrary.org/obo/COHD_256717",
+        "http://purl.obolibrary.org/obo/DOID_1176",
+        "http://purl.obolibrary.org/obo/MESH_D001982",
+        "http://purl.obolibrary.org/obo/MONDO_0001358",
+        "http://purl.obolibrary.org/obo/NCIT_C34439",
+        "http://purl.obolibrary.org/obo/SCTID_41427001",
+        "http://www.ebi.ac.uk/efo/EFO_1002018"
+    ]
+    eq_class = [
+        "http://purl.obolibrary.org/obo/NCIT_C28397",
+        "http://purl.obolibrary.org/obo/SCTID_31387002",
+        "http://www.ebi.ac.uk/efo/EFO_0000270"
+    ]
+    close = [
+        "http://identifiers.org/snomedct/155574008",
+        "http://identifiers.org/snomedct/155579003",
+        "http://identifiers.org/snomedct/187687003",
+        "http://identifiers.org/snomedct/195967001",
+        "http://identifiers.org/snomedct/195979001",
+        "http://identifiers.org/snomedct/195983001",
+        "http://identifiers.org/snomedct/21341004",
+        "http://identifiers.org/snomedct/266365004",
+        "http://identifiers.org/snomedct/266398009",
+        "http://identifiers.org/snomedct/278517007"
+    ]
+    exact = [
+        "http://linkedlifedata.com/resource/umls/id/C0004096",
+        "http://purl.obolibrary.org/obo/DOID_2841",
+        "http://purl.obolibrary.org/obo/NCIT_C28397",
+        "http://identifiers.org/mesh/D001249",
+        "http://identifiers.org/snomedct/31387002"
+    ]
     result = ontology.all_properties('MONDO:0004979')
     print(f"result={result}")
     sys.stdout.flush()
     sys.stderr.flush()
-    #assert result['id'][0] == "MONDO:0004979"
-    #assert result['is_a'][0] == 'MONDO:0001358 {source="DOID:2841", source="EFO:0000270", source="MESH:D001249"}'
+    for dict_item in result:
+        for key in dict_item:
+            if key == 'property_key' and dict_item[key] == 'id':
+                assert 'MONDO:0004979' in dict_item['property_values']
+            if key == 'property_key' and 'label' in dict_item[key]:
+                assert 'asthma' in dict_item['property_values']
+            if key == 'property_key' and 'subClassOf' in dict_item[key]:
+                for s in superclasses:
+                    assert s in dict_item['property_values']
+            if key == 'property_key' and 'hasDbXref' in dict_item[key]:
+                for x in xref:
+                    assert x in dict_item['property_values']
+            if key == 'property_key' and 'hasNarrowSynonym' in dict_item[key]:
+                for ns in narrow_syn:
+                    assert ns in dict_item['property_values']
+            if key == 'property_key' and 'hasExactSynonym' in dict_item[key]:
+                for es in exact_syn:
+                    assert es in dict_item['property_values']
+            if key == 'property_key' and 'subClassOf' in dict_item[key]:
+                for s in superclasses:
+                    assert s in dict_item['property_values']
+            if key == 'property_key' and 'equivalentClass' in dict_item[key]:
+                for e in eq_class:
+                    assert e in dict_item['property_values']
+            if key == 'property_key' and 'closeMatch' in dict_item[key]:
+                for c in close:
+                    assert c in dict_item['property_values']
+            if key == 'property_key' and 'exactMatch' in dict_item[key]:
+                for ex in exact:
+                    assert ex in dict_item['property_values']
 
-    xref_str_list = [
-        'COHD:317009 {source="MONDO:equivalentTo"}',
-        'DOID:2841 {source="MONDO:equivalentTo", source="EFO:0000270"}',
-        'EFO:0000270 {source="MONDO:equivalentTo", source="DOID:2841"}',
-        'GARD:0010246 {source="MONDO:equivalentTo"}',
-        'HP:0002099 {source="MONDO:otherHierarchy"}',
-        'ICD10:J45 {source="MONDO:equivalentTo", source="DOID:2841"}',
-        'ICD10:J45.90 {source="DOID:2841"}',
-        'ICD10:J45.909 {source="DOID:2841"}',
-        'ICD9:493 {source="DOID:2841", source="EFO:0000270"}',
-        'ICD9:493.81 {source="MONDO:equivalentTo", source="i2s"}',
-        'ICD9:493.9 {source="DOID:2841"}',
-        'KEGG:05310 {source="MONDO:equivalentTo", source="DOID:2841"}',
-        'MESH:D001249 {source="MONDO:equivalentTo", source="DOID:2841", source="EFO:0000270"}',
-        'NCIT:C28397 {source="MONDO:equivalentTo", source="DOID:2841", source="EFO:0000270"}',
-        'SCTID:31387002 {source="MONDO:kboom-pr-0.90/0.77/0.32", source="MONDO:equivalentTo"}',
-        'UMLS:C0004096 {source="NCIT:C28397", source="MONDO:equivalentTo", source="DOID:2841"}'
-    ]
-
-    #xref_result_list = result['xref']
-    #for s in xref_str_list:
-    #    print(s)
-    #    assert s in xref_result_list
-
-    pv_str_list = [
-        'closeMatch http://identifiers.org/snomedct/155574008',
-        'closeMatch http://identifiers.org/snomedct/155579003',
-        'closeMatch http://identifiers.org/snomedct/187687003',
-        'closeMatch http://identifiers.org/snomedct/195967001',
-        'closeMatch http://identifiers.org/snomedct/195979001',
-        'closeMatch http://identifiers.org/snomedct/195983001',
-        'closeMatch http://identifiers.org/snomedct/21341004',
-        'closeMatch http://identifiers.org/snomedct/266365004',
-        'closeMatch http://identifiers.org/snomedct/266398009',
-        'closeMatch http://identifiers.org/snomedct/278517007',
-        'exactMatch DOID:2841',
-        'exactMatch http://identifiers.org/mesh/D001249',
-        'exactMatch http://identifiers.org/snomedct/31387002',
-        'exactMatch http://linkedlifedata.com/resource/umls/id/C0004096',
-        'exactMatch NCIT:C28397'
-    ]
-
-    #pv_result_list = result['property_value']
-    #for s in pv_str_list:
-    #    print(s)
-    #    assert s in pv_result_list
-    assert True
 
 
 # test 53
@@ -781,20 +806,51 @@ def test_go_all_properties(go_ontology):
     print(f"result={result}")
     sys.stdout.flush()
     sys.stderr.flush()
-    #assert result['id'][0] == "GO:0001682"
-    #assert result['is_a'][0] == "GO:0099116"
-    #assert result['namespace'][0] == "biological_process"
-    assert True
+    for dict_item in result:
+        for key in dict_item:
+            if key == 'property_key' and dict_item[key] == 'id':
+                assert dict_item['property_values'] == 'GO:0001682'
+            if key == 'property_key' and 'label' in dict_item[key]:
+                assert "tRNA 5'-leader removal" in dict_item['property_values']
+            if key == 'property_key' and 'subClassOf' in dict_item[key]:
+                assert 'http://purl.obolibrary.org/obo/GO_0099116' in dict_item["property_values"]
+            if key == 'property_key' and 'hasExactSynonym' in dict_item[key]:
+                assert "tRNA 5' leader removal" in dict_item['property_values']
+            if dict_item[key] == "has_obo_namespace":
+                assert 'biological_process' in dict_item["property_values"]
+
+
 
 # test 54
 def test_hp_all_properties(hp_ontology):
     """Validates pass case of retrieving all_properties for a curie"""
+    syns = [
+        "Periorbital rhytids",
+        "Wrinkles around the eyes",
+        "Excess periorbital skin wrinkling",
+        "Periorbital wrinkling"
+    ]
+    superclasses = [
+        'http://purl.obolibrary.org/obo/HP_0000606',
+        'http://purl.obolibrary.org/obo/HP_0100678'
+    ]
     result = hp_ontology.all_properties('HP:0000607')
     print(f"result={result}")
     sys.stdout.flush()
     sys.stderr.flush()
-    #assert result['id'][0] == "HP:0000607"
-    #for x in [ "HP:0000606", "HP:0100678" ]:
-    #    assert x in result['is_a']
-    #assert result['xref'][0] == "UMLS:C1844605"
-    assert True
+    for dict_item in result:
+        for key in dict_item:
+            if key == 'property_key' and dict_item[key] == 'id':
+                assert dict_item['property_values'] == 'HP:0000607'
+            if key == 'property_key' and 'label' in dict_item[key]:
+                assert'Periorbital wrinkles' in dict_item['property_values']
+            if key == 'property_key' and 'subClassOf' in dict_item[key]:
+                for s in superclasses:
+                    assert s in dict_item['property_values']
+            if key == 'property_key' and 'hasDbXref' in dict_item[key]:
+                assert 'UMLS:C1844605' in dict_item['property_values']
+            if key == 'property_key' and 'hasExactSynonym' in dict_item[key]:
+                for x in syns:
+                    assert x in dict_item['property_values']
+            if dict_item[key] == 'has_obo_namespace':
+                assert dict_item['property_values'][0] == 'human_phenotype'
