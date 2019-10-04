@@ -14,7 +14,7 @@ def lookup_phenotype_by_name( name, greent ):
     return hpo_ids
 
 def pubchem_drug_name_to_chemical_identifier(drug_name_as_string):
-    pubchem_query = requests.get(f"https://pubchem.ncbi.nlm.nih.gov/rest/pubg/compound/name/{drug_name_as_string}/property/MolecularFormula/JSON").json()
+    pubchem_query = requests.get(f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{drug_name_as_string}/property/MolecularFormula/JSON").json()
     if 'Fault' in pubchem_query:
         empty_pubchem_query = []
         return empty_pubchem_query
