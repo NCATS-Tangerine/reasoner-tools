@@ -146,6 +146,7 @@ class Curie_Resolver:
             'MONDO': 'http://purl.obolibrary.org/obo/MONDO_',
             'NCIT' : 'http://purl.obolibrary.org/obo/NCIT_',
             'OMIM': 'https://www.omim.org/entry/',
+            'OMIMPS': 'http://purl.obolibrary.org/obo/OMIMPS_',
             'ONCOTREE': 'http://purl.obolibrary.org/obo/ONCOTREE_',
             'ORPHANET': 'http://www.orpha.net/ORDO/Orphanet_',
             'SCTID': 'http://purl.obolibrary.org/obo/SCTID_',
