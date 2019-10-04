@@ -30,7 +30,7 @@ def onto_drug_name_to_chemical_identifier(drug_name_as_string):
     onto_IDs_annotated = []
     new_dict = {}
     for substance in onto_response['values']:
-        del substance['type']
+        #del substance['type']
         onto_IDs_annotated.append(substance)
     return onto_IDs_annotated
 
