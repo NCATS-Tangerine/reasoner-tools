@@ -22,7 +22,10 @@ class Onto(CachedService):
         return obj['label'] if 'label' in obj else None
     def search(self,name,is_regex=False, full=False):
         """ Search ontologies for a term. """
-        obj = self.get(f"{self.url}/search/{name}/?regex={'true' if is_regex else 'false'}")
+        url = f"{self.url}/search/{name}"
+        params = {'regex' : 'true'}
+        headers = {'Accept' : 'application/json'}
+        obj = self.get(url, params, headers)
         results = []
         if full:
             results = obj['values'] if 'values' in obj else []
