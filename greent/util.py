@@ -149,6 +149,7 @@ class Curie_Resolver:
             'OMIMPS': 'http://purl.obolibrary.org/obo/OMIMPS_',
             'ONCOTREE': 'http://purl.obolibrary.org/obo/ONCOTREE_',
             'ORPHANET': 'http://www.orpha.net/ORDO/Orphanet_',
+            'PR': 'http://purl.obolibrary.org/obo/PR_',
             'SCTID': 'http://purl.obolibrary.org/obo/SCTID_',
             'SNOMEDCT': 'http://identifiers.org/snomedct/',
             'UBERON': 'http://purl.obolibrary.org/obo/UBERON_',
