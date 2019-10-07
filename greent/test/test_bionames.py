@@ -164,13 +164,7 @@ def test_lookup_router(bionames):
         "type": "disease"
       }
     ]
-
-
-
-
-
     result = bionames.lookup_router(query_key, concept_key)
-
     print(f"query_key={query_key}")
     print(f"concept_key={concept_key}")
     print(f"result={result}")
@@ -190,7 +184,6 @@ def test__find_chemical_substance(bionames):
     """
     query_key = 'nicotine'
     concept_key = 'chemical_substance'
-
     cs_result = [
       {
         'defined_by': 'http://purl.obolibrary.org/obo/chebi.owl',
@@ -217,13 +210,27 @@ def test__find_chemical_substance(bionames):
     assert any(x == y for x, y in paired_results)
 
 
-# TODO
 # test 3
 def test__find(bionames):
     """
     Validate the pass case for the _find method.
     """
-    assert True
+    expected = [
+      {
+        'defined_by': 'http://purl.obolibrary.org/obo/mondo.owl',
+        'definition': 'A viral hemorrhagic fever that is caused by the Ebola virus, which is transmitted by contact with infected animals or humans; it is characterized by high fever, unexplained bleeding, and a high mortality rate.',
+        'id': 'MONDO:0005737',
+        'label': 'Ebola hemorrhagic fever'
+      }
+    ]
+    query_key = 'ebola'
+    concept_key = 'disease'
+    result = bionames._find(query_key, concept_key)
+    print(f"query_key={query_key}")
+    print(f"concept_key={concept_key}")
+    print(f"result={result}")
+    paired_results = zip(result, expected)
+    assert any(x == y for x, y in paired_results)
 
 
 # test 4
