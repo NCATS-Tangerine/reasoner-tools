@@ -114,3 +114,6 @@ descendants.txt
 
 # a script for checking a potential subset against its purported set
 subset_check.py
+
+# editor backup files
+*~

@@ -1,0 +1,26 @@
+dist: xenial
+
+language: python
+python:
+  - "3.7"
+
+notifications:
+  email:
+#    - scox@renci.org
+    - bennettc@renci.org
+
+# command to install dependencies
+install:
+  - pip install -r greent/requirements.txt
+
+env:
+  global:
+    - greent_conf=greent/greent.conf
+    - PYTHONPATH=$PWD
+
+# command to run tests
+script:
+  - pytest -p no:warnings -v greent/test/
+
+#after_success:
+#  - coveralls
