@@ -25,12 +25,8 @@ $cd reasoner-tools
 $pip install -r greent/requirements.txt
 $export greent_conf=greent/greent.conf
 
-- TO RUN VIA PYTHON:
-$PYTHONPATH=$PWD python3 greent/api/onto.py
-navigate to http://localhost:5000/apidocs
-
-- TO RUN VIA GUNICORN:
-$gunicorn onto:app --workers 1 --pythonpath=$PWD/greent/api
+- TO RUN:
+$gunicorn onto_gunicorn:app --workers 1 --pythonpath=$PWD/greent/api
 navigate to http://127.0.0.1:8000/apidocs
 
 make functionality changes in greent/services/ontology.py
