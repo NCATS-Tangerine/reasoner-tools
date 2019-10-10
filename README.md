@@ -30,7 +30,7 @@ $gunicorn onto_gunicorn:app --workers 1 --pythonpath=$PWD/greent/api
 navigate to http://127.0.0.1:8000/apidocs
 
 make functionality changes in greent/services/ontology.py
-make front-end changes in greent/api/onto.py
+make front-end changes in greent/api/onto_unicorn.py
 the above two files should be considered in tandem
 ```
 
