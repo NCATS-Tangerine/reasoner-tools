@@ -4,6 +4,8 @@
 ### Tools Available:
 
 ## Onto API
+Onto is a facility which aggregates lookup services that provide generic facts about ontologies. It leverages the Uberongraph RDB (a SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query) for data.
+
 ### To edit/execute/test Onto API locally:
 
 ```
@@ -46,6 +48,7 @@ pytest greent/test/test_ontology.py -k test_label
 ```
 
 ## BioNames API
+BioNames is a generic facility which aggregates bio-ontology lookup services.  It retrieve names from IDs or IDs based on Natural Language names.
 ### To edit/execute/test BioNames API locally:
 
 ```
