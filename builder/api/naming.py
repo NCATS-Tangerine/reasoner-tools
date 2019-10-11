@@ -15,7 +15,7 @@ template = {
   "swagger": "2.0",
   "info": {
     "title": "BioNames API",
-    "description": "Generic facility aggregating bio-ontology lookup services to retrieve names from IDs or IDs based on Natural Language names.",
+    "description": "Bionames is a generic facility which aggregates bio-ontology lookup services to retrieve names from IDs or IDs based on Natural Language names.",
     "contact": {
       "responsibleOrganization": "renci.org",
       "responsibleDeveloper": "scox@renci.org",
@@ -125,7 +125,7 @@ def ID_to_label (ID):
    return jsonify(result)
 
 if __name__ == "__main__":
-   parser = argparse.ArgumentParser(description='Rosetta Server')
+   parser = argparse.ArgumentParser(description='BioNames Server')
    parser.add_argument('-p', '--port',  type=int, help='Port to run service on.', default=5000)
    parser.add_argument('-d', '--debug', help="Debug.", default=False)
    parser.add_argument('-c', '--conf',  help='GreenT config file to use.', default="greent.conf")

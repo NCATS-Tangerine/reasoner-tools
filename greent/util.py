@@ -145,7 +145,7 @@ class Curie_Resolver:
             'MESH': 'http://purl.obolibrary.org/obo/MESH_',
             'MONDO': 'http://purl.obolibrary.org/obo/MONDO_',
             'NCIT' : 'http://purl.obolibrary.org/obo/NCIT_',
-            'OMIM': 'https://www.omim.org/entry/',
+            'OMIM': 'http://purl.obolibrary.org/obo/OMIM_',
             'OMIMPS': 'http://purl.obolibrary.org/obo/OMIMPS_',
             'ONCOTREE': 'http://purl.obolibrary.org/obo/ONCOTREE_',
             'ORPHANET': 'http://www.orpha.net/ORDO/Orphanet_',

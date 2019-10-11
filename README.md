@@ -3,17 +3,13 @@
 
 ### Tools Available:
 
-## UberOnto API
-### version h-bar/2
-
-```
-updates to follow
-```
-
 ## Onto API
-### To edit/execute Onto API locally:
+Onto is a facility which aggregates lookup services that provide generic facts about ontologies. It leverages the Uberongraph RDB (a SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query) for data.
+
+### To edit/execute/test Onto API locally:
 
 ```
+- TO EDIT:
 $git clone git@github.com:NCATS-Translator/reasoner-tools
 
 - make a virtual env and activate it, recommended as follows:
@@ -22,21 +18,41 @@ $source YOUR_ENV_NAME/bin/activate
 
 $cd reasoner-tools
 
+Make functionality changes in greent/services/ontology.py
+Make front-end changes in greent/api/onto_gunicorn.py
+The above two files should be considered in tandem.
+
+Add unit test cases to greent/test/test_ontology.py
+
+
+- TO RUN:
 $pip install -r greent/requirements.txt
 $export greent_conf=greent/greent.conf
 
-- TO RUN:
 $gunicorn onto_gunicorn:app --workers 1 --pythonpath=$PWD/greent/api
-navigate to http://127.0.0.1:8000/apidocs
+Navigate in your browser to http://127.0.0.1:8000/apidocs.
 
-make functionality changes in greent/services/ontology.py
-make front-end changes in greent/api/onto.py
-the above two files should be considered in tandem
+
+- TO TEST:
+$cd reasoner-tools
+    
+- To run all unit tests:
+pytest greent/test/test_ontology.py
+    
+- Remove warnings and get more information as tests run:
+pytest -p no:warnings -vv greent/test/test_ontology.py
+    
+- Run a single unit test:
+pytest greent/test/test_ontology.py -k <test_name>
+pytest greent/test/test_ontology.py -k test_label
 ```
 
 ## BioNames API
+BioNames is a generic facility which aggregates bio-ontology lookup services.  It retrieve names from IDs or IDs based on Natural Language names.
+### To edit/execute/test BioNames API locally:
 
 ```
+- TO EDIT:
 $git clone git@github.com:NCATS-Translator/reasoner-tools
 
 - make a virtual env and activate it, recommended as follows:
@@ -45,13 +61,30 @@ $source YOUR_ENV_NAME/bin/activate
 
 $cd reasoner-tools
 
+Make functionality changes in greent/services/bionames.py
+Make front-end changes in builder/api/naming.py
+The above two files should be considered in tandem.
+
+Add unit test cases to greent/test/test_bionames.py
+
+
+- TO RUN:
 $pip install -r greent/requirements.txt
 
-- TO RUN VIA PYTHON:
 $PYTHONPATH=$PWD python3 builder/api/naming.py
--navigate to localhost:5000/apidocs
+- Navigate in your browser to localhost:5000/apidocs.
 
-make functionality changes in greent/services/bionames.py
-make front-end changes in builder/api/naming.py
-the above two files should be considered in tandem
+
+- TO TEST:
+$cd reasoner-tools
+    
+- To run all unit tests:
+pytest greent/test/test_bionames.py
+    
+- Remove warnings and get more information as tests run:
+pytest -p no:warnings -vv greent/test/test_bionames.py
+    
+- Run a single unit test:
+pytest greent/test/test_bionames.py -k <test_name>
+pytest greent/test/test_bionames.py -k test_lookup_router
 ```
