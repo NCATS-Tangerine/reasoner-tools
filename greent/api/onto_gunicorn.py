@@ -14,7 +14,7 @@ template = {
   "swagger": "2.0",
   "info": {
     "title": "Generic Ontology API",
-    "description": "Generic facts about ontologies (Flask/Gunicorn). This interface utilizes flat file .obo files as well as leveraging the Uberongraph RDB (a SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query)",
+    "description": "Onto is a facility which aggregates lookup services that provide generic facts about ontologies. It leverages the Uberongraph RDB (a SPARQL-queried Uberongraph available at https://stars-app.renci.org/uberongraph/#query) for data.",
     "contact": {
       "responsibleOrganization": "renci.org",
       "responsibleDeveloper": "scox@renci.org",
@@ -466,10 +466,6 @@ def all_properties (curie):
    ont = get_ontology_service() 
    return jsonify({"all_properties" : ont.all_properties(curie_normalize(curie))})
    
-##################
-# start of sparkle based access to the Uberongraph RDB
-##################
-
 @app.route('/descendants/<curie>')
 def descendants(curie):
   """ Get all cascading 'is_a' descendants of an input CURIE term.
@@ -565,7 +561,7 @@ def label(curie):
 
 @app.route('/uri/<curie>')
 def uri_from_curie(curie):
-   """ Exapnds a curie to uri.
+   """ Expands a curie to uri.
    ---
    parameters:
      - name: curie
@@ -602,11 +598,10 @@ def get_curie_uri_map():
 
 
 if __name__ == "__main__":
-   parser = argparse.ArgumentParser(description='Rosetta Server')
+   parser = argparse.ArgumentParser(description='Onto Server')
    parser.add_argument('-p', '--port',  type=int, help='Port to run service on.', default=5000)
    parser.add_argument('-d', '--debug', help="Debug.", default=False)
-   parser.add_argument('-t', '--data',  help="Ontology data source.", default="c:/Users/powen/PycharmProjects/Reasoner/reasoner-tools/")
-  #  parser.add_argument('-t', '--data',  help="Ontology data source.", default="/projects/stars/reasoner/var/ontologies/")
+   parser.add_argument('-t', '--data',  help="Ontology data source.", default="/projects/stars/reasoner/var/ontologies/")
    parser.add_argument('-c', '--conf',  help='GreenT config file to use.', default="greent.conf")
    args = parser.parse_args ()
    app.config['SWAGGER']['greent_conf'] = args.greent_conf = args.conf

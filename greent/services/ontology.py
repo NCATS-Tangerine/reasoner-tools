@@ -51,7 +51,7 @@ class GenericOntology(Service):
 
 
     def label(self,identifier):
-        """Return the exitlabel for an identifier"""       
+        """Return the label for an identifier"""
         query_text = f"""
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             SELECT DISTINCT ?labels
@@ -67,7 +67,7 @@ class GenericOntology(Service):
             },
             outputs = ['labels']
         )
-        return results[0]["labels"]
+        return results[0]["labels"] if len(results) > 0 else ''
         
  
     def is_a(self,identifier, ancestors):
