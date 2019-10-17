@@ -26,8 +26,8 @@ Add unit test cases to greent/test/test_ontology.py
 
 
 - TO RUN:
+$cd reasoner-tools
 $pip install -r greent/requirements.txt
-$export greent_conf=greent/greent.conf
 
 $gunicorn onto_gunicorn:app --workers 1 --pythonpath=$PWD/greent/api
 Navigate in your browser to http://127.0.0.1:8000/apidocs.
@@ -35,7 +35,11 @@ Navigate in your browser to http://127.0.0.1:8000/apidocs.
 
 - TO TEST:
 $cd reasoner-tools
-    
+
+Note: If you're running a local server, edit the onto URL in greent/greent.conf to point to 127.0.0.1:8000.
+$export greent_conf=greent/greent.conf
+$export PYTHONPATH=$PWD:$PWD/greent/api
+
 - To run all unit tests:
 pytest greent/test/test_ontology.py
     
@@ -77,6 +81,9 @@ $PYTHONPATH=$PWD python3 builder/api/naming.py
 
 - TO TEST:
 $cd reasoner-tools
+Note:  If you're running a local server, edit the bionames URL in greent/greent.conf to point to localhost:5000
+$export greent_conf=greent/greent.conf
+$export PYTHONPATH=$PWD:$PWD/builder/api
     
 - To run all unit tests:
 pytest greent/test/test_bionames.py
