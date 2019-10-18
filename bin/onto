@@ -1,0 +1,74 @@
+#!/bin/bash
+
+################################################################
+##
+## Onto aggregates lookup services that provide generic facts 
+##   about ontologies. It leverages the Uberongraph RDB (a 
+##   SPARQL-queried Uberongraph database available at 
+##   https://stars-app.renci.org/uberongraph/#query) for data.
+## 
+##   This is the Bash command line interface (CLI) for Onto.
+##   
+##   author: Chuck Bennett
+##   version: 0.1
+##   usage:
+##      
+##     exec: 
+##      
+##       onto exec
+##       ex: onto exec
+##      
+##     test:
+##      
+##       onto test
+##       ex: onto test
+##
+##     test_cov:
+##
+##       onto test_cov
+##       ex: onto test_cov
+##       
+################################################################
+set -e
+
+##
+## Configure paths.
+##
+export CURDIR=$(pwd)
+export REASONERTOOLS=${CURDIR%/bin}
+export GREENT=$REASONERTOOLS/greent
+export TESTDIR=$GREENT/test
+export PYTHONPATH=$GREENT/api:$REASONERTOOLS
+export GREENT_CONF=$GREENT/greent.conf
+
+export COVERAGE_DEBUG="sys,config"
+export COVERAGE_DEBUG_FILE=$CURDIR/pytestconfig_onto.log
+
+##
+## Run the onto gunicorn server
+##
+exec () {
+    gunicorn onto_gunicorn:app --workers 1 --pythonpath=$PYTHONPATH
+}
+
+##
+## Run tests.
+##
+test () {
+    pytest -p no:warnings -vv $TESTDIR/test_ontology.py
+}
+
+##
+## Run tests with code coverage.
+##
+test_cov () {
+    cd $REASONERTOOLS
+    pytest -p no:warnings -vv --cov=$GREENT --cov-report term --cov-config=$TESTDIR/.onto_coveragerc $TESTDIR/test_ontology.py
+    # Same test using coverage tool:
+    #coverage run --rcfile=greent/test/.onto_coveragerc -m pytest -p no:warnings -vv greent/test/test_ontology.py
+    #coverage report --rcfile=greent/test/.onto_coveragerc
+}
+
+$*
+
+exit 0

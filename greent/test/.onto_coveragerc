@@ -1,7 +1,7 @@
-# .coveragerc to control coverage.py for Onto
+# .coveragerc to control code coverage for Onto
 
 [run]
-#source = reasoner-tools/greent/ 
+
 include =
    greent/api/*
    greent/cache.py
@@ -38,7 +38,9 @@ omit =
    # test files  . . .
    greent/test/*
 
+
 [report]
+
 # Regexes for lines to exclude from consideration
 exclude_lines =
     # Have to re-enable the standard pragma
