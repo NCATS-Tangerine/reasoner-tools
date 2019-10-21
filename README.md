@@ -52,6 +52,7 @@ pytest greent/test/test_ontology.py -k test_label
 
 - Do code coverage for onto:
 pytest --cov=greent --cov-report term --cov-config=greent/test/.onto_coveragerc greent/test/test_ontology.py
+
 ```
 
 ## BioNames API
@@ -100,4 +101,5 @@ pytest greent/test/test_bionames.py -k test_lookup_router
 
 - Do code coverage for bionames:
 pytest --cov=greent --cov-report term --cov-config=greent/test/.bionames_coveragerc greent/test/test_bionames.py
+
 ```
