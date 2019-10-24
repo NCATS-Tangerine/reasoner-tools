@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bionames-deployment
+  labels:
+    app: bionames
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bionames
+  template:
+    metadata:
+      labels:
+        app: bionames
+    spec:
+      containers:
+      - name: bionames
+        image: renciorg/green-bionames
+        ports:
+        #  - containerPort: 5001
+        #    name: http
+        env:
+          - name: APP_PORT
+            value: "5001"
