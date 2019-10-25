@@ -1,11 +1,15 @@
 #!/bin/bash
 
+export CURDIR=$(pwd)
+export REASONERTOOLS=${CURDIR%/bin}
+export DOCKER=$REASONERTOOLS/docker
+
 build () {
     local mod=$1
     if [ -z "$mod" ]; then
         echo module name required
     fi
-    docker build --no-cache $mod -t renciorg/green-$mod
+    docker build --no-cache $DOCKER/$mod -t renciorg/green-$mod
 }
 push () {
     local mod=$1
@@ -20,6 +24,7 @@ clean () {
     }
     $*
 }
+
 all () {
     build base
     push base
