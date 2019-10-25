@@ -8,7 +8,7 @@ metadata:
 spec:
   terminationGracePeriodSeconds: 10
   containers:
-  - name: green-bionames
+  - name: bionames
     image: renciorg/green-bionames
     ports:
     env:
