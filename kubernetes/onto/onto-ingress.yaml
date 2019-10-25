@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: tranql-ingress
+  name: onto-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/enable-cors: "true"
@@ -12,17 +12,17 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "6000"
 spec:
  rules:
- - host: tranql.local.org
+ - host: onto.local.org
    http:
      paths:
-     - path: /
+     - path: /apidocs/
        backend:
-         serviceName: tranql
-         servicePort: 8001
- - host: tranql.local.org
+         serviceName: onto
+         servicePort: 6001
+ - host: onto.local.org
    http:
      paths:
-     - path: /*
+     - path: /apidocs/*
        backend:
-         serviceName: tranql
-         servicePort: 8001
+         serviceName: onto
+         servicePort: 6001
