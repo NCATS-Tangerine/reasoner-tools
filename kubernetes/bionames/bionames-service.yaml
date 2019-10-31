@@ -7,6 +7,7 @@ spec:
   selector:
     app: bionames
   ports:
-  - protocol: TCP
+  - name: http
     port: 5001
+    protocol: TCP
     targetPort: 5001

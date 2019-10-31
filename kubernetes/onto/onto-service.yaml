@@ -7,6 +7,7 @@ spec:
   selector:
     app: onto
   ports:
-  - protocol: TCP
+  - name: http
     port: 6001
+    protocol: TCP
     targetPort: 6001
