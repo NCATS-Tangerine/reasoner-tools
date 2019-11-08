@@ -2,7 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: onto-deployment
+  namespace: translator
   labels:
+    service: onto
     app: onto
 spec:
   replicas: 2
@@ -14,12 +16,35 @@ spec:
       labels:
         app: onto
     spec:
+      volumes:
+        - name: nfs-volume
+          nfs:
+            server: arrival.edc.renci.org
+            path: /srv/k8s-pvs/translator/logs
+      terminationGracePeriodSeconds: 10
       containers:
       - name: onto
-        image: renciorg/green-onto_gunicorn
+        image: renciorg/green-onto_gunicorn:latest
         ports:
-        #  - containerPort: 6001
-        #    name: http
         env:
           - name: APP_PORT
             value: "6001"
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: ACCESS_LOG
+            value: "/var/nfs/onto_access_log"
+          - name: ERROR_LOG
+            value: "/var/nfs/onto_error_log"
+        volumeMounts:
+          - name: nfs-volume
+            mountPath: /var/nfs
+            subPathExpr: $(POD_NAME)
+        resources:
+          requests:
+            memory: 200Mi
+          limits:
+            memory: 1Gi
+        stdin: true
+      restartPolicy: Always
