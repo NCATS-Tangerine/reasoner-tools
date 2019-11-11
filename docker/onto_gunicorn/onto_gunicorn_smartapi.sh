@@ -13,11 +13,11 @@ if [ "x$GIT_PULL" == "xtrue" ]; then
     cd greent/api
 fi
 
-if [ -z $ACCESS_LOG ]; then
+if [[ -z $ACCESS_LOG ]]; then
     export ACCESS_LOG='-'
 fi
 
-if [ -z $ERROR_LOG ]; then
+if [[ -z $ERROR_LOG ]]; then
     export ERROR_LOG='-'
 fi
 
