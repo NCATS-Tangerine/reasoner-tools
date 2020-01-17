@@ -1,0 +1,105 @@
+#!/bin/bash
+
+export CURDIR=$(pwd)
+export REASONERTOOLS=${CURDIR%/bin}
+export DOCKER=$REASONERTOOLS/docker
+
+build () {
+    local mod=$1
+    if [ -z "$mod" ]; then
+        echo module name required
+    fi
+    docker build --no-cache $DOCKER/$mod -t renciorg/green-$mod
+}
+push () {
+    local mod=$1
+    if [ -z "$mod" ]; then
+        echo module name required
+    fi
+    docker push renciorg/green-$mod
+}
+clean () {
+    images () {
+        for i in $(sudo docker images | awk '{ print $3 }' | grep -vi image); do echo $i; sudo docker rmi -f $i; done
+    }
+    $*
+}
+
+all () {
+    build base
+    push base
+    build onto_gunicorn
+    push onto_gunicorn
+    build bionames
+    push bionames
+}
+
+all_bionames () {
+    build base
+    push base
+    build bionames
+    push bionames
+}
+
+all_onto_gunicorn () {
+    build base
+    push base
+    build onto_gunicorn
+    push onto_gunicorn
+}
+kill () {
+    local mod=$1
+    if [ -z "$mod" ]; then
+        echo module name required
+    fi
+    docker kill -s 9 $mod
+}
+shell () {
+        local mod=$1
+    if [ -z "$mod" ]; then
+        echo module name required
+    fi
+    docker exec -it $mod bash
+}
+monit () {
+    set -x
+    docker run \
+           --name monit \
+           --rm \
+           renciorg/green-monit-base $*
+    set +x
+}
+tranql () {
+    set -x
+    docker run \
+           --name tranql \
+           --rm \
+           --publish=8101:8101 \
+           renciorg/green-tranql
+    set +x
+}
+onto_gunicorn () {
+    set -x
+    local_dir=$1
+    docker run \
+           --env GIT_PULL=true \
+           --name ont \
+           --rm \
+           --publish=5001:5359 \
+           -v ${local_dir}:/data renciorg/green-onto_gunicorn
+    set +x
+}
+bionames () {
+    set -x
+    local_dir=$1
+    docker run \
+           --env GIT_PULL=true \
+           --name bio \
+           --rm \
+           --publish=5001:5354 \
+           -v ${local_dir}:/data renciorg/green-bionames
+    set +x
+}
+
+
+$*

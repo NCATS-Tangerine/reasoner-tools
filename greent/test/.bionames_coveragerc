@@ -1,0 +1,65 @@
+# .coveragerc to control code coverage for BioNames
+
+[run]
+
+include =
+   builder/api/*
+   greent/cache.py
+   greent/cachedservice.py
+   greent/config.py
+   greent/core.py
+   greent/service.py
+   greent/servicecontext.py
+   greent/services/onto.py
+   greent/services/ontology.py
+   greent/services/bionames.py
+   greent/triplestore.py
+
+omit =
+   # other/misc product files . . .
+   greent/rosetta.py
+   greent/util.py
+
+   # other/unused services files . . .
+   greent/services/alpha_query_to_graph.py
+   greent/services/chembl.py
+   greent/services/hgnc.py
+   greent/services/mesh.py
+   greent/services/pubchem.py
+   greent/services/robo_query_to_graph.py
+   greent/ontologies/go2.py
+   greent/ontologies/hpo2.py
+   greent/ontologies/mondo2.py
+
+   # workflow files . . .
+   greent/flow/*
+   greent/flow/dag/*
+
+   # test files  . . .
+   greent/test/*
+
+
+[report]
+
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    def __str__
+    if self\.debug
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ == .__main__.:
+
+ignore_errors = True
+
+[html]
+directory = coverage_html_report

@@ -17,9 +17,9 @@ class CachedService(Service):
                 obj = requests.get(url).json()
             elif params and headers:
                 obj = requests.get(url, params=params, headers=headers).json()
-            elif params and headers==None:
+            elif params and headers==None: # pragma: no cover
                 obj = requests.get(url, params=params).json()
-            elif params==None and headers:
+            elif params==None and headers: # pragma: no cover
                 obj = requests.get(url, headers=headers).json()
             self.context.cache.set(key, obj)
         return obj

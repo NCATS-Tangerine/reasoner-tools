@@ -132,6 +132,12 @@ def test__find_chemical_substance(bionames):
     concept_key = 'chemical_substance'
     cs_result = [
       {
+         'defined_by': 'http://purl.obolibrary.org/obo/chebi.owl',
+         'definition': 'A 3-(1-methylpyrrolidin-2-yl)pyridine in which the chiral centre has S-configuration. The naturally occurring and most active enantiomer of nicotine, isolated from Nicotiana tabacum.',
+         'id': 'CHEBI:17688',
+         'label': '(S)-nicotine'
+      },
+      {
         'defined_by': 'http://purl.obolibrary.org/obo/chebi.owl',
         'definition': 'A racemate composed of equimolar amounts of (R)- and (S)-nicotine.',
         'id': 'CHEBI:18723',

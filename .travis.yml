@@ -20,7 +20,7 @@ env:
 
 # command to run tests
 script:
-  - pytest -p no:warnings -v greent/test/
+  - pytest -p no:warnings -vv --cov=greent --cov-report term --cov-config=greent/test/.coveragerc greent/test
 
 #after_success:
-#  - coveralls
+  - coveralls

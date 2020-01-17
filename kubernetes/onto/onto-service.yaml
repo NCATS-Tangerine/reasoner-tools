@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: onto
+  namespace: translator
+spec:
+  type: LoadBalancer
+  loadBalancerIP: nnn.nn.nn.nnn
+  selector:
+    app: onto
+  ports:
+  - name: http
+    port: 6001
+    protocol: TCP
+    targetPort: 6001

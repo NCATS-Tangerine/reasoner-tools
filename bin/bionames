@@ -1,0 +1,74 @@
+#!/bin/bash
+
+################################################################
+##
+## BioNames is a generic facility which aggregates bio-ontology 
+##   lookup services. It retrieve names from IDs or IDs based 
+##   on Natural Language names.
+## 
+##   This is the Bash command line interface (CLI) for BioNames.
+##   
+##   author: Chuck Bennett
+##   version: 0.1
+##   usage:
+##      
+##     exec: 
+##      
+##       onto exec
+##       ex: bionames exec
+##      
+##     test:
+##      
+##       onto test
+##       ex: bionames test
+##
+##     test_cov:
+##
+##       onto test_cov
+##       ex: bionames test_cov
+##       
+################################################################
+set -e
+
+##
+## Configure paths.
+##
+export CURDIR=$(pwd)
+export REASONERTOOLS=${CURDIR%/bin}
+export BIONAMES_ROOT=$REASONERTOOLS/builder/api
+export GREENT=$REASONERTOOLS/greent
+export TESTDIR=$GREENT/test
+export PYTHONPATH=$REASONERTOOLS:$BIONAMES_ROOT
+export GREENT_CONF=$GREENT/greent.conf
+
+export COVERAGE_DEBUG="sys,config"
+export COVERAGE_DEBUG_FILE=$CURDIR/pytestconfig.log
+
+##
+## Run the BioNames server
+##
+exec () {
+    PYTHONPATH=$PYTHONPATH python3 $BIONAMES_ROOT/naming.py
+}
+
+##
+## Run tests on the BioNames server.
+##
+test () {
+    pytest -p no:warnings -vv $TESTDIR/test_bionames.py
+}
+
+##
+## Run tests with code coverage.
+##
+test_cov () {
+    cd ..
+    pytest -p no:warnings -vv --cov=$GREENT --cov-report term --cov-config=$TESTDIR/.bionames_coveragerc $TESTDIR/test_bionames.py
+    # Same test using coverage tool:
+    #coverage run --rcfile=$TESTDIR/.bionames_coveragerc -m pytest -p no:warnings -vv $TESTDIR/test_bionames.py
+    #coverage report --rcfile=$TESTDIR/.bionames_coveragerc
+}
+
+$*
+
+exit 0
