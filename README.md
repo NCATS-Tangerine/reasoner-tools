@@ -24,7 +24,6 @@ The above two files should be considered in tandem.
 
 Add unit test cases to greent/test/test_ontology.py
 
-
 - TO RUN:
 $cd reasoner-tools
 $pip install -r greent/requirements.txt
@@ -85,6 +84,7 @@ $PYTHONPATH=$PWD python3 builder/api/naming.py
 
 - TO TEST:
 $cd reasoner-tools
+
 Note:  If you're running a local server, edit the bionames URL in greent/greent.conf to point to localhost:5000
 $export greent_conf=greent/greent.conf
 $export PYTHONPATH=$PWD:$PWD/builder/api
