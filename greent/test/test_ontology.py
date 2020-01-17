@@ -720,14 +720,7 @@ def test_all_properties(ontology):
         "chronic obstructive asthma with status asthmaticus"
     ]
     superclasses = [
-        "http://linkedlifedata.com/resource/umls/id/C0006261",
-        "http://purl.obolibrary.org/obo/COHD_256717",
-        "http://purl.obolibrary.org/obo/DOID_1176",
-        "http://purl.obolibrary.org/obo/MESH_D001982",
-        "http://purl.obolibrary.org/obo/MONDO_0001358",
-        "http://purl.obolibrary.org/obo/NCIT_C34439",
-        "http://purl.obolibrary.org/obo/SCTID_41427001",
-        "http://www.ebi.ac.uk/efo/EFO_1002018"
+        "http://linkedlifedata.com/resource/umls/id/C0006261"
     ]
     eq_class = [
         "http://purl.obolibrary.org/obo/NCIT_C28397",
@@ -775,9 +768,9 @@ def test_all_properties(ontology):
             if key == 'property_key' and 'hasExactSynonym' in dict_item[key]:
                 for es in exact_syn:
                     assert es in dict_item['property_values']
-            # if key == 'property_key' and 'subClassOf' in dict_item[key]:
-            #     for s in superclasses:
-            #         assert s in dict_item['property_values']
+            if key == 'property_key' and 'subClassOf' in dict_item[key]:
+                for s in superclasses:
+                    assert s in dict_item['property_values']
             if key == 'property_key' and 'equivalentClass' in dict_item[key]:
                 for e in eq_class:
                     assert e in dict_item['property_values']
