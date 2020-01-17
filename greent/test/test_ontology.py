@@ -720,7 +720,7 @@ def test_all_properties(ontology):
         "chronic obstructive asthma with status asthmaticus"
     ]
     superclasses = [
-        "http://linkedlifedata.com/resource/umls/id/C0006261"
+        "http://purl.obolibrary.org/obo/MONDO_0001358"
     ]
     eq_class = [
         "http://purl.obolibrary.org/obo/NCIT_C28397",
