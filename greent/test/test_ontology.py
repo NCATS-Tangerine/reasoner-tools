@@ -416,9 +416,8 @@ def test_mondo_single_level_is_a(ontology):
 def test_go_single_level_is_a(go_ontology):
     go_result = go_ontology.single_level_is_a('GO:0005575')
     print(f"{go_result}")
-    for g in ["GO:0016020","GO:0043226","GO:0044464","GO:0005576","GO:0032991","GO:0019012",
-              "GO:0044423","GO:0031974","GO:0044217","GO:0044425","GO:0044456","GO:0005623","GO:0055044",
-              "GO:0045202","GO:0009295","GO:0099080","GO:0097423","GO:0044421","GO:0030054"]:
+    for g in ['CL:0000000', 'GO:0005623', 'GO:0005622', 'GO:0032991', 
+              'GO:0110165', 'GO:0019012', 'GO:0044217', 'GO:0044423']:
         assert g in go_result
 
 
