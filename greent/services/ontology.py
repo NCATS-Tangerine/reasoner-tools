@@ -67,7 +67,7 @@ class GenericOntology(Service):
             },
             outputs = ['labels']
         )
-        return results[0]["labels"]
+        return results[0]["labels"] if len(results) > 0 else ''
         
  
     def is_a(self,identifier, ancestors):
