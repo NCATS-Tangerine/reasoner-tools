@@ -416,9 +416,8 @@ def test_mondo_single_level_is_a(ontology):
 def test_go_single_level_is_a(go_ontology):
     go_result = go_ontology.single_level_is_a('GO:0005575')
     print(f"{go_result}")
-    for g in ["GO:0044422","GO:0016020","GO:0043226","GO:0044464","GO:0005576","GO:0032991","GO:0019012",
-              "GO:0044423","GO:0031974","GO:0044217","GO:0044425","GO:0044456","GO:0005623","GO:0055044",
-              "GO:0045202","GO:0009295","GO:0099080","GO:0097423","GO:0044421","GO:0030054"]:
+    for g in ['CL:0000000', 'GO:0005623', 'GO:0005622', 'GO:0032991', 
+              'GO:0110165', 'GO:0019012', 'GO:0044217', 'GO:0044423']:
         assert g in go_result
 
 
@@ -441,7 +440,7 @@ def test_parents(ontology):
 def test_go_parents(go_ontology):
     """Validates pass case of retrieving parents for a curie"""
     result = go_ontology.parents('GO:0005576')
-    assert 'GO:0005575' in result
+    assert 'GO:0110165' in result
 
 
 # test 39
@@ -531,15 +530,7 @@ def test_children(ontology):
 
     children = [
         "MONDO:0002988",
-        "MONDO:0006489",
-        "UMLS:C0877611",
-        "UMLS:C2004576",
-        "DOID:4413",
-        "GARD:0009664",
-        "NCIT:C27394",
-        "NCIT:C40239",
-        "ONCOTREE:VMM",
-        "EFO:1000619"
+        "MONDO:0006489"
     ]
     for c in children:
         assert c in result
@@ -729,14 +720,7 @@ def test_all_properties(ontology):
         "chronic obstructive asthma with status asthmaticus"
     ]
     superclasses = [
-        "http://linkedlifedata.com/resource/umls/id/C0006261",
-        "http://purl.obolibrary.org/obo/COHD_256717",
-        "http://purl.obolibrary.org/obo/DOID_1176",
-        "http://purl.obolibrary.org/obo/MESH_D001982",
-        "http://purl.obolibrary.org/obo/MONDO_0001358",
-        "http://purl.obolibrary.org/obo/NCIT_C34439",
-        "http://purl.obolibrary.org/obo/SCTID_41427001",
-        "http://www.ebi.ac.uk/efo/EFO_1002018"
+        "http://purl.obolibrary.org/obo/MONDO_0001358"
     ]
     eq_class = [
         "http://purl.obolibrary.org/obo/NCIT_C28397",
