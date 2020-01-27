@@ -28,88 +28,143 @@ def test_lookup_router(bionames):
     concept_key = 'disease'
     lookup_no_sims_result = [
       {
-        'id': 'MONDO:0004979',
-        'label': 'asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "A bronchial disease that is characterized by chronic inflammation and narrowing of the airways, which is caused by a combination of environmental and genetic factors resulting in recurring periods of wheezing (a whistling sound while breathing), chest tightness, shortness of breath, mucus production and coughing. The symptoms appear due to a variety of triggers such as allergens, irritants, respiratory infections, weather changes, exercise, stress, reflux disease, medications, foods and emotional anxiety.",
+        "id": "MONDO:0004979",
+        "label": "asthma"
       }
     ]
     lookup_w_sims_result = [
       {
-        'id': 'MONDO:0004979',
-        'label': 'asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/hp.owl",
+        "definition": "Asthma is characterized by increased responsiveness of the tracheobronchial tree to multiple stimuli, leading to narrowing of the air passages with resultant dyspnea, cough, and wheezing.",
+        "id": "HP:0002099",
+        "label": "Asthma"
       },
       {
-        'id': 'MONDO:0022742',
-        'label': 'occupational asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/hp.owl",
+        "definition": "A type of asthma in which aspirin and other nonsteroidal anti-inflammatory drugs (NSAIDs) that inhibit cyclooxygen-ase 1 (COX-1) exacerbate bronchoconstriction.",
+        "id": "HP:0012042",
+        "label": "Aspirin-induced asthma"
       },
       {
-        'id': 'MONDO:0004765',
-        'label': 'intrinsic asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "An acute exacerbation of asthma, characterized by inadequate response to initial bronchodilators.",
+        "id": "MONDO:0004766",
+        "label": "status asthmaticus"
       },
       {
-        'id': 'MONDO:0004784',
-        'label': 'allergic asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/hp.owl",
+        "definition": "Severe asthma unresponsive to repeated courses of beta-agonist therapy such as inhaled albuterol, levalbuterol, or subcutaneous epinephrine.",
+        "id": "HP:0012653",
+        "label": "Status asthmaticus"
       },
       {
-        'id': 'MONDO:0004766',
-        'label': 'status asthmaticus',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "A asthma with a basis in a pathological type I hypersensitivity reaction.",
+        "id": "MONDO:0004784",
+        "label": "allergic asthma"
       },
       {
-        'id': 'MONDO:0012607',
-        'label': 'asthma-related traits, susceptibility to, 5',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/hp.owl",
+        "definition": "Asthma attacks following exercise.",
+        "id": "HP:0012652",
+        "label": "Exercise-induced asthma"
       },
       {
-        'id': 'MONDO:0010940',
-        'label': 'inherited susceptibility to asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "Any inherited susceptibility to asthma in which the cause of the disease is a mutation in the PTGDR gene.",
+        "id": "MONDO:0011805",
+        "label": "asthma-related traits, susceptibility to, 1"
       },
       {
-        'id': 'MONDO:0025556',
-        'label': 'isocyanate induced asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "Any inherited susceptibility to asthma in which the cause of the disease is a mutation in the NPSR1 gene.",
+        "id": "MONDO:0012067",
+        "label": "asthma-related traits, susceptibility to, 2"
       },
       {
-        'id': 'MONDO:0011805',
-        'label': 'asthma-related traits, susceptibility to, 1',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "id": "MONDO:0012379",
+        "label": "asthma-related traits, susceptibility to, 3"
       },
       {
-        'id': 'MONDO:0012067',
-        'label': 'asthma-related traits, susceptibility to, 2',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "id": "MONDO:0012577",
+        "label": "asthma-related traits, susceptibility to, 4"
       },
       {
-        'id': 'MONDO:0012771',
-        'label': 'asthma-related traits, susceptibility to, 7',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "Any inherited susceptibility to asthma in which the cause of the disease is a mutation in the IRAK3 gene.",
+        "id": "MONDO:0012607",
+        "label": "asthma-related traits, susceptibility to, 5"
       },
       {
-        'id': 'MONDO:0001491',
-        'label': 'cough variant asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "id": "MONDO:0012666",
+        "label": "asthma-related traits, susceptibility to, 6"
       },
       {
-        'id': 'MONDO:0005405',
-        'label': 'childhood onset asthma',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "Any inherited susceptibility to asthma in which the cause of the disease is a mutation in the CHI3L1 gene.",
+        "id": "MONDO:0012771",
+        "label": "asthma-related traits, susceptibility to, 7"
       },
       {
-        'id': 'MONDO:0008835',
-        'label': 'asthma, short stature, and elevated IgA',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "id": "MONDO:0013180",
+        "label": "asthma-related traits, susceptibility to, 8"
       },
       {
-        'id': 'MONDO:0008834',
-        'label': 'asthma, nasal polyps, and aspirin intolerance',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "Asthma that starts in childhood.",
+        "id": "MONDO:0005405",
+        "label": "childhood onset asthma"
+      },
+      {
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "id": "MONDO:0008834",
+        "label": "asthma, nasal polyps, and aspirin intolerance"
+      },
+      {
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "id": "MONDO:0008835",
+        "label": "asthma, short stature, and elevated IgA"
+      },
+      {
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "A bronchial disease that is characterized by chronic inflammation and narrowing of the airways, which is caused by a combination of environmental and genetic factors resulting in recurring periods of wheezing (a whistling sound while breathing), chest tightness, shortness of breath, mucus production and coughing. The symptoms appear due to a variety of triggers such as allergens, irritants, respiratory infections, weather changes, exercise, stress, reflux disease, medications, foods and emotional anxiety.",
+        "id": "MONDO:0004979",
+        "label": "asthma"
+      },
+      {
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "Asthma attacks caused, triggered, or exacerbated by OCCUPATIONAL EXPOSURE.",
+        "id": "MONDO:0022742",
+        "label": "occupational asthma"
+      },
+      {
+        "id": "MONDO:0004765",
+        "label": "intrinsic asthma",
+        "type": "disease"
+      },
+      {
+        "id": "MONDO:0010940",
+        "label": "inherited susceptibility to asthma",
+        "type": "disease"
+      },
+      {
+        "id": "MONDO:0025556",
+        "label": "isocyanate induced asthma",
+        "type": "disease"
+      },
+      {
+        "id": "MONDO:0001491",
+        "label": "cough variant asthma",
+        "type": "disease"
       }
     ]
+
     result = bionames.lookup_router(query_key, concept_key)
     print(f"query_key={query_key}")
     print(f"concept_key={concept_key}")
@@ -169,11 +224,13 @@ def test__find(bionames):
     """
     expected = [
       {
-        'id': 'MONDO:0005737',
-        'label': 'Ebola hemorrhagic fever',
-        'type': 'disease'
+        "defined_by": "http://purl.obolibrary.org/obo/mondo.owl",
+        "definition": "A viral hemorrhagic fever that is caused by the Ebola virus, which is transmitted by contact with infected animals or humans; it is characterized by high fever, unexplained bleeding, and a high mortality rate.",
+        "id": "MONDO:0005737",
+        "label": "Ebola hemorrhagic fever"
       }
     ]
+
     query_key = 'ebola'
     concept_key = 'disease'
     result = bionames._find(query_key, concept_key)
