@@ -97,7 +97,7 @@ class BioNames(Service):
             result = self.context.core.onto.search (q, is_regex=True, full=True)
             if concept:
                 # Added fix for KeyException when there's no 'type' key in dict r
-                result = [r for r in result if 'type' in r and r['type'] == concept]
+                result = [r for r in result if 'type' not in r or r['type'] == concept]
         except:
             traceback.print_exc ()
         return result
