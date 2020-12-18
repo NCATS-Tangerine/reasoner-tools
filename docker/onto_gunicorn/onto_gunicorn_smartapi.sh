@@ -26,7 +26,7 @@ gunicorn \
         --bind=0.0.0.0:$APP_PORT \
         --workers=$NUM_WORKERS \
         --pythonpath '../../' \
-        --timeout=120 \
+        --timeout=600 \
         --access-logfile $ACCESS_LOG \
         --error-logfile $ERROR_LOG \
         --log-level debug \
