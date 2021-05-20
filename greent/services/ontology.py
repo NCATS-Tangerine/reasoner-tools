@@ -323,7 +323,8 @@ class GenericOntology(Service):
 
     def lookup(self, identifier):
         """ Given an identifier, find ids in the ontology for which it is an xref. """
-        assert identifier and ':' in identifier, "Must provide a valid identifier."
+        assert identifier and ':' in identifier, "Must provide a valid curie. Curie must have format " \
+                                                 "<PREFIX>:<ID>"
         query_template = """
         PREFIX XREF: <http://www.geneontology.org/formats/oboInOwl#hasDbXref>
         PREFIX LABEL: <http://www.w3.org/2000/01/rdf-schema#label>

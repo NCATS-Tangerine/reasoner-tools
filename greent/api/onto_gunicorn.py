@@ -65,10 +65,12 @@ def get_ontology_service ():
     return result
   
 def curie_normalize(curie):    
-    assert ':' in curie, "Curie format invalid"
+    assert ':' in curie, "Curie format invalid. Format should be <PREFIX>:<ID>"
     curie_parts = curie.split(':')
     print(curie_parts[0])
-    assert curie_parts[0].upper() in Curie_Resolver.get_curie_to_uri_map(), "Curie not supported" # since this is going to raise an exception in our sparql either way
+    prefix_list = list(Curie_Resolver.get_curie_to_uri_map().   keys())
+    assert curie_parts[0].upper() in prefix_list, "Curie prefix not supported " \
+                                       f"support prefixes are {prefix_list}"# since this is going to raise an exception in our sparql either way
     return ':'.join([curie_parts[0].upper()] + curie_parts[1:])
 
 
@@ -130,8 +132,14 @@ def is_a (curie, ancestors):
      200:
        description: ...
    """
-   assert curie, "An identifier must be supplied."
-   assert isinstance(ancestors, str), "Ancestors must be one or more identifiers"
+   if not curie:
+       return jsonify({
+        "error": "Curie must be supplied"
+       }), 400
+   if not isinstance(ancestors, str):
+       return jsonify({
+           "error": "Ancestors must be one or more identifiers"
+       }) , 400
    ont = get_ontology_service ()
    is_a, ancestors = ont.is_a(curie, ancestors)
    return jsonify ({
@@ -199,9 +207,15 @@ def xrefs (curie):
      200:
        description: ...
    """
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
    ont = get_ontology_service ()
    return jsonify ({
-       "xrefs"     : [ x.split(' ')[0] if ' ' in x else x for x in ont.xrefs (curie_normalize(curie)) ]
+       "xrefs"     : [ x.split(' ')[0] if ' ' in x else x for x in ont.xrefs (normalized_curie) ]
    } if ont else {})
 
 
@@ -226,8 +240,13 @@ def lookup (curie):
        description: ...
    """
    ont = get_ontology_service ()
+   try:
+       refs = ont.lookup (curie)
+   except AssertionError as error:
+       error_message = str(error)
+       return jsonify({"validation error": f"{error_message}"}), 400
    return jsonify ({
-       "refs" :  ont.lookup (curie)
+       "refs" : refs
    })
      
 @app.route('/synonyms/<curie>')
@@ -252,8 +271,14 @@ def synonyms (curie):
    """
    result = []
    ont = get_ontology_service ()
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
    if ont:
-       syns = ont.synonyms (curie_normalize(curie))
+       syns = ont.synonyms (normalized_curie)
        if syns:
            for syn in syns:
                result.append ({
@@ -285,7 +310,13 @@ def exactMatch (curie):
        description: ...
    """
    ont = get_ontology_service ()
-   return jsonify ({'exact matches' : ont.exactMatch(curie_normalize(curie))})
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify ({'exact matches' : ont.exactMatch(normalized_curie)})
 
 @app.route('/closeMatch/<curie>')
 def closeMatch (curie):
@@ -308,7 +339,13 @@ def closeMatch (curie):
        description: ...
    """
    ont = get_ontology_service ()
-   return jsonify ({'close matches' : ont.closeMatch(curie_normalize(curie))})
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify ({'close matches' : ont.closeMatch(normalized_curie)})
 
 @app.route('/subterms/<curie>')
 def subterms (curie):
@@ -332,7 +369,13 @@ def subterms (curie):
        description: ...
    """
    ont = get_ontology_service()
-   return jsonify({ "subterms" : ont.subterms(curie_normalize(curie)) }  )
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify({ "subterms" : ont.subterms(normalized_curie) }  )
 
 @app.route('/superterms/<curie>')
 def superterms (curie):
@@ -356,7 +399,13 @@ def superterms (curie):
         description: ...
    """
    ont = get_ontology_service ()
-   return jsonify({ "superterms" : ont.superterms(curie_normalize(curie)) }  )
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify({ "superterms" : ont.superterms(normalized_curie) }  )
 
 @app.route('/siblings/<curie>')
 def siblings (curie):
@@ -379,7 +428,13 @@ def siblings (curie):
         description: ...
    """
    ont = get_ontology_service ()
-   return jsonify({"siblings" : ont.siblings(curie_normalize(curie))})
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify({"siblings" : ont.siblings(normalized_curie)})
 
 @app.route('/parents/<curie>')
 def parents (curie):
@@ -401,8 +456,14 @@ def parents (curie):
      200:
         description: ...
    """
-   ont = get_ontology_service () 
-   return jsonify({"parents" : ont.parents(curie_normalize(curie))})
+   ont = get_ontology_service ()
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify({"parents" : ont.parents(normalized_curie)})
 
 @app.route('/property_value/<curie>/<path:property_key>')
 def property_value (curie, property_key):
@@ -439,8 +500,13 @@ def property_value (curie, property_key):
    """
 
    ont = get_ontology_service()
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
 
-   return jsonify({"property_value" : ont.property_value(curie_normalize(curie), property_key)})
+   return jsonify({"property_value" : ont.property_value(normalized_curie, property_key)})
 
 
 @app.route('/all_properties/<curie>')
@@ -463,8 +529,14 @@ def all_properties (curie):
      200:
         description: ...
    """
-   ont = get_ontology_service() 
-   return jsonify({"all_properties" : ont.all_properties(curie_normalize(curie))})
+   ont = get_ontology_service()
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+   return jsonify({"all_properties" : ont.all_properties(normalized_curie)})
    
 @app.route('/descendants/<curie>')
 def descendants(curie):
@@ -487,7 +559,13 @@ def descendants(curie):
        description: ...
    """
   ont = get_ontology_service()
-  return jsonify(ont.descendants(curie_normalize(curie)))
+  try:
+      normalized_curie = curie_normalize(curie)
+  except AssertionError as error:
+      error_msg = str(error)
+      return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+  return jsonify(ont.descendants(normalized_curie))
 
 @app.route('/ancestors/<curie>')
 def ancestors(curie):
@@ -510,7 +588,13 @@ def ancestors(curie):
        description: ...
    """
   ont = get_ontology_service()
-  return jsonify(ont.ancestors(curie_normalize(curie)))
+  try:
+      normalized_curie = curie_normalize(curie)
+  except AssertionError as error:
+      error_msg = str(error)
+      return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+  return jsonify(ont.ancestors(normalized_curie))
 
 @app.route('/children/<curie>')
 def children(curie):
@@ -533,7 +617,13 @@ def children(curie):
        description: ...
    """
   ont = get_ontology_service()
-  return jsonify(ont.children(curie_normalize(curie)))
+  try:
+      normalized_curie = curie_normalize(curie)
+  except AssertionError as error:
+      error_msg = str(error)
+      return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+  return jsonify(ont.children(normalized_curie))
 
 @app.route('/label/<curie>')
 def label(curie):
@@ -556,7 +646,13 @@ def label(curie):
        description: ...
    """
   ont = get_ontology_service()
-  output = {'id':curie, 'label': ont.label(curie_normalize(curie))}
+  try:
+      normalized_curie = curie_normalize(curie)
+  except AssertionError as error:
+      error_msg = str(error)
+      return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
+  output = {'id':curie, 'label': ont.label(normalized_curie)}
   return jsonify(output)
 
 @app.route('/uri/<curie>')
@@ -579,9 +675,14 @@ def uri_from_curie(curie):
      200:
        description: ...
    """
-   assert ':' in curie, "Curie is not properly formatted"
+   try:
+       normalized_curie = curie_normalize(curie)
+   except AssertionError as error:
+       error_msg = str(error)
+       return jsonify({"validation error": f"{error_msg}. Curie provided : `{curie}`"}), 400
+
    return jsonify({
-     'uri': Curie_Resolver.curie_to_uri(curie_normalize(curie))
+     'uri': Curie_Resolver.curie_to_uri(normalized_curie)
    })
 
 @app.route('/curie_uri_map')
